@@ -1,7 +1,6 @@
 package com.example.controller;
 
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +24,7 @@ public class MessageController {
         messageModel.clearError(errorName);
     }
 
-    public void sendMessage(UserToken senderToken, String recevierEmail, String subject, String message,
+    public void addMessage(UserToken senderToken, String recevierEmail, String subject, String message,
             List<File> files) {
         messageModel.addMesssage(senderToken, recevierEmail, subject, message, files);
     }

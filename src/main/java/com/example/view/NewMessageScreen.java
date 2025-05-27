@@ -69,8 +69,8 @@ public class NewMessageScreen extends VBox implements GuiHelperFunctions {
 
     private void sendButtonAction(UserController userController, ScreenController screenController,
             MessageController messageController, TextField whomField, TextField subjectField, TextArea messageAreaField,
-            Label whomErrorLabel, Label subjectErrorLabel, Label messageTextAreaErrorLabel, List<File> selectedFiles,
-            Stage stage) {
+            Label whomErrorLabel, Label subjectErrorLabel, Label messageTextAreaErrorLabel, Label attachFileErrorLabel,
+            List<File> selectedFiles, Stage stage) {
 
         boolean valid = true;
         clearErrorLabels(whomErrorLabel, subjectErrorLabel, messageTextAreaErrorLabel);
@@ -81,15 +81,16 @@ public class NewMessageScreen extends VBox implements GuiHelperFunctions {
         }
 
         if (valid) {
-            messageController.sendMessage(userController.getLoggedUser(), whomField.getText(), subjectField.getText(),
+            messageController.addMessage(userController.getLoggedUser(), whomField.getText(), subjectField.getText(),
                     messageAreaField.getText(), selectedFiles);
 
             showIfError(messageController.getError("email"), whomErrorLabel);
             showIfError(messageController.getError("subject"), subjectErrorLabel);
             showIfError(messageController.getError("message"), messageTextAreaErrorLabel);
+            showIfError(messageController.getError("file"), attachFileErrorLabel);
 
             if (messageController.getError("email") != null || messageController.getError("subject") != null
-                    || messageController.getError("message") != null) {
+                    || messageController.getError("message") != null || messageController.getError("file") != null) {
                 valid = false;
             }
         }
@@ -164,7 +165,7 @@ public class NewMessageScreen extends VBox implements GuiHelperFunctions {
         sendButton.setOnAction(e -> {
             sendButtonAction(userController, screenController, messageController, whomField, subjectField,
                     messageAreaField, whomErrorLabel, subjectErrorLabel, messageTextAreaErrorLabel,
-                    fileChooserUI.getSelectedFiles(), stage);
+                    attachFileErrorLabel, fileChooserUI.getSelectedFiles(), stage);
         });
 
         Button backButton = new Button("Back");

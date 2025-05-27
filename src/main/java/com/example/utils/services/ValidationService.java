@@ -1,6 +1,7 @@
 package com.example.utils.services;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -21,7 +22,7 @@ public class ValidationService {
     private static final Pattern PASSWORD_REGEX = Pattern
             .compile("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&.])[A-Za-z\\d@$!%*?&.]{8,}$");
     private static final String SUPPORTED_IMAGE_FILES = "(?i).*\\.(png|jpg|jpeg|gif)$";
-    private static final String SUPPORTED_FILES = "(?i).*\\.(docx?|xlsx?|pptx?|pdf|txt|rtf|odt|ods|odp|jpg|jpeg|png|gif|bmp|tiff|webp|mp4|mov|avi|wmv|mp3|wav|m4a|zip|7z|tar|gz)$";
+    private static final String SUPPORTED_FILES = "(?i).*\\.(docx?|xlsx?|pptx?|pdf|txt|rtf|jpg|jpeg|png|gif|bmp|tiff|webp|mp4|mov|avi|wmv|mp3|wav|m4a|zip|7z|tar)$";
 
     public class UserModelValidations implements UserModelValidationsTools {
         private ErrorToolManager errorToolManager;
@@ -204,7 +205,6 @@ public class ValidationService {
             return true;
         }
 
-        // TODO - validation of words and deeds
         @Override
         public boolean validMessageData(String whom, String subject, String message) {
 
@@ -214,17 +214,25 @@ public class ValidationService {
                 return false;
             }
 
-            if (subject != null && subject.length() > 50) {
+            if (isTextTooLong(subject, 30)) {
                 errorToolManager.logError(errorToolManager.createErrorBody("subject", "Subject is too long"));
                 return false;
             }
 
-            if (message != null && message.length() > 225) {
+            if (isTextTooLong(message, 700)) {
                 errorToolManager.logError(errorToolManager.createErrorBody("message", "Message is too long"));
                 return false;
             }
 
             return true;
+        }
+
+        private boolean isTextTooLong(String text, int limit) {
+            if (text == null)
+                return false;
+
+            return Arrays.stream(text.trim().split("(?<=\\S)\\s+(?=\\S)")).mapToInt(w -> w.trim().length())
+                    .sum() > limit;
         }
     }
 }

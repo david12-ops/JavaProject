@@ -77,8 +77,8 @@ public class MessageModel {
         storageTool.removeItem(message);
     }
 
-    public List<Message> getAllReceviedMessagesByUser(String userId) {
-        return listOfMessages.stream().filter(message -> message.getReceiverId().equals(userId)).toList();
+    public List<Message> getAllReceviedMessagesByUser(String recevierEmail) {
+        return listOfMessages.stream().filter(message -> message.getReceiver().equals(recevierEmail)).toList();
     }
 
     public List<Message> getAllSentMessagesByUser(String userId) {

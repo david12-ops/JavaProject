@@ -20,6 +20,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+
+        // Icons use from - https://icons8.com
         private UserModel userModel = new UserModel(Environment.PRODUCTION);
         private MessageModel messageModel = new MessageModel();
         private UserController userController = new UserController(userModel);

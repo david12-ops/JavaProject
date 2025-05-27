@@ -17,8 +17,8 @@ public class Message {
     @JsonProperty("sender_id")
     private final String senderId;
 
-    @JsonProperty("receiver_id")
-    private final String receiverId;
+    @JsonProperty("recevier")
+    private String receiver;
 
     @JsonProperty("subject")
     private String subject;
@@ -36,18 +36,16 @@ public class Message {
     private LocalDateTime timestamp;
 
     @JsonCreator
-    public Message(@JsonProperty("message_id") String messageId, @JsonProperty("sender_id") String senderId,
-            @JsonProperty("receiver_id") String receiverId) {
+    public Message(@JsonProperty("message_id") String messageId, @JsonProperty("sender_id") String senderId) {
         this.messageId = messageId;
         this.senderId = senderId;
-        this.receiverId = receiverId;
     }
 
-    public Message(String messageId, String senderId, String receiverId, String subject, String message,
+    public Message(String messageId, String senderId, String receiver, String subject, String message,
             LocalDateTime timestamp, List<String> attachedFiles, Map<String, List<MessageStatus>> status) {
         this.messageId = (messageId == null || messageId.isBlank()) ? UUID.randomUUID().toString() : messageId;
         this.senderId = (senderId == null || senderId.isBlank()) ? UUID.randomUUID().toString() : senderId;
-        this.receiverId = (receiverId == null || receiverId.isBlank()) ? UUID.randomUUID().toString() : receiverId;
+        this.receiver = receiver;
         this.subject = subject;
         this.message = message;
         this.timestamp = timestamp;
@@ -77,8 +75,8 @@ public class Message {
         return senderId;
     }
 
-    public String getReceiverId() {
-        return receiverId;
+    public String getReceiver() {
+        return receiver;
     }
 
     public String getSubject() {
@@ -99,7 +97,7 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message{" + "messageId=" + messageId + ", senderId=" + senderId + ", receiverId=" + receiverId
+        return "Message{" + "messageId=" + messageId + ", senderId=" + senderId + ", receiver=" + receiver
                 + ", message='" + message + '\'' + ", timestamp=" + timestamp + '}';
     }
 }
