@@ -7,9 +7,9 @@ import java.nio.file.Files;
 import java.util.Base64;
 import javafx.scene.image.Image;
 
-public class ImageConvertor {
+public class FileConvertor {
 
-    private ImageConvertor() {
+    private FileConvertor() {
     }
 
     public static String imageToBase64(File file) throws IOException {

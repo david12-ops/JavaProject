@@ -4,7 +4,7 @@ import com.example.controller.ScreenController;
 import com.example.controller.UserController;
 import com.example.model.User;
 import com.example.model.UserToken;
-import com.example.utils.ImageConvertor;
+import com.example.utils.FileConvertor;
 import com.example.utils.services.StateEventService;
 
 import javafx.application.Platform;
@@ -27,7 +27,7 @@ public class Avatar extends VBox {
 
     public Avatar(Stage stage, User user) {
 
-        Image imgaeProfile = ImageConvertor.Base64ToImage(user.getProfileImage());
+        Image imgaeProfile = FileConvertor.Base64ToImage(user.getProfileImage());
         String firstLetter = user != null ? user.getMailAccount().substring(0, 1).toUpperCase() : null;
 
         Circle circle = new Circle(30);

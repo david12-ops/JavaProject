@@ -7,6 +7,16 @@
     -fx-text-fill: #333;
 }
 
+.text-area-field {
+    -fx-pref-height: 200px;
+    -fx-pref-width: 400px;
+    -fx-max-width: 400px;
+    -fx-padding: 8px;
+    -fx-border-color: #ccc;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
 .text-field,
 .password-field {
     -fx-pref-width: 250px;

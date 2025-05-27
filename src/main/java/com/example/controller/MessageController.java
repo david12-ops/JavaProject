@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.List;
 import com.example.model.Message;
 import com.example.model.MessageModel;
 import com.example.model.UserToken;
-import com.example.utils.enums.MessageType;
+import com.example.utils.enums.MessageStatus;
 
 public class MessageController {
     private MessageModel messageModel;
@@ -16,9 +17,17 @@ public class MessageController {
         this.messageModel = messageModel;
     }
 
-    public void sendMessage(String subject, String message, String senderId, String recevierId) {
-        Message newMessage = new Message(null, senderId, recevierId, subject, message, LocalDateTime.now());
-        messageModel.addMesssage(newMessage);
+    public String getError(String errorName) {
+        return messageModel.getError(errorName);
+    }
+
+    public void clearError(String errorName) {
+        messageModel.clearError(errorName);
+    }
+
+    public void sendMessage(UserToken senderToken, String recevierEmail, String subject, String message,
+            List<File> files) {
+        messageModel.addMesssage(senderToken, recevierEmail, subject, message, files);
     }
 
     public void responseToMessage() {
@@ -29,14 +38,14 @@ public class MessageController {
         messageModel.removeMessage(message);
     }
 
-    public List<Message> getMessages(MessageType type, UserToken userToken) {
+    public List<Message> getMessages(MessageStatus type, UserToken userToken) {
         List<Message> messages = new ArrayList<>();
 
-        if (type == MessageType.SENDED && userToken != null) {
-            messages = messageModel.getAllSendedMessagesByUser(userToken.getUserId());
+        if (type == MessageStatus.SENT && userToken != null) {
+            messages = messageModel.getAllSentMessagesByUser(userToken.getUserId());
         }
 
-        if (type == MessageType.RECEVIED && userToken != null) {
+        if (type == MessageStatus.INBOX && userToken != null) {
             messages = messageModel.getAllReceviedMessagesByUser(userToken.getUserId());
         }
 

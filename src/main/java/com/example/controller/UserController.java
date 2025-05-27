@@ -6,7 +6,7 @@ import java.util.List;
 import com.example.model.User;
 import com.example.model.UserModel;
 import com.example.model.UserToken;
-import com.example.utils.ImageConvertor;
+import com.example.utils.FileConvertor;
 import com.example.utils.enums.AddTypeOperation;
 import com.example.utils.enums.Form;
 import com.example.utils.enums.GetUserTypeOperation;
@@ -86,7 +86,7 @@ public class UserController implements AuthManagement, UserManagement {
         User user = getUser(null, null, GetUserTypeOperation.BYTOKEN);
 
         if (user != null && user.getProfileImage() != null) {
-            return ImageConvertor.Base64ToImage(user.getProfileImage());
+            return FileConvertor.Base64ToImage(user.getProfileImage());
         }
         return null;
     }

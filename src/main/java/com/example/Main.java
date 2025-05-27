@@ -10,6 +10,7 @@ import com.example.view.AddAnotherAccountScreen;
 import com.example.view.ForgotCredentialsScreen;
 import com.example.view.LoginScreen;
 import com.example.view.MainScreen;
+import com.example.view.NewMessageScreen;
 import com.example.view.RegisterScreen;
 import com.example.view.SwitchUserScreen;
 import com.example.view.UpdateAvatar;
@@ -42,6 +43,8 @@ public class Main extends Application {
                                 messageController);
                 UpdateAvatar updateAvatarScreen = new UpdateAvatar(primaryStage, screenController, userController,
                                 messageController);
+                NewMessageScreen newMessageScreen = new NewMessageScreen(primaryStage, screenController, userController,
+                                messageController);
 
                 Scene scene = new Scene(loginScreen, 400, 300);
                 screenController.setScene(scene);
@@ -53,6 +56,7 @@ public class Main extends Application {
                 screenController.addScreen("main", mainScreen);
                 screenController.addScreen("updateAvatarImage", updateAvatarScreen);
                 screenController.addScreen("switchUser", switchUserScreen);
+                screenController.addScreen("newMessage", newMessageScreen);
 
                 scene.getStylesheets().add(getClass().getResource("/styles/form.css").toExternalForm());
                 scene.getStylesheets().add(getClass().getResource("/styles/appBar.css").toExternalForm());

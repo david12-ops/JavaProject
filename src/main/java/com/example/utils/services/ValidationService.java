@@ -109,7 +109,6 @@ public class ValidationService {
         @Override
         public boolean nonDuplicateUserWithEmail(Operation operation, String currentUserEmail, String newEmail,
                 List<User> users) {
-            // This app does not allow changing email at all
 
             if (users != null && !users.isEmpty()) {
                 List<User> list = operation == Operation.UPDATE && currentUserEmail != null ? users.stream()
@@ -176,55 +175,52 @@ public class ValidationService {
         @Override
         public boolean validFiles(List<File> files) {
 
-            for (File file : files) {
-                String fileName = file.getName().toLowerCase();
+            if (files != null && files.size() > 5) {
+                errorToolManager.logError(
+                        errorToolManager.createErrorBody("file", "Too much attached files in one message (max. 5)"));
+                return false;
+            }
 
-                if (file.length() > MAX_FILE_SIZE) {
-                    errorToolManager.logError(errorToolManager.createErrorBody("file", "The file \"" + file.getName()
-                            + "\" is too big — only files smaller than 25 MB can be sent."));
-                    return false;
+            if (files != null) {
+                for (File file : files) {
+                    String fileName = file.getName().toLowerCase();
+
+                    if (file.length() > MAX_FILE_SIZE) {
+                        errorToolManager.logError(errorToolManager.createErrorBody("file", "The file \""
+                                + file.getName() + "\" is too big — only files smaller than 25 MB can be sent"));
+                        return false;
+                    }
+
+                    if (!fileName.matches(SUPPORTED_FILES)) {
+                        errorToolManager.logError(
+                                errorToolManager.createErrorBody("file", "Unsupported file type: " + file.getName()));
+                        return false;
+                    }
                 }
 
-                if (!fileName.matches(SUPPORTED_FILES)) {
-                    errorToolManager.logError(
-                            errorToolManager.createErrorBody("file", "Unsupported file type: " + file.getName()));
-                    return false;
-                }
+                return true;
             }
 
             return true;
         }
 
+        // TODO - validation of words and deeds
         @Override
-        public boolean validMessageData(String sender, String acceptor, String subject, String message,
-                List<String> kopies) {
+        public boolean validMessageData(String whom, String subject, String message) {
 
-            if (sender == null || !EMAIL_REGEX.matcher(sender).matches()) {
-                errorToolManager.logError(errorToolManager.createErrorBody("sender",
+            if (whom == null || !EMAIL_REGEX.matcher(whom).matches()) {
+                errorToolManager.logError(errorToolManager.createErrorBody("email",
                         "Please enter a valid email address (e.g., user@example.com)"));
                 return false;
             }
 
-            if (acceptor == null || !EMAIL_REGEX.matcher(acceptor).matches()) {
-                errorToolManager.logError(errorToolManager.createErrorBody("acceptor",
-                        "Please enter a valid email address (e.g., user@example.com)"));
-                return false;
-            }
-
-            if (subject != null && subject.length() > 500) {
+            if (subject != null && subject.length() > 50) {
                 errorToolManager.logError(errorToolManager.createErrorBody("subject", "Subject is too long"));
                 return false;
             }
 
-            if (message != null && message.length() > 10000) {
+            if (message != null && message.length() > 225) {
                 errorToolManager.logError(errorToolManager.createErrorBody("message", "Message is too long"));
-                return false;
-            }
-
-            if (kopies != null && kopies.size() > 500) {
-
-                errorToolManager.logError(errorToolManager.createErrorBody("kopies",
-                        "Too many recipients — you can't send more than 500 at once"));
                 return false;
             }
 

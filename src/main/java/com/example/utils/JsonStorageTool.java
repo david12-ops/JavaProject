@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 class FilePersistence<T> {
 
@@ -24,6 +25,7 @@ class FilePersistence<T> {
     private List<T> items;
 
     public FilePersistence(String fileName, TypeReference<List<T>> typeReference, List<T> items) {
+        objectMapper.registerModule(new JavaTimeModule());
         this.filePath = Path.of(FOLDER_PATH, fileName);
         this.typeReference = typeReference;
         this.items = items;

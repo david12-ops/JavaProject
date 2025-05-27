@@ -37,7 +37,7 @@ public class SideBar extends VBox {
 
                 Button addButton = new Button("New message");
                 addButton.setOnAction(e -> {
-                        screenController.activate("main", stage);
+                        screenController.activate("newMessage", stage);
                 });
 
                 Button inboxButton = new Button("Inbox");

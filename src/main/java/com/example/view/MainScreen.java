@@ -6,7 +6,7 @@ import com.example.controller.ScreenController;
 import com.example.controller.UserController;
 import com.example.model.Message;
 import com.example.model.UserToken;
-import com.example.utils.enums.MessageType;
+import com.example.utils.enums.MessageStatus;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -29,7 +29,7 @@ public class MainScreen extends VBox {
 
         UserToken userToken = userController.getLoggedUser();
 
-        List<Message> receviedMessages = messageController.getMessages(MessageType.RECEVIED, userToken);
+        List<Message> receviedMessages = messageController.getMessages(MessageStatus.INBOX, userToken);
 
         // listView.setCellFactory(lv -> new ListCell<>() {
         // @Override

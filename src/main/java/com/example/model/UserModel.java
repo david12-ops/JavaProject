@@ -9,7 +9,7 @@ import java.util.List;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.example.utils.ErrorToolManager;
-import com.example.utils.ImageConvertor;
+import com.example.utils.FileConvertor;
 import com.example.utils.JsonStorageTool;
 import com.example.utils.enums.AddTypeOperation;
 import com.example.utils.enums.Environment;
@@ -207,7 +207,7 @@ public class UserModel {
         }
 
         try {
-            String base64 = profileImage != null ? ImageConvertor.imageToBase64(profileImage) : null;
+            String base64 = profileImage != null ? FileConvertor.imageToBase64(profileImage) : null;
             user.setImage(base64);
             if (environment == Environment.PRODUCTION) {
                 storageTool.updateItem(user, user);
@@ -310,7 +310,7 @@ public class UserModel {
     }
 
     public List<User> getAllUserAccounts(UserToken userToken) {
-        if (getUserByToken(userToken) == null || userToken == null) {
+        if (userToken == null || getUserByToken(userToken) == null) {
             errorToolManager.logError(errorToolManager.createErrorBody("getAccounts",
                     "Invalid token or user not found by provided token"));
             return null;

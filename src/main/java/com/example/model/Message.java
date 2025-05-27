@@ -1,8 +1,11 @@
 package com.example.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import com.example.utils.enums.MessageStatus;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -20,8 +23,14 @@ public class Message {
     @JsonProperty("subject")
     private String subject;
 
-    @JsonProperty("description")
-    private String description;
+    @JsonProperty("message")
+    private String message;
+
+    @JsonProperty("attached_files")
+    private List<String> attachedFiles;
+
+    @JsonProperty("status")
+    Map<String, List<MessageStatus>> status;
 
     @JsonProperty("timestamp")
     private LocalDateTime timestamp;
@@ -34,14 +43,16 @@ public class Message {
         this.receiverId = receiverId;
     }
 
-    public Message(String messageId, String senderId, String receiverId, String subject, String description,
-            LocalDateTime timestamp) {
+    public Message(String messageId, String senderId, String receiverId, String subject, String message,
+            LocalDateTime timestamp, List<String> attachedFiles, Map<String, List<MessageStatus>> status) {
         this.messageId = (messageId == null || messageId.isBlank()) ? UUID.randomUUID().toString() : messageId;
         this.senderId = (senderId == null || senderId.isBlank()) ? UUID.randomUUID().toString() : senderId;
         this.receiverId = (receiverId == null || receiverId.isBlank()) ? UUID.randomUUID().toString() : receiverId;
         this.subject = subject;
-        this.description = description;
+        this.message = message;
         this.timestamp = timestamp;
+        this.status = status;
+        this.attachedFiles = attachedFiles;
     }
 
     /*
@@ -75,7 +86,7 @@ public class Message {
     }
 
     public String getMessage() {
-        return description;
+        return message;
     }
 
     public LocalDateTime getTimestamp() {
@@ -89,6 +100,6 @@ public class Message {
     @Override
     public String toString() {
         return "Message{" + "messageId=" + messageId + ", senderId=" + senderId + ", receiverId=" + receiverId
-                + ", message='" + description + '\'' + ", timestamp=" + timestamp + '}';
+                + ", message='" + message + '\'' + ", timestamp=" + timestamp + '}';
     }
 }
