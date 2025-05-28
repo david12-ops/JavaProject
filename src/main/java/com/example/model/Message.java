@@ -30,8 +30,8 @@ public class Message {
     @JsonProperty("attached_files")
     private List<String> attachedFiles;
 
-    @JsonProperty("status")
-    private Map<String, Set<MessageStatus>> status;
+    @JsonProperty("statuses")
+    private Map<String, Set<MessageStatus>> statuses;
 
     @JsonProperty("timestamp")
     private LocalDateTime timestamp;
@@ -43,14 +43,14 @@ public class Message {
     }
 
     public Message(String messageId, String senderId, String receiver, String subject, String message,
-            LocalDateTime timestamp, List<String> attachedFiles, Map<String, Set<MessageStatus>> status) {
+            LocalDateTime timestamp, List<String> attachedFiles, Map<String, Set<MessageStatus>> statuses) {
         this.messageId = (messageId == null || messageId.isBlank()) ? UUID.randomUUID().toString() : messageId;
         this.senderId = senderId;
         this.receiver = receiver;
         this.subject = subject;
         this.message = message;
         this.timestamp = timestamp;
-        this.status = status;
+        this.statuses = statuses;
         this.attachedFiles = attachedFiles;
     }
 
@@ -96,12 +96,12 @@ public class Message {
         return attachedFiles;
     }
 
-    public Map<String, Set<MessageStatus>> getStatus() {
-        return status;
+    public Map<String, Set<MessageStatus>> getStatuses() {
+        return statuses;
     }
 
-    public void setStatus(String key, Set<MessageStatus> status) {
-        this.status.put(key, status);
+    public void setStatuses(String key, Set<MessageStatus> statuses) {
+        this.statuses.put(key, statuses);
     }
 
     @Override

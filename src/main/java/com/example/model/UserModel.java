@@ -274,6 +274,7 @@ public class UserModel {
             user.setImage(base64);
             if (environment == Environment.PRODUCTION) {
                 storageTool.updateItem(user, user);
+                listOfUsers = storageTool.getItems();
             } else if (environment == Environment.TEST) {
                 listOfUsers.set(listOfUsers.indexOf(user), user);
             }

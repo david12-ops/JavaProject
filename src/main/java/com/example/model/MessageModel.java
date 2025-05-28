@@ -14,7 +14,10 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -31,6 +34,21 @@ public class MessageModel {
     private List<Message> listOfMessages;
     private JsonStorageTool<Message> storageTool;
     private Environment environment;
+    private Map<MessageStatus, Set<MessageStatus>> allowedByStatus;
+
+    private void defineMessageStatusTransition() {
+        Map<MessageStatus, Set<MessageStatus>> map = new HashMap<>();
+
+        map.put(MessageStatus.INBOX, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED, MessageStatus.SNOOZED));
+        map.put(MessageStatus.SENT, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED, MessageStatus.SNOOZED));
+        map.put(MessageStatus.STARRED, EnumSet.of(MessageStatus.TRASH, MessageStatus.SNOOZED));
+
+        map.put(MessageStatus.SNOOZED, Set.of());
+        map.put(MessageStatus.DRAFTS, Set.of());
+        map.put(MessageStatus.TRASH, Set.of());
+
+        allowedByStatus = Collections.unmodifiableMap(map);
+    }
 
     public MessageModel(Environment environment) {
         this.environment = environment;
@@ -39,14 +57,16 @@ public class MessageModel {
                     new TypeReference<List<Message>>() {
                     });
             this.listOfMessages = storageTool.getItems();
+            defineMessageStatusTransition();
         } else if (environment == Environment.TEST) {
             this.listOfMessages = new ArrayList<>();
+            defineMessageStatusTransition();
         }
     }
 
     // Support Methods
     private void applyMessageAdding(Message message) {
-        clearError("addMesssage");
+        clearError("addMessage");
         if (environment == Environment.PRODUCTION) {
             storageTool.addItem(message);
             listOfMessages = storageTool.getItems();
@@ -55,20 +75,28 @@ public class MessageModel {
         }
     }
 
-    private boolean containsOnlySupportedStatuses(Map<String, Set<MessageStatus>> messageStatus,
+    private boolean isStatusUpdateAllowed(Message message, MessageStatus newStatus, String userKey) {
+        Set<MessageStatus> messageStatuses = message.getStatuses().get(userKey);
+        for (MessageStatus status : messageStatuses) {
+            if (!allowedByStatus.get(status).contains(newStatus)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean containsOnlySupportedStatuses(Map<String, Set<MessageStatus>> messageStatuses,
             List<MessageStatus> expectedMessageStatus) {
-        boolean expectedStatus = false;
-        for (Set<MessageStatus> statuses : messageStatus.values()) {
+        for (Set<MessageStatus> statuses : messageStatuses.values()) {
             for (MessageStatus status : statuses) {
-                if (expectedMessageStatus.contains(status)) {
-                    expectedStatus = true;
-                } else {
-                    expectedStatus = false;
+                if (!expectedMessageStatus.contains(status)) {
+                    return false;
                 }
             }
         }
 
-        return expectedStatus;
+        return true;
     }
 
     // Methods that implement the main logic
@@ -113,28 +141,58 @@ public class MessageModel {
             }
         }).filter(Objects::nonNull).toList() : null;
 
-        Map<String, Set<MessageStatus>> messageStatus = new HashMap<>();
-        messageStatus.put(senderToken.getUserId(), Set.of(MessageStatus.SENT));
-        messageStatus.put(recevierEmail, Set.of(MessageStatus.INBOX));
+        Map<String, Set<MessageStatus>> messageStatuses = new HashMap<>();
+        messageStatuses.put(senderToken.getUserId(), Set.of(MessageStatus.SENT));
+        messageStatuses.put(recevierEmail, Set.of(MessageStatus.INBOX));
 
-        if (!containsOnlySupportedStatuses(messageStatus, List.of(MessageStatus.SENT, MessageStatus.INBOX))) {
+        if (!containsOnlySupportedStatuses(messageStatuses, List.of(MessageStatus.SENT, MessageStatus.INBOX))) {
             errorToolManager.logError(
                     errorToolManager.createErrorBody("addMessage", "Message contains unsupported status values"));
             return;
         }
 
         Message newMessage = new Message(null, senderToken.getUserId(), recevierEmail, subject, message,
-                LocalDateTime.now(), base64Files, messageStatus);
+                LocalDateTime.now(), base64Files, messageStatuses);
 
         applyMessageAdding(newMessage);
     }
 
     public void removeMessage(Message message) {
-        storageTool.removeItem(message);
+        if (environment == Environment.PRODUCTION) {
+            storageTool.removeItem(message);
+            listOfMessages = storageTool.getItems();
+        } else if (environment == Environment.TEST) {
+            listOfMessages.remove(message);
+        }
     }
 
-    public void updateMessageStatus(Message message, String aacount, MessageStatus status) {
-        message.setStatus(aacount, Set.of(status));
+    public void updateMessageStatus(Message message, MessageStatus statusFrom, MessageStatus statusTo,
+            UserToken userToken) {
+
+        if (userToken == null) {
+            errorToolManager
+                    .logError(errorToolManager.createErrorBody("updateMessageStatus", "Token of user required"));
+            return;
+        }
+
+        String userKey = statusFrom == MessageStatus.INBOX ? userToken.getMailAccount() : userToken.getUserId();
+
+        if (!isStatusUpdateAllowed(message, statusTo, userKey)) {
+            errorToolManager.logError(
+                    errorToolManager.createErrorBody("updateMessageStatus", "Message status update is not allowed"));
+            return;
+        }
+
+        Set<MessageStatus> currenMessageStatuses = new HashSet<>(message.getStatuses().getOrDefault(userKey, Set.of()));
+        currenMessageStatuses.add(statusTo);
+        message.setStatuses(userKey, currenMessageStatuses);
+
+        if (environment == Environment.PRODUCTION) {
+            storageTool.updateItem(message, message);
+            listOfMessages = storageTool.getItems();
+        } else if (environment == Environment.TEST) {
+            listOfMessages.set(listOfMessages.indexOf(message), message);
+        }
     }
 
     public List<Message> getAllReceviedMessagesByUser(String recevierEmail) {
@@ -144,5 +202,4 @@ public class MessageModel {
     public List<Message> getAllSentMessagesByUser(String userId) {
         return listOfMessages.stream().filter(message -> message.getSenderId().equals(userId)).toList();
     }
-
 }
