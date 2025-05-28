@@ -1,6 +1,7 @@
 package com.example.components;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +81,11 @@ public class FileChooserUI extends VBox {
         VBox filePreview = new VBox(10, removeButton, icon, fileNameLabel);
         filePreview.setPadding(new Insets(5));
         filePreview.setAlignment(Pos.CENTER);
-        removeButton.setOnAction(e -> fileBox.getChildren().remove(filePreview));
+        removeButton.setOnAction(e -> {
+            selectedFiles = new ArrayList(selectedFiles);
+            selectedFiles.remove(file);
+            fileBox.getChildren().remove(filePreview);
+        });
 
         return filePreview;
     }
@@ -133,14 +138,14 @@ public class FileChooserUI extends VBox {
             attachFileBox.getChildren().clear();
 
             if (!fileBox.getChildren().isEmpty()) {
-                attachedFilesErrorLabel.setText("");
-                messageController.clearError("file");
                 attachFileBox.getChildren().addAll(scrollPane, attachButton);
                 VBox.setMargin(attachButton, new Insets(10, 0, 0, 0));
-            } else {
                 attachedFilesErrorLabel.setText("");
                 messageController.clearError("file");
+            } else {
                 attachFileBox.getChildren().add(attachButton);
+                attachedFilesErrorLabel.setText("");
+                messageController.clearError("file");
             }
         });
 
