@@ -43,14 +43,7 @@ public class UserModel {
         }
     }
 
-    public void setTestData(List<User> listOfUsers) {
-        this.listOfUsers = listOfUsers;
-    }
-
-    public List<User> getTestData() {
-        return listOfUsers;
-    }
-
+    // Support Methods
     private boolean validatePasswords(String email, String currentPassword, String password,
             String confirmationPassword, Form form) {
 
@@ -79,6 +72,76 @@ public class UserModel {
             return false;
         }
 
+    }
+
+    private boolean applyUserUpdate(User user, User updatedUser, String confirmationPassword) {
+        if (environment == Environment.PRODUCTION) {
+            storageTool.updateItem(user, updatedUser);
+            listOfUsers = storageTool.getItems();
+        } else if (environment == Environment.TEST) {
+            int index = listOfUsers.indexOf(user);
+            if (index >= 0) {
+                listOfUsers.set(index, updatedUser);
+            } else {
+                errorToolManager
+                        .logError(errorToolManager.createErrorBody("updateUser", "User not found in test user list"));
+            }
+        }
+
+        boolean updated = getUserByEmailAndPassword(updatedUser.getMailAccount(), confirmationPassword) != null;
+        if (updated) {
+            clearError("updateUser");
+        }
+
+        return updated;
+    }
+
+    private boolean applyUserAdding(User user, String email, String confirmationPassword) {
+        if (environment == Environment.PRODUCTION) {
+            storageTool.addItem(user);
+            listOfUsers = storageTool.getItems();
+        } else if (environment == Environment.TEST) {
+            listOfUsers.add(user);
+        }
+
+        boolean added = getUserByEmailAndPassword(email, confirmationPassword) != null;
+        if (added) {
+            clearError("addAccount");
+        }
+
+        return added;
+    }
+
+    private User getUserByEmailAndPassword(String email, String password) {
+        for (User user : listOfUsers) {
+            if (user.getMailAccount().equals(email) && BCrypt.checkpw(password, user.getPassword())) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    private User getUserByToken(UserToken userToken) {
+        for (User user : listOfUsers) {
+            if (user.getUserId().equals(userToken.getUserId())
+                    && user.getMailAccount().equals(userToken.getMailAccount())) {
+                return user;
+            }
+        }
+        return null;
+    }
+
+    private boolean isFormSupported(Form form) {
+        return form == Form.ADDACCOUNT || form == Form.FORGOTCREDENTIALS || form == Form.REGISTER;
+    }
+
+    // Methods that implement the main logic
+    public void setTestData(List<User> listOfUsers) {
+        this.listOfUsers = listOfUsers;
+    }
+
+    public List<User> getTestData() {
+        return listOfUsers;
     }
 
     public boolean addUser(String emailAccount, String password, String confirmationPassword, UserToken userToken,
@@ -248,67 +311,6 @@ public class UserModel {
         return null;
     }
 
-    private boolean applyUserUpdate(User user, User updatedUser, String confirmationPassword) {
-        if (environment == Environment.PRODUCTION) {
-            storageTool.updateItem(user, updatedUser);
-            listOfUsers = storageTool.getItems();
-        } else if (environment == Environment.TEST) {
-            int index = listOfUsers.indexOf(user);
-            if (index >= 0) {
-                listOfUsers.set(index, updatedUser);
-            } else {
-                errorToolManager
-                        .logError(errorToolManager.createErrorBody("updateUser", "User not found in test user list"));
-            }
-        }
-
-        boolean updated = getUserByEmailAndPassword(updatedUser.getMailAccount(), confirmationPassword) != null;
-        if (updated) {
-            clearError("updateUser");
-        }
-
-        return updated;
-    }
-
-    private boolean applyUserAdding(User user, String email, String confirmationPassword) {
-        if (environment == Environment.PRODUCTION) {
-            storageTool.addItem(user);
-            listOfUsers = storageTool.getItems();
-        } else if (environment == Environment.TEST) {
-            listOfUsers.add(user);
-        }
-
-        boolean added = getUserByEmailAndPassword(email, confirmationPassword) != null;
-        if (added) {
-            clearError("addAccount");
-        }
-
-        return added;
-    }
-
-    private User getUserByEmailAndPassword(String email, String password) {
-        for (User user : listOfUsers) {
-            if (user.getMailAccount().equals(email) && BCrypt.checkpw(password, user.getPassword())) {
-                return user;
-            }
-        }
-        return null;
-    }
-
-    private User getUserByToken(UserToken userToken) {
-        for (User user : listOfUsers) {
-            if (user.getUserId().equals(userToken.getUserId())
-                    && user.getMailAccount().equals(userToken.getMailAccount())) {
-                return user;
-            }
-        }
-        return null;
-    }
-
-    private boolean isFormSupported(Form form) {
-        return form == Form.ADDACCOUNT || form == Form.FORGOTCREDENTIALS || form == Form.REGISTER;
-    }
-
     public List<User> getAllUserAccounts(UserToken userToken) {
         if (userToken == null || getUserByToken(userToken) == null) {
             errorToolManager.logError(errorToolManager.createErrorBody("getAccounts",
@@ -318,4 +320,5 @@ public class UserModel {
 
         return listOfUsers.stream().filter(user -> user.getGroupId().equals(userToken.getGroupId())).toList();
     }
+
 }

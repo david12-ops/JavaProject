@@ -26,7 +26,7 @@ public class MessageController {
 
     public void addMessage(UserToken senderToken, String recevierEmail, String subject, String message,
             List<File> files) {
-        messageModel.addMesssage(senderToken, recevierEmail, subject, message, files);
+        messageModel.addMessage(senderToken, recevierEmail, subject, message, files);
     }
 
     public void responseToMessage() {

@@ -23,7 +23,7 @@ public class Main extends Application {
 
         // Icons use from - https://icons8.com
         private UserModel userModel = new UserModel(Environment.PRODUCTION);
-        private MessageModel messageModel = new MessageModel();
+        private MessageModel messageModel = new MessageModel(Environment.PRODUCTION);
         private UserController userController = new UserController(userModel);
         private MessageController messageController = new MessageController(messageModel);
         private ScreenController screenController;

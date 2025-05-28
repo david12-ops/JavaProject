@@ -3,6 +3,7 @@ package com.example.model;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.example.utils.enums.MessageStatus;
@@ -30,7 +31,7 @@ public class Message {
     private List<String> attachedFiles;
 
     @JsonProperty("status")
-    Map<String, List<MessageStatus>> status;
+    private Map<String, Set<MessageStatus>> status;
 
     @JsonProperty("timestamp")
     private LocalDateTime timestamp;
@@ -42,9 +43,9 @@ public class Message {
     }
 
     public Message(String messageId, String senderId, String receiver, String subject, String message,
-            LocalDateTime timestamp, List<String> attachedFiles, Map<String, List<MessageStatus>> status) {
+            LocalDateTime timestamp, List<String> attachedFiles, Map<String, Set<MessageStatus>> status) {
         this.messageId = (messageId == null || messageId.isBlank()) ? UUID.randomUUID().toString() : messageId;
-        this.senderId = (senderId == null || senderId.isBlank()) ? UUID.randomUUID().toString() : senderId;
+        this.senderId = senderId;
         this.receiver = receiver;
         this.subject = subject;
         this.message = message;
@@ -91,8 +92,16 @@ public class Message {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    public List<String> getAttachedFiles() {
+        return attachedFiles;
+    }
+
+    public Map<String, Set<MessageStatus>> getStatus() {
+        return status;
+    }
+
+    public void setStatus(String key, Set<MessageStatus> status) {
+        this.status.put(key, status);
     }
 
     @Override

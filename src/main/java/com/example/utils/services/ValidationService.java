@@ -2,7 +2,9 @@ package com.example.utils.services;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -168,6 +170,7 @@ public class ValidationService {
 
     public class MessageModelValidations implements MessageModelValidationsTools {
         private ErrorToolManager errorToolManager;
+        Map<Integer, String> messagePartForNullFiles = new HashMap<>();
 
         public MessageModelValidations(ErrorToolManager errorToolManager) {
             this.errorToolManager = errorToolManager;
@@ -176,6 +179,12 @@ public class ValidationService {
         @Override
         public boolean validFiles(List<File> files) {
 
+            messagePartForNullFiles.put(1, "first");
+            messagePartForNullFiles.put(2, "second");
+            messagePartForNullFiles.put(3, "third");
+            messagePartForNullFiles.put(4, "fourth");
+            messagePartForNullFiles.put(5, "fifth");
+
             if (files != null && files.size() > 5) {
                 errorToolManager.logError(
                         errorToolManager.createErrorBody("file", "Too much attached files in one message (max. 5)"));
@@ -183,7 +192,16 @@ public class ValidationService {
             }
 
             if (files != null) {
+
                 for (File file : files) {
+
+                    if (file == null) {
+                        errorToolManager.logError(errorToolManager.createErrorBody("file",
+                                "We couldn't process your " + messagePartForNullFiles.get(files.indexOf(file) + 1)
+                                        + " file. Make sure it's uploaded and in a supported format"));
+                        return false;
+                    }
+
                     String fileName = file.getName().toLowerCase();
 
                     if (file.length() > MAX_FILE_SIZE) {
@@ -214,7 +232,7 @@ public class ValidationService {
                 return false;
             }
 
-            if (isTextTooLong(subject, 30)) {
+            if (isTextTooLong(subject, 50)) {
                 errorToolManager.logError(errorToolManager.createErrorBody("subject", "Subject is too long"));
                 return false;
             }
