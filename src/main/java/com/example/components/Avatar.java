@@ -5,9 +5,10 @@ import com.example.controller.UserController;
 import com.example.model.User;
 import com.example.model.UserToken;
 import com.example.utils.FileConvertor;
-import com.example.utils.services.StateEventService;
 
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,6 +25,7 @@ import javafx.stage.Popup;
 import javafx.stage.Stage;
 
 public class Avatar extends VBox {
+    private final ObjectProperty<Image> imageProperty = new SimpleObjectProperty<>();
 
     public Avatar(Stage stage, User user) {
 
@@ -125,10 +127,8 @@ public class Avatar extends VBox {
             }
         });
 
-        StateEventService.getInstance().subscribe("updateAvatar", payload -> {
-            if (payload == null || payload instanceof Image) {
-                updateAvatarImage(circle, (Image) payload, letter);
-            }
+        imageProperty.addListener((obs, oldImage, newImage) -> {
+            updateAvatarImage(circle, newImage, letter);
         });
 
         this.getChildren().add(avatarStack);
@@ -145,6 +145,6 @@ public class Avatar extends VBox {
     }
 
     public void setImage(Image newImage) {
-        StateEventService.getInstance().emit("updateAvatar", newImage);
+        imageProperty.set(newImage);
     }
 }
