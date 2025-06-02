@@ -18,6 +18,9 @@ public class Message {
     @JsonProperty("sender_id")
     private final String senderId;
 
+    @JsonProperty("statuses")
+    private Map<String, Set<MessageStatus>> statuses;
+
     @JsonProperty("recevier")
     private String receiver;
 
@@ -29,9 +32,6 @@ public class Message {
 
     @JsonProperty("attached_files")
     private List<String> attachedFiles;
-
-    @JsonProperty("statuses")
-    private Map<String, Set<MessageStatus>> statuses;
 
     @JsonProperty("timestamp")
     private LocalDateTime timestamp;

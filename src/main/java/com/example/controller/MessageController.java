@@ -45,7 +45,7 @@ public class MessageController {
         }
 
         if (type == MessageStatus.INBOX && userToken != null) {
-            messages = messageModel.getAllReceviedMessagesByUser(userToken.getUserId());
+            messages = messageModel.getAllReceviedMessagesByUser(userToken.getMailAccount());
         }
 
         return messages;

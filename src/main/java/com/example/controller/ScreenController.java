@@ -50,28 +50,23 @@ public class ScreenController {
             switch (name) {
             case "login":
                 stage.setTitle("Log in");
-                stage.setWidth(700);
-                stage.setHeight(700);
+                stage.setMaximized(true);
                 break;
             case "updateAvatarImage":
                 stage.setTitle("Avatar Image update");
-                stage.setWidth(700);
-                stage.setHeight(700);
+                stage.setMaximized(true);
                 break;
             case "register":
                 stage.setTitle("Registration");
-                stage.setWidth(700);
-                stage.setHeight(700);
+                stage.setMaximized(true);
                 break;
             case "reset":
                 stage.setTitle("Reset Password");
-                stage.setWidth(700);
-                stage.setHeight(700);
+                stage.setMaximized(true);
                 break;
             case "addAnotherAccount":
                 stage.setTitle("Add another account");
-                stage.setWidth(700);
-                stage.setHeight(700);
+                stage.setMaximized(true);
                 break;
             case "switchUser":
                 stage.setTitle("Switch user");
@@ -87,8 +82,7 @@ public class ScreenController {
                 break;
             default:
                 stage.setTitle("Application");
-                stage.setWidth(700);
-                stage.setHeight(700);
+                stage.setMaximized(true);
             }
         } else {
             throw new IllegalArgumentException("Screen not found: " + name);

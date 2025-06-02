@@ -99,6 +99,8 @@ public class NewMessageScreen extends VBox implements GuiHelperFunctions {
             clearFields(whomField, subjectField, messageAreaField, whomErrorLabel, subjectErrorLabel,
                     messageTextAreaErrorLabel, messageController);
             fileChooserUI.clearFileBox();
+            screenController.updateScreen("main",
+                    new MainScreen(stage, screenController, userController, messageController));
             screenController.activate("main", stage);
         }
 
