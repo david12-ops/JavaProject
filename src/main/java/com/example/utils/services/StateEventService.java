@@ -2,13 +2,15 @@ package com.example.utils.services;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class StateEventService {
     private static final StateEventService instance = new StateEventService();
 
-    private final HashMap<String, HashSet<Consumer<Object>>> listeners = new HashMap<>();
-    private final HashMap<String, Object> lastEmittedValue = new HashMap<>();
+    private final Map<String, Set<Consumer<Object>>> listeners = new HashMap<>();
+    private final Map<String, Object> lastEmittedValue = new HashMap<>();
 
     private StateEventService() {
     }

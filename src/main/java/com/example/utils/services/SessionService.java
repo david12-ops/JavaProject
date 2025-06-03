@@ -2,13 +2,15 @@ package com.example.utils.services;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import com.example.model.User;
 import com.example.model.UserToken;
 
 public class SessionService {
 
     // syncronized getInstance/hasMap for multi acces - prevent race conditions
-    private ConcurrentHashMap<String, UserToken> activeSessions;
+    private ConcurrentMap<String, UserToken> activeSessions;
 
     // 'volatile' ensures changes to this variable are visible across all threads
     private static volatile SessionService instance;

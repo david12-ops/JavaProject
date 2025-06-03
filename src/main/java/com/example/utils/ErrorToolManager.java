@@ -1,16 +1,15 @@
 package com.example.utils;
 
 import java.util.AbstractMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.example.utils.interfaces.ErrorManagement;
 
 public class ErrorToolManager implements ErrorManagement {
-    private final HashMap<String, String> errorMap;
+    private final Map<String, String> errorMap;
 
-    public ErrorToolManager(HashMap<String, String> errorMap) {
+    public ErrorToolManager(Map<String, String> errorMap) {
         this.errorMap = errorMap;
     }
 

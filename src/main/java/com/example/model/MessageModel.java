@@ -26,7 +26,7 @@ import java.util.Set;
 public class MessageModel {
 
     static Dotenv dotenv = Dotenv.load();
-    private HashMap<String, String> errorMap = new HashMap<>();
+    private Map<String, String> errorMap = new HashMap<>();
     private final ErrorToolManager errorToolManager = new ErrorToolManager(errorMap);
     private final ValidationService validationService = new ValidationService();
     private final ValidationService.MessageModelValidations validator = validationService.new MessageModelValidations(

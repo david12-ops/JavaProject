@@ -1,13 +1,14 @@
 package com.example.controller;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
 public class ScreenController {
-    private final HashMap<String, Pane> screenMap = new HashMap<>();
+    private final Map<String, Pane> screenMap = new HashMap<>();
     private Scene main;
 
     public ScreenController(Scene main) {
