@@ -1,5 +1,5 @@
 package com.example.utils.enums;
 
-public enum Operation {
+public enum OperationType {
     CREATE, UPDATE
 }

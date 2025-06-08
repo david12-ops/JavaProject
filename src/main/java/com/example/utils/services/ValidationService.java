@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.example.model.User;
-import com.example.utils.ErrorToolManager;
-import com.example.utils.enums.Form;
-import com.example.utils.enums.Operation;
-import com.example.utils.interfaces.MessageModelValidationsTools;
-import com.example.utils.interfaces.UserModelValidationsTools;
+import com.example.utils.ErrorManager;
+import com.example.utils.enums.FormType;
+import com.example.utils.enums.OperationType;
+import com.example.utils.interfaces.MessageValidator;
+import com.example.utils.interfaces.UserValidator;
 
 public class ValidationService {
     private static final Pattern EMAIL_REGEX = Pattern
@@ -26,10 +26,10 @@ public class ValidationService {
     private static final String SUPPORTED_IMAGE_FILES = "(?i).*\\.(png|jpg|jpeg|gif)$";
     private static final String SUPPORTED_FILES = "(?i).*\\.(docx?|xlsx?|pptx?|pdf|txt|rtf|jpg|jpeg|png|gif|bmp|tiff|webp|mp4|mov|avi|wmv|mp3|wav|m4a|zip|7z|tar)$";
 
-    public class UserModelValidations implements UserModelValidationsTools {
-        private ErrorToolManager errorToolManager;
+    public class UserValidations implements UserValidator {
+        private ErrorManager errorToolManager;
 
-        public UserModelValidations(ErrorToolManager errorToolManager) {
+        public UserValidations(ErrorManager errorToolManager) {
             this.errorToolManager = errorToolManager;
         }
 
@@ -46,16 +46,16 @@ public class ValidationService {
         }
 
         @Override
-        public boolean validPassword(String currentPassword, String password, String email, Form form) {
+        public boolean validPassword(String currentPassword, String password, String email, FormType form) {
 
             if (password == null || !PASSWORD_REGEX.matcher(password).matches()) {
-                if (form == Form.ADDACCOUNT || form == Form.REGISTER) {
+                if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
                     errorToolManager.logError(errorToolManager.createErrorBody("password",
                             "Password must include uppercase, lowercase, number, and special character, and be at least 8 characters"));
                     return false;
                 }
 
-                if (form == Form.FORGOTCREDENTIALS) {
+                if (form == FormType.FORGOTCREDENTIALS) {
                     errorToolManager.logError(errorToolManager.createErrorBody("newPassword",
                             "New password must include uppercase, lowercase, number, and special character, and be at least 8 characters"));
                     return false;
@@ -74,14 +74,14 @@ public class ValidationService {
                 }
 
                 for (String part : parts) {
-                    if ((form == Form.ADDACCOUNT || form == Form.REGISTER) && lowerPassword.contains(part)
+                    if ((form == FormType.ADDACCOUNT || form == FormType.REGISTER) && lowerPassword.contains(part)
                             && emailPart.length() >= 4) {
                         errorToolManager.logError(
                                 errorToolManager.createErrorBody("password", "Password is too similar to your email"));
                         return false;
                     }
 
-                    if (form == Form.FORGOTCREDENTIALS && lowerPassword.contains(part) && emailPart.length() >= 4) {
+                    if (form == FormType.FORGOTCREDENTIALS && lowerPassword.contains(part) && emailPart.length() >= 4) {
                         errorToolManager.logError(errorToolManager.createErrorBody("newPassword",
                                 "New password is too similar to your email"));
                         return false;
@@ -93,13 +93,14 @@ public class ValidationService {
             // overlap, Common prefix/suffix comparison (optional)
 
             if (currentPassword != null) {
-                if ((form == Form.ADDACCOUNT || form == Form.REGISTER) && BCrypt.checkpw(password, currentPassword)) {
+                if ((form == FormType.ADDACCOUNT || form == FormType.REGISTER)
+                        && BCrypt.checkpw(password, currentPassword)) {
                     errorToolManager.logError(errorToolManager.createErrorBody("password",
                             "Password must be different from the current password"));
                     return false;
                 }
 
-                if (form == Form.FORGOTCREDENTIALS && BCrypt.checkpw(password, currentPassword)) {
+                if (form == FormType.FORGOTCREDENTIALS && BCrypt.checkpw(password, currentPassword)) {
                     errorToolManager.logError(errorToolManager.createErrorBody("newPassword",
                             "New password must be different from the current password"));
                     return false;
@@ -110,11 +111,11 @@ public class ValidationService {
         }
 
         @Override
-        public boolean nonDuplicateUserWithEmail(Operation operation, String currentUserEmail, String newEmail,
+        public boolean nonDuplicateUserWithEmail(OperationType operation, String currentUserEmail, String newEmail,
                 List<User> users) {
 
             if (users != null && !users.isEmpty()) {
-                List<User> list = operation == Operation.UPDATE && currentUserEmail != null ? users.stream()
+                List<User> list = operation == OperationType.UPDATE && currentUserEmail != null ? users.stream()
                         .filter(user -> !user.getMailAccount().equals(currentUserEmail)).collect(Collectors.toList())
                         : users;
 
@@ -132,15 +133,15 @@ public class ValidationService {
         }
 
         @Override
-        public boolean confirmedPassword(String password, String confirmationPassword, Form form) {
+        public boolean confirmedPassword(String password, String confirmationPassword, FormType form) {
 
             if (!password.equals(confirmationPassword)) {
-                if (form == Form.ADDACCOUNT || form == Form.REGISTER) {
+                if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
                     errorToolManager.logError(errorToolManager.createErrorBody("confirmPassword",
                             "Password does not match the confirmation"));
                 }
 
-                if (form == Form.FORGOTCREDENTIALS) {
+                if (form == FormType.FORGOTCREDENTIALS) {
                     errorToolManager.logError(errorToolManager.createErrorBody("confirmNewPassword",
                             "New password does not match the confirmation"));
                 }
@@ -168,11 +169,11 @@ public class ValidationService {
         }
     }
 
-    public class MessageModelValidations implements MessageModelValidationsTools {
-        private ErrorToolManager errorToolManager;
+    public class MessageValidations implements MessageValidator {
+        private ErrorManager errorToolManager;
         Map<Integer, String> messagePartForNullFiles = new HashMap<>();
 
-        public MessageModelValidations(ErrorToolManager errorToolManager) {
+        public MessageValidations(ErrorManager errorToolManager) {
             this.errorToolManager = errorToolManager;
         }
 

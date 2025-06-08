@@ -7,7 +7,7 @@ import javafx.scene.image.Image;
 import java.io.File;
 import java.io.IOException;
 
-public interface UserManagement {
+public interface AccountService {
 
     boolean addAnotherAccount(String emailAccount, String password, String confirmationPassword);
 

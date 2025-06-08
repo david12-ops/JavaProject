@@ -1,11 +1,11 @@
 package com.example;
 
 import com.example.model.User;
-import com.example.utils.ErrorToolManager;
-import com.example.utils.enums.Form;
-import com.example.utils.enums.Operation;
+import com.example.utils.ErrorManager;
+import com.example.utils.enums.FormType;
+import com.example.utils.enums.OperationType;
 import com.example.utils.services.ValidationService;
-import com.example.utils.services.ValidationService.UserModelValidations;
+import com.example.utils.services.ValidationService.UserValidations;
 
 import javafx.util.Pair;
 
@@ -27,20 +27,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class UserValidationsTest {
 
-        private ErrorToolManager errorToolManager;
+        private ErrorManager errorToolManager;
         private ValidationService validationService;
-        private UserModelValidations validator;
-        private Map<Form, String> errors;
+        private UserValidations validator;
+        private Map<FormType, String> errors;
 
         @BeforeEach
         void setup() {
-                this.errorToolManager = new ErrorToolManager(new HashMap<>());
+                this.errorToolManager = new ErrorManager(new HashMap<>());
                 this.validationService = new ValidationService();
-                this.validator = validationService.new UserModelValidations(errorToolManager);
+                this.validator = validationService.new UserValidations(errorToolManager);
                 this.errors = new HashMap<>();
         }
 
-        private void compareErrors(String expectedMessage, List<String> keys, ErrorToolManager errorToolManager) {
+        private void compareErrors(String expectedMessage, List<String> keys, ErrorManager errorToolManager) {
                 for (String key : keys) {
                         String errorMessage = errorToolManager.getError(key);
                         if (errorMessage != null) {
@@ -54,9 +54,9 @@ public class UserValidationsTest {
         @DisplayName("Should validate password confirmation fails for mismatches and succeeds for exact matches")
         void testPasswordMatchSuccess() {
 
-                errors.put(Form.ADDACCOUNT, "Password does not match the confirmation");
-                errors.put(Form.REGISTER, "Password does not match the confirmation");
-                errors.put(Form.FORGOTCREDENTIALS, "New password does not match the confirmation");
+                errors.put(FormType.ADDACCOUNT, "Password does not match the confirmation");
+                errors.put(FormType.REGISTER, "Password does not match the confirmation");
+                errors.put(FormType.FORGOTCREDENTIALS, "New password does not match the confirmation");
 
                 List<Pair<String, String>> invalidInputs = Arrays.asList(new Pair<>("Secret", "secret"), // case-sensitive
                                 new Pair<>("a@čbc", "ca@čb"), // different order
@@ -66,11 +66,12 @@ public class UserValidationsTest {
                 List<Pair<String, String>> validInputs = Arrays
                                 .asList(new Pair<>("long@stringwithtext", "long@stringwithtext"));
 
-                for (Form form : Arrays.asList(Form.ADDACCOUNT, Form.FORGOTCREDENTIALS, Form.REGISTER)) {
+                for (FormType form : Arrays.asList(FormType.ADDACCOUNT, FormType.FORGOTCREDENTIALS,
+                                FormType.REGISTER)) {
                         for (Pair<String, String> pair : invalidInputs) {
                                 assertFalse(validator.confirmedPassword(pair.getKey(), pair.getValue(), form));
 
-                                compareErrors(form == Form.ADDACCOUNT || form == Form.REGISTER
+                                compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
                                                 ? "Password does not match the confirmation"
                                                 : "New password does not match the confirmation",
                                                 Arrays.asList("confirmPassword", "confirmNewPassword"),
@@ -108,7 +109,8 @@ public class UserValidationsTest {
                                 new User(null, null, "michael.lee@example.com",
                                                 BCrypt.hashpw("Secure3$", BCrypt.gensalt())));
 
-                for (Form form : Arrays.asList(Form.ADDACCOUNT, Form.FORGOTCREDENTIALS, Form.REGISTER)) {
+                for (FormType form : Arrays.asList(FormType.ADDACCOUNT, FormType.FORGOTCREDENTIALS,
+                                FormType.REGISTER)) {
                         for (int i = 0; i < users.size(); i++) {
                                 User user = users.get(i);
                                 String validPassword = validPasswords.get(i);
@@ -116,7 +118,7 @@ public class UserValidationsTest {
 
                                 assertFalse(validator.validPassword(user.getPassword(),
                                                 tooSimilarPasswordsWithEmail.get(i), user.getMailAccount(), form));
-                                compareErrors(form == Form.ADDACCOUNT || form == Form.REGISTER
+                                compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
                                                 ? "Password is too similar to your email"
                                                 : "New password is too similar to your email",
                                                 Arrays.asList("password", "newPassword"), errorToolManager);
@@ -127,7 +129,7 @@ public class UserValidationsTest {
                                 assertFalse(validator.validPassword(user.getPassword(), sameAsCurrentPass,
                                                 user.getMailAccount(), form));
 
-                                compareErrors(form == Form.ADDACCOUNT || form == Form.REGISTER
+                                compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
                                                 ? "Password must be different from the current password"
                                                 : "New password must be different from the current password",
                                                 Arrays.asList("password", "newPassword"), errorToolManager);
@@ -135,7 +137,7 @@ public class UserValidationsTest {
                                 for (String password : invalidPasswords) {
                                         assertFalse(validator.validPassword(user.getPassword(), password,
                                                         user.getMailAccount(), form));
-                                        compareErrors(form == Form.ADDACCOUNT || form == Form.REGISTER
+                                        compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
                                                         ? "Password must include uppercase, lowercase, number, and special character, and be at least 8 characters"
                                                         : "New password must include uppercase, lowercase, number, and special character, and be at least 8 characters",
                                                         Arrays.asList("password", "newPassword"), errorToolManager);
@@ -206,14 +208,15 @@ public class UserValidationsTest {
                                 new User(null, null, "user1234@sub.domain.org",
                                                 BCrypt.hashpw("Password8!", BCrypt.gensalt())));
 
-                assertTrue(validator.nonDuplicateUserWithEmail(Operation.CREATE, null, "user12@sub.domain.org", users));
-                assertFalse(validator.nonDuplicateUserWithEmail(Operation.CREATE, null, "user1234@sub.domain.org",
+                assertTrue(validator.nonDuplicateUserWithEmail(OperationType.CREATE, null, "user12@sub.domain.org",
+                                users));
+                assertFalse(validator.nonDuplicateUserWithEmail(OperationType.CREATE, null, "user1234@sub.domain.org",
                                 users));
                 compareErrors("Provided email is already used", Arrays.asList("email"), errorToolManager);
 
-                assertTrue(validator.nonDuplicateUserWithEmail(Operation.UPDATE, "user@example.com",
+                assertTrue(validator.nonDuplicateUserWithEmail(OperationType.UPDATE, "user@example.com",
                                 "user.test12@sub.domain.org", users));
-                assertFalse(validator.nonDuplicateUserWithEmail(Operation.UPDATE, "user@example.com",
+                assertFalse(validator.nonDuplicateUserWithEmail(OperationType.UPDATE, "user@example.com",
                                 "user1234@sub.domain.org", users));
                 compareErrors("Provided email is already used", Arrays.asList("email"), errorToolManager);
         }

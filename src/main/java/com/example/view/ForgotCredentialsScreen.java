@@ -3,7 +3,7 @@ package com.example.view;
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
 import com.example.model.UserToken;
-import com.example.utils.interfaces.GuiHelperFunctions;
+import com.example.utils.interfaces.GuiErrorHelper;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -16,7 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
-public class ForgotCredentialsScreen extends VBox implements GuiHelperFunctions {
+public class ForgotCredentialsScreen extends VBox implements GuiErrorHelper {
 
     @Override
     public Label createErrorLabel() {

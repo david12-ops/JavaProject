@@ -8,7 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.example.utils.ErrorToolManager;
+import com.example.utils.ErrorManager;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,11 +16,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 public class ErrorToolManagerTest {
 
-    private ErrorToolManager errorToolManager;
+    private ErrorManager errorToolManager;
 
     @BeforeEach
     void setup() {
-        this.errorToolManager = new ErrorToolManager(new HashMap<>());
+        this.errorToolManager = new ErrorManager(new HashMap<>());
     }
 
     private List<Entry<String, String>> sampleErrors() {

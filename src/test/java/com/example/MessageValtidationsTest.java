@@ -19,18 +19,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.model.Message;
-import com.example.utils.ErrorToolManager;
+import com.example.utils.ErrorManager;
 import com.example.utils.enums.MessageStatus;
 import com.example.utils.services.ValidationService;
-import com.example.utils.services.ValidationService.MessageModelValidations;
+import com.example.utils.services.ValidationService.MessageValidations;
 
 @ExtendWith(MockitoExtension.class)
 public class MessageValtidationsTest {
-    private ErrorToolManager errorToolManager;
+    private ErrorManager errorToolManager;
     private ValidationService validationService;
-    private MessageModelValidations validator;
+    private MessageValidations validator;
 
-    private void compareErrors(String expectedMessage, String key, ErrorToolManager errorToolManager) {
+    private void compareErrors(String expectedMessage, String key, ErrorManager errorToolManager) {
         String errorMessage = errorToolManager.getError(key);
         if (errorMessage != null) {
             assertEquals(expectedMessage, errorMessage, "Mismatch in error message for key " + key);
@@ -49,9 +49,9 @@ public class MessageValtidationsTest {
 
     @BeforeEach
     void setup() {
-        this.errorToolManager = new ErrorToolManager(new HashMap<>());
+        this.errorToolManager = new ErrorManager(new HashMap<>());
         this.validationService = new ValidationService();
-        this.validator = validationService.new MessageModelValidations(errorToolManager);
+        this.validator = validationService.new MessageValidations(errorToolManager);
     }
 
     @Test

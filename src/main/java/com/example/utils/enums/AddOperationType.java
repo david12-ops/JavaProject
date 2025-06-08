@@ -1,5 +1,5 @@
 package com.example.utils.enums;
 
-public enum AddTypeOperation {
+public enum AddOperationType {
     ANOTHERACCOUNT, NEWACCOUNT
 }

@@ -7,7 +7,7 @@ import com.example.components.FileChooserUI;
 import com.example.controller.MessageController;
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
-import com.example.utils.interfaces.GuiHelperFunctions;
+import com.example.utils.interfaces.GuiErrorHelper;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -20,7 +20,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
-public class NewMessageScreen extends VBox implements GuiHelperFunctions {
+public class NewMessageScreen extends VBox implements GuiErrorHelper {
 
     @Override
     public Label createErrorLabel() {

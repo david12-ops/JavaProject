@@ -9,44 +9,39 @@ import java.util.Map;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import com.example.utils.ErrorToolManager;
+import com.example.utils.ErrorManager;
 import com.example.utils.FileConvertor;
 import com.example.utils.JsonStorageTool;
-import com.example.utils.enums.AddTypeOperation;
-import com.example.utils.enums.Environment;
-import com.example.utils.enums.Form;
-import com.example.utils.enums.Operation;
+import com.example.utils.enums.AddOperationType;
+import com.example.utils.enums.EnvironmentType;
+import com.example.utils.enums.FormType;
+import com.example.utils.enums.OperationType;
 import com.example.utils.services.ValidationService;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
-public class UserModel {
+public class UserRepository {
 
     static Dotenv dotenv = Dotenv.load();
-    private Map<String, String> errorMap = new HashMap<>();
-    private final ErrorToolManager errorToolManager = new ErrorToolManager(errorMap);
-    private final ValidationService validationService = new ValidationService();
-    private final ValidationService.UserModelValidations validator = validationService.new UserModelValidations(
-            errorToolManager);
     private List<User> listOfUsers;
     private JsonStorageTool<User> storageTool;
-    private Environment environment;
+    private EnvironmentType environment;
 
-    public UserModel(Environment environment) {
+    public UserRepository(EnvironmentType environment) {
         this.environment = environment;
-        if (environment == Environment.PRODUCTION) {
+        if (environment == EnvironmentType.PRODUCTION) {
             storageTool = new JsonStorageTool<User>(dotenv.get("FILE_PATH_USERS"), new TypeReference<List<User>>() {
             });
             this.listOfUsers = storageTool.getItems();
-        } else if (environment == Environment.TEST) {
+        } else if (environment == EnvironmentType.TEST) {
             this.listOfUsers = new ArrayList<>();
         }
     }
 
     // Support Methods
     private boolean validatePasswords(String email, String currentPassword, String password,
-            String confirmationPassword, Form form) {
+            String confirmationPassword, FormType form) {
 
         clearError("validation");
         if (isFormSupported(form)) {
@@ -59,8 +54,8 @@ public class UserModel {
         }
     }
 
-    private boolean validateData(Operation operation, String currentEmail, String newEmail, String currentPassword,
-            String password, String confirmationPassword, Form form) {
+    private boolean validateData(OperationType operation, String currentEmail, String newEmail, String currentPassword,
+            String password, String confirmationPassword, FormType form) {
 
         clearError("validation");
         if (isFormSupported(form)) {
@@ -76,10 +71,10 @@ public class UserModel {
     }
 
     private boolean applyUserUpdate(User user, User updatedUser, String confirmationPassword) {
-        if (environment == Environment.PRODUCTION) {
+        if (environment == EnvironmentType.PRODUCTION) {
             storageTool.updateItem(user, updatedUser);
             listOfUsers = storageTool.getItems();
-        } else if (environment == Environment.TEST) {
+        } else if (environment == EnvironmentType.TEST) {
             int index = listOfUsers.indexOf(user);
             if (index >= 0) {
                 listOfUsers.set(index, updatedUser);
@@ -98,10 +93,10 @@ public class UserModel {
     }
 
     private boolean applyUserAdding(User user, String email, String confirmationPassword) {
-        if (environment == Environment.PRODUCTION) {
+        if (environment == EnvironmentType.PRODUCTION) {
             storageTool.addItem(user);
             listOfUsers = storageTool.getItems();
-        } else if (environment == Environment.TEST) {
+        } else if (environment == EnvironmentType.TEST) {
             listOfUsers.add(user);
         }
 
@@ -132,8 +127,8 @@ public class UserModel {
         return null;
     }
 
-    private boolean isFormSupported(Form form) {
-        return form == Form.ADDACCOUNT || form == Form.FORGOTCREDENTIALS || form == Form.REGISTER;
+    private boolean isFormSupported(FormType form) {
+        return form == FormType.ADDACCOUNT || form == FormType.FORGOTCREDENTIALS || form == FormType.REGISTER;
     }
 
     // Methods that implement the main logic
@@ -146,7 +141,7 @@ public class UserModel {
     }
 
     public boolean addUser(String emailAccount, String password, String confirmationPassword, UserToken userToken,
-            AddTypeOperation addTypeOperation, Form form) {
+            AddOperationType addTypeOperation, FormType form) {
 
         if (!isFormSupported(form)) {
             errorToolManager
@@ -154,22 +149,22 @@ public class UserModel {
             return false;
         }
 
-        if (addTypeOperation == AddTypeOperation.NEWACCOUNT) {
-            if (validateData(Operation.CREATE, null, emailAccount, null, password, confirmationPassword, form)) {
+        if (addTypeOperation == AddOperationType.NEWACCOUNT) {
+            if (validateData(OperationType.CREATE, null, emailAccount, null, password, confirmationPassword, form)) {
                 User newUser = new User(null, null, emailAccount, BCrypt.hashpw(password, BCrypt.gensalt()));
                 return applyUserAdding(newUser, emailAccount, confirmationPassword);
             }
             return false;
         }
 
-        if (addTypeOperation == AddTypeOperation.ANOTHERACCOUNT) {
+        if (addTypeOperation == AddOperationType.ANOTHERACCOUNT) {
             if (userToken == null) {
                 errorToolManager.logError(errorToolManager.createErrorBody("addAccount", "User token is required"));
                 return false;
             }
 
             User loggedUser = getUserByToken(userToken);
-            if (loggedUser != null && validateData(Operation.CREATE, null, emailAccount, loggedUser.getPassword(),
+            if (loggedUser != null && validateData(OperationType.CREATE, null, emailAccount, loggedUser.getPassword(),
                     password, confirmationPassword, form)) {
                 User newUser = new User(null, loggedUser.getGroupId(), emailAccount,
                         BCrypt.hashpw(password, BCrypt.gensalt()));
@@ -195,10 +190,10 @@ public class UserModel {
         }
 
         if (loggedUser != null && !loggedUser.getMailAccount().equals(user.getMailAccount())) {
-            if (environment == Environment.PRODUCTION) {
+            if (environment == EnvironmentType.PRODUCTION) {
                 storageTool.removeItem(user);
                 listOfUsers = storageTool.getItems();
-            } else if (environment == Environment.TEST) {
+            } else if (environment == EnvironmentType.TEST) {
                 listOfUsers.remove(user);
             }
 
@@ -217,7 +212,7 @@ public class UserModel {
         return false;
     }
 
-    public boolean updateUser(UserToken userToken, String password, String confirmationPassword, Form form) {
+    public boolean updateUser(UserToken userToken, String password, String confirmationPassword, FormType form) {
         User foundUser = getUserByToken(userToken);
 
         if (foundUser == null) {
@@ -238,7 +233,7 @@ public class UserModel {
         return applyUserUpdate(foundUser, updatedUser, confirmationPassword);
     }
 
-    public boolean updateUser(User user, String password, String confirmationPassword, Form form) {
+    public boolean updateUser(User user, String password, String confirmationPassword, FormType form) {
 
         if (user == null) {
             errorToolManager.logError(errorToolManager.createErrorBody("updateUser", "User is required"));
@@ -273,10 +268,10 @@ public class UserModel {
         try {
             String base64 = profileImage != null ? FileConvertor.imageToBase64(profileImage) : null;
             user.setImage(base64);
-            if (environment == Environment.PRODUCTION) {
+            if (environment == EnvironmentType.PRODUCTION) {
                 storageTool.updateItem(user, user);
                 listOfUsers = storageTool.getItems();
-            } else if (environment == Environment.TEST) {
+            } else if (environment == EnvironmentType.TEST) {
                 listOfUsers.set(listOfUsers.indexOf(user), user);
             }
         } catch (IOException e) {

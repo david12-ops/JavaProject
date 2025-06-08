@@ -1,5 +1,5 @@
 package com.example.utils.enums;
 
-public enum Form {
+public enum FormType {
     ADDACCOUNT, FORGOTCREDENTIALS, REGISTER, LOGIN, UPDATEAVATAR, NEWMESSAGE
 }

@@ -5,7 +5,7 @@ import java.util.List;
 import com.example.model.User;
 import com.example.model.UserToken;
 
-public interface AuthManagement {
+public interface AuthService {
 
     boolean register(String emailAccount, String password, String confirmationPassword);
 

@@ -15,21 +15,21 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.model.User;
-import com.example.model.UserModel;
+import com.example.model.UserRepository;
 import com.example.model.UserToken;
-import com.example.utils.enums.AddTypeOperation;
-import com.example.utils.enums.Environment;
-import com.example.utils.enums.Form;
+import com.example.utils.enums.AddOperationType;
+import com.example.utils.enums.EnvironmentType;
+import com.example.utils.enums.FormType;
 
 @ExtendWith(MockitoExtension.class)
-public class UserModelTest {
+public class UserRepositoryTest {
 
-    private UserModel userModel;
+    private UserRepository userModel;
     private List<User> testDataUsers;
 
     @BeforeEach
     void setup() {
-        this.userModel = new UserModel(Environment.TEST);
+        this.userModel = new UserRepository(EnvironmentType.TEST);
         this.testDataUsers = createUsersWithNullProfileImages();
     }
 
@@ -143,15 +143,15 @@ public class UserModelTest {
         UserToken userToken = new UserToken("1", "groupA", "alice@example.com");
 
         userModel.addUser("test.addanother@gmail.com", "Example@123", "Example@123", userToken,
-                AddTypeOperation.ANOTHERACCOUNT, Form.ADDACCOUNT);
+                AddOperationType.ANOTHERACCOUNT, FormType.ADDACCOUNT);
 
         assertTrue(data.stream().anyMatch(user -> user.getMailAccount().equals("test.addanother@gmail.com")));
 
         userModel.addUser("test.addanother@gmail.com", "Example@123", "Example@123", userToken,
-                AddTypeOperation.ANOTHERACCOUNT, Form.ADDACCOUNT);
+                AddOperationType.ANOTHERACCOUNT, FormType.ADDACCOUNT);
 
-        userModel.addUser("alice@example.com", "Example@123", "Example@123", userToken, AddTypeOperation.ANOTHERACCOUNT,
-                Form.ADDACCOUNT);
+        userModel.addUser("alice@example.com", "Example@123", "Example@123", userToken, AddOperationType.ANOTHERACCOUNT,
+                FormType.ADDACCOUNT);
 
         assertTrue(data.size() == 6);
     }
@@ -170,15 +170,15 @@ public class UserModelTest {
         UserToken userToken = new UserToken("1", "groupA", "alice@example.com");
 
         userModel.addUser("test.addanother@gmail.com", "Example@123", "Example@123", userToken,
-                AddTypeOperation.NEWACCOUNT, Form.REGISTER);
+                AddOperationType.NEWACCOUNT, FormType.REGISTER);
 
         assertTrue(data.stream().anyMatch(user -> user.getMailAccount().equals("test.addanother@gmail.com")));
 
         userModel.addUser("test.addanother@gmail.com", "Example@123", "Example@123", userToken,
-                AddTypeOperation.NEWACCOUNT, Form.REGISTER);
+                AddOperationType.NEWACCOUNT, FormType.REGISTER);
 
-        userModel.addUser("alice@example.com", "Example@123", "Example@123", userToken, AddTypeOperation.NEWACCOUNT,
-                Form.REGISTER);
+        userModel.addUser("alice@example.com", "Example@123", "Example@123", userToken, AddOperationType.NEWACCOUNT,
+                FormType.REGISTER);
 
         assertTrue(data.size() == 6);
     }
@@ -198,14 +198,14 @@ public class UserModelTest {
         User foundUser = userModel.getUserByCredentials("alice@example.com", "hashedPassword1!", null);
         assertNotNull(foundUser);
 
-        userModel.updateUser(foundUser, "Example@123456", "Example@123456", Form.FORGOTCREDENTIALS);
+        userModel.updateUser(foundUser, "Example@123456", "Example@123456", FormType.FORGOTCREDENTIALS);
 
         assertNotNull(userModel.getUserByCredentials("alice@example.com", "Example@123456", null));
 
         User foundUser2 = userModel.getUserByCredentials("bob@example.com", "hashedPassword2!", null);
         assertNotNull(foundUser2);
 
-        userModel.updateUser(foundUser2, "Example@123456789", "Example@123456789", Form.FORGOTCREDENTIALS);
+        userModel.updateUser(foundUser2, "Example@123456789", "Example@123456789", FormType.FORGOTCREDENTIALS);
 
         assertNull(userModel.getUserByCredentials("bob@example.com", "Example@123456", null));
     }
@@ -227,14 +227,14 @@ public class UserModelTest {
         User foundUser = userModel.getUserByCredentials(null, null, tokens.get(0));
         assertNotNull(foundUser);
 
-        userModel.updateUser(foundUser, "Example@123456", "Example@123456", Form.FORGOTCREDENTIALS);
+        userModel.updateUser(foundUser, "Example@123456", "Example@123456", FormType.FORGOTCREDENTIALS);
 
         assertNotNull(userModel.getUserByCredentials(foundUser.getMailAccount(), "Example@123456", null));
 
         User foundUser2 = userModel.getUserByCredentials(null, null, tokens.get(1));
         assertNotNull(foundUser2);
 
-        userModel.updateUser(foundUser2, "Example@123456789", "Example@123456789", Form.FORGOTCREDENTIALS);
+        userModel.updateUser(foundUser2, "Example@123456789", "Example@123456789", FormType.FORGOTCREDENTIALS);
 
         assertNull(userModel.getUserByCredentials(foundUser2.getMailAccount(), "Example@123456", null));
     }

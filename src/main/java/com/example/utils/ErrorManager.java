@@ -4,12 +4,12 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.example.utils.interfaces.ErrorManagement;
+import com.example.utils.interfaces.ErrorHandler;
 
-public class ErrorToolManager implements ErrorManagement {
+public class ErrorManager implements ErrorHandler {
     private final Map<String, String> errorMap;
 
-    public ErrorToolManager(Map<String, String> errorMap) {
+    public ErrorManager(Map<String, String> errorMap) {
         this.errorMap = errorMap;
     }
 

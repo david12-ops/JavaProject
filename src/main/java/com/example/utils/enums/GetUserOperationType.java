@@ -1,5 +1,5 @@
 package com.example.utils.enums;
 
-public enum GetUserTypeOperation {
+public enum GetUserOperationType {
     BYTOKEN, BYCREDENTIALS
 }

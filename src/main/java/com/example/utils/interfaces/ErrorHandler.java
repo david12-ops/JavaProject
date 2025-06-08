@@ -3,7 +3,7 @@ package com.example.utils.interfaces;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public interface ErrorManagement {
+public interface ErrorHandler {
 
     void logError(Entry<String, String> error);
 

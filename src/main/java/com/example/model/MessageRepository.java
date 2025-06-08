@@ -1,9 +1,9 @@
 package com.example.model;
 
-import com.example.utils.ErrorToolManager;
+import com.example.utils.ErrorManager;
 import com.example.utils.FileConvertor;
 import com.example.utils.JsonStorageTool;
-import com.example.utils.enums.Environment;
+import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.MessageStatus;
 import com.example.utils.services.ValidationService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,17 +23,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class MessageModel {
+public class MessageRepository {
 
     static Dotenv dotenv = Dotenv.load();
-    private Map<String, String> errorMap = new HashMap<>();
-    private final ErrorToolManager errorToolManager = new ErrorToolManager(errorMap);
-    private final ValidationService validationService = new ValidationService();
-    private final ValidationService.MessageModelValidations validator = validationService.new MessageModelValidations(
-            errorToolManager);
     private List<Message> listOfMessages;
     private JsonStorageTool<Message> storageTool;
-    private Environment environment;
+    private EnvironmentType environment;
     private Map<MessageStatus, Set<MessageStatus>> allowedByStatus;
 
     private void defineMessageStatusTransition() {
@@ -50,15 +45,15 @@ public class MessageModel {
         allowedByStatus = Collections.unmodifiableMap(map);
     }
 
-    public MessageModel(Environment environment) {
+    public MessageRepository(EnvironmentType environment) {
         this.environment = environment;
-        if (environment == Environment.PRODUCTION) {
+        if (environment == EnvironmentType.PRODUCTION) {
             storageTool = new JsonStorageTool<Message>(dotenv.get("FILE_PATH_MESSAGES"),
                     new TypeReference<List<Message>>() {
                     });
             this.listOfMessages = storageTool.getItems();
             defineMessageStatusTransition();
-        } else if (environment == Environment.TEST) {
+        } else if (environment == EnvironmentType.TEST) {
             this.listOfMessages = new ArrayList<>();
             defineMessageStatusTransition();
         }
@@ -67,10 +62,10 @@ public class MessageModel {
     // Support Methods
     private void applyMessageAdding(Message message) {
         clearError("addMessage");
-        if (environment == Environment.PRODUCTION) {
+        if (environment == EnvironmentType.PRODUCTION) {
             storageTool.addItem(message);
             listOfMessages = storageTool.getItems();
-        } else if (environment == Environment.TEST) {
+        } else if (environment == EnvironmentType.TEST) {
             listOfMessages.add(message);
         }
     }
@@ -158,10 +153,10 @@ public class MessageModel {
     }
 
     public void removeMessage(Message message) {
-        if (environment == Environment.PRODUCTION) {
+        if (environment == EnvironmentType.PRODUCTION) {
             storageTool.removeItem(message);
             listOfMessages = storageTool.getItems();
-        } else if (environment == Environment.TEST) {
+        } else if (environment == EnvironmentType.TEST) {
             listOfMessages.remove(message);
         }
     }
@@ -187,10 +182,10 @@ public class MessageModel {
         currenMessageStatuses.add(statusTo);
         message.setStatuses(userKey, currenMessageStatuses);
 
-        if (environment == Environment.PRODUCTION) {
+        if (environment == EnvironmentType.PRODUCTION) {
             storageTool.updateItem(message, message);
             listOfMessages = storageTool.getItems();
-        } else if (environment == Environment.TEST) {
+        } else if (environment == EnvironmentType.TEST) {
             listOfMessages.set(listOfMessages.indexOf(message), message);
         }
     }
