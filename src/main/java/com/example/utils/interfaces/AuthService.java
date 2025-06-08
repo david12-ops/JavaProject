@@ -15,8 +15,6 @@ public interface AuthService {
 
     UserToken getLoggedUser();
 
-    List<User> getAllUserAccounts();
-
     boolean updateNotLoggedAccount(String emailAccount, String password, String newPassword,
             String confirmationPassword);
 

@@ -1,8 +1,10 @@
 package com.example.controller;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.example.dto.UserDTO;
 import com.example.model.User;
 import com.example.model.UserRepository;
 import com.example.model.UserToken;
@@ -21,8 +23,8 @@ public class UserController implements AuthService, AccountService {
     private SessionService sessionService;
     private String currentSessionId;
 
-    public UserController(UserRepository UserRepository) {
-        this.userRepository = UserRepository;
+    public UserController(UserRepository userRepository) {
+        this.userRepository = userRepository;
         this.sessionService = SessionService.getInstance();
     }
 
@@ -137,15 +139,21 @@ public class UserController implements AuthService, AccountService {
     }
 
     @Override
-    public List<User> getAllUserAccounts() {
+    public List<UserDTO> getAllUserAccounts() {
         UserToken userToken = getLoggedUser();
         List<User> users = userRepository.getAllUserAccounts(userToken);
+        List<UserDTO> userDTOs = new ArrayList<>();
 
         if (users == null || users.size() == 0) {
             return List.of();
         }
 
-        return users.stream().filter(user -> !user.getUserId().equals(userToken.getUserId())
-                && !user.getMailAccount().equals(userToken.getMailAccount())).toList();
+        users.stream().filter(user -> !user.getUserId().equals(userToken.getUserId())
+                && !user.getMailAccount().equals(userToken.getMailAccount())).toList().forEach(user -> {
+                    userDTOs.add(new UserDTO(user.getMailAccount(), null, null, null, user.getProfileImage()));
+                });
+        ;
+
+        return userDTOs;
     }
 }

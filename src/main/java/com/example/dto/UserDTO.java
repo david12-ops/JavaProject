@@ -6,6 +6,8 @@ public class UserDTO {
 
     private String currentPassword;
 
+    private String password;
+
     private String confirmPassword;
 
     private String profileImage;
@@ -13,9 +15,11 @@ public class UserDTO {
     public UserDTO() {
     }
 
-    public UserDTO(String mailAccount, String currentPassword, String confirmPassword, String profileImage) {
+    public UserDTO(String mailAccount, String currentPassword, String password, String confirmPassword,
+            String profileImage) {
         this.mailAccount = mailAccount;
         this.currentPassword = currentPassword;
+        this.password = password;
         this.confirmPassword = confirmPassword;
         this.profileImage = profileImage;
     }
@@ -50,5 +54,13 @@ public class UserDTO {
 
     public void setConfirmPassword(String confirmPassword) {
         this.confirmPassword = confirmPassword;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
