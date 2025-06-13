@@ -1,11 +1,13 @@
 package com.example.model;
 
-import com.example.utils.ErrorManager;
 import com.example.utils.FileConvertor;
 import com.example.utils.JsonStorageTool;
+import com.example.utils.ValidationContext;
 import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.MessageStatus;
-import com.example.utils.services.ValidationService;
+import com.example.utils.enums.ValidationMode;
+import com.example.utils.interfaces.ErrorHandler;
+import com.example.utils.interfaces.MessageValidator;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.github.cdimascio.dotenv.Dotenv;
@@ -26,9 +28,13 @@ import java.util.Set;
 public class MessageRepository {
 
     static Dotenv dotenv = Dotenv.load();
+    private final ValidationContext validationContext = new ValidationContext(ValidationMode.MESSAGE);
+
+    private ErrorHandler errorHandler;
+    private MessageValidator messageValidator;
     private List<Message> listOfMessages;
     private JsonStorageTool<Message> storageTool;
-    private EnvironmentType environment;
+    private EnvironmentType environmentType;
     private Map<MessageStatus, Set<MessageStatus>> allowedByStatus;
 
     private void defineMessageStatusTransition() {
@@ -45,27 +51,31 @@ public class MessageRepository {
         allowedByStatus = Collections.unmodifiableMap(map);
     }
 
-    public MessageRepository(EnvironmentType environment) {
-        this.environment = environment;
-        if (environment == EnvironmentType.PRODUCTION) {
+    public MessageRepository(EnvironmentType environmentType) {
+        this.environmentType = environmentType;
+        if (environmentType == EnvironmentType.PRODUCTION) {
             storageTool = new JsonStorageTool<Message>(dotenv.get("FILE_PATH_MESSAGES"),
                     new TypeReference<List<Message>>() {
                     });
             this.listOfMessages = storageTool.getItems();
             defineMessageStatusTransition();
-        } else if (environment == EnvironmentType.TEST) {
+            this.messageValidator = validationContext.getMessageValidationBundle().getValidator();
+            this.errorHandler = validationContext.getMessageValidationBundle().getErrorManager();
+        } else if (environmentType == EnvironmentType.TEST) {
             this.listOfMessages = new ArrayList<>();
             defineMessageStatusTransition();
+            this.messageValidator = validationContext.getMessageValidationBundle().getValidator();
+            this.errorHandler = validationContext.getMessageValidationBundle().getErrorManager();
         }
     }
 
     // Support Methods
     private void applyMessageAdding(Message message) {
         clearError("addMessage");
-        if (environment == EnvironmentType.PRODUCTION) {
+        if (environmentType == EnvironmentType.PRODUCTION) {
             storageTool.addItem(message);
             listOfMessages = storageTool.getItems();
-        } else if (environment == EnvironmentType.TEST) {
+        } else if (environmentType == EnvironmentType.TEST) {
             listOfMessages.add(message);
         }
     }
@@ -104,26 +114,27 @@ public class MessageRepository {
     }
 
     public String getError(String errorName) {
-        return errorToolManager.getError(errorName);
+        return errorHandler.getError(errorName);
     }
 
     public void clearError(String errorName) {
-        errorToolManager.removeError(errorName);
+        errorHandler.removeError(errorName);
     }
 
     public void addMessage(UserToken senderToken, String recevierEmail, String subject, String message,
             List<File> files) {
 
-        boolean isValid = validator.validMessageData(recevierEmail, subject, message) && validator.validFiles(files);
+        boolean isValid = messageValidator.validMessageData(recevierEmail, subject, message)
+                && messageValidator.validFiles(files);
 
         if (senderToken == null) {
-            errorToolManager.logError(errorToolManager.createErrorBody("addMessage", "Token of sender is required"));
+            errorHandler.logError(errorHandler.createErrorBody("addMessage", "Token of sender is required"));
             return;
         }
 
         if (!isValid) {
-            errorToolManager.logError(
-                    errorToolManager.createErrorBody("addMessage", "Invalid message data or unsupported files"));
+            errorHandler
+                    .logError(errorHandler.createErrorBody("addMessage", "Invalid message data or unsupported files"));
             return;
         }
 
@@ -141,8 +152,8 @@ public class MessageRepository {
         messageStatuses.put(recevierEmail, Set.of(MessageStatus.INBOX));
 
         if (!containsOnlySupportedStatuses(messageStatuses, List.of(MessageStatus.SENT, MessageStatus.INBOX))) {
-            errorToolManager.logError(
-                    errorToolManager.createErrorBody("addMessage", "Message contains unsupported status values"));
+            errorHandler
+                    .logError(errorHandler.createErrorBody("addMessage", "Message contains unsupported status values"));
             return;
         }
 
@@ -153,10 +164,10 @@ public class MessageRepository {
     }
 
     public void removeMessage(Message message) {
-        if (environment == EnvironmentType.PRODUCTION) {
+        if (environmentType == EnvironmentType.PRODUCTION) {
             storageTool.removeItem(message);
             listOfMessages = storageTool.getItems();
-        } else if (environment == EnvironmentType.TEST) {
+        } else if (environmentType == EnvironmentType.TEST) {
             listOfMessages.remove(message);
         }
     }
@@ -165,16 +176,15 @@ public class MessageRepository {
             UserToken userToken) {
 
         if (userToken == null) {
-            errorToolManager
-                    .logError(errorToolManager.createErrorBody("updateMessageStatus", "Token of user required"));
+            errorHandler.logError(errorHandler.createErrorBody("updateMessageStatus", "Token of user required"));
             return;
         }
 
         String userKey = statusFrom == MessageStatus.INBOX ? userToken.getMailAccount() : userToken.getUserId();
 
         if (!isStatusUpdateAllowed(message, statusTo, userKey)) {
-            errorToolManager.logError(
-                    errorToolManager.createErrorBody("updateMessageStatus", "Message status update is not allowed"));
+            errorHandler.logError(
+                    errorHandler.createErrorBody("updateMessageStatus", "Message status update is not allowed"));
             return;
         }
 
@@ -182,10 +192,10 @@ public class MessageRepository {
         currenMessageStatuses.add(statusTo);
         message.setStatuses(userKey, currenMessageStatuses);
 
-        if (environment == EnvironmentType.PRODUCTION) {
+        if (environmentType == EnvironmentType.PRODUCTION) {
             storageTool.updateItem(message, message);
             listOfMessages = storageTool.getItems();
-        } else if (environment == EnvironmentType.TEST) {
+        } else if (environmentType == EnvironmentType.TEST) {
             listOfMessages.set(listOfMessages.indexOf(message), message);
         }
     }

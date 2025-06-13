@@ -1,159 +1,92 @@
 package com.example.controller;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.example.dto.UserDTO;
-import com.example.model.User;
 import com.example.model.UserRepository;
 import com.example.model.UserToken;
-import com.example.utils.FileConvertor;
 import com.example.utils.enums.AddOperationType;
 import com.example.utils.enums.FormType;
-import com.example.utils.enums.GetUserOperationType;
 import com.example.utils.interfaces.AuthService;
 import com.example.utils.interfaces.AccountService;
 import com.example.utils.services.SessionService;
+import com.example.utils.services.UserAccountService;
+import com.example.utils.services.UserAuthService;
 
 import javafx.scene.image.Image;
 
-public class UserController implements AuthService, AccountService {
+public class UserController {
+
     private UserRepository userRepository;
-    private SessionService sessionService;
-    private String currentSessionId;
+    private final AuthService authService = new UserAuthService(SessionService.getInstance());
+    private final AccountService accountService = new UserAccountService();
 
     public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.sessionService = SessionService.getInstance();
-    }
-
-    private User getUser(String emailAccount, String password, GetUserOperationType getUserTypeOperation) {
-        if (getUserTypeOperation == GetUserOperationType.BYTOKEN) {
-            UserToken userToken = getLoggedUser();
-            return userRepository.getUserByCredentials(null, null, userToken);
-        }
-
-        if (getUserTypeOperation == GetUserOperationType.BYCREDENTIALS) {
-            return userRepository.getUserByCredentials(emailAccount, password, null);
-        }
-        return null;
     }
 
     public String getError(String errorName) {
-        return userRepository.getError(errorName);
+        return authService.getErrorHandler().getError(errorName);
     }
 
     public void clearError(String errorName) {
-        userRepository.clearError(errorName);
+        authService.getErrorHandler().removeError(errorName);
     }
 
     // Auth
-    @Override
     public boolean register(String emailAccount, String password, String confirmationPassword) {
-        return userRepository.addUser(emailAccount, password, confirmationPassword, null, AddOperationType.NEWACCOUNT,
-                FormType.REGISTER);
+        return authService.register(emailAccount, password, confirmationPassword, FormType.REGISTER,
+                AddOperationType.NEWACCOUNT, userRepository);
     }
 
-    @Override
     public void login(String emailAccount, String password) {
-        User user = getUser(emailAccount, password, GetUserOperationType.BYCREDENTIALS);
-
-        if (user != null && !sessionService.isUserLoggedIn(user.getUserId())) {
-            currentSessionId = sessionService.createSessionId(user);
-        }
+        authService.login(emailAccount, password, userRepository);
     }
 
-    @Override
     public boolean updateNotLoggedAccount(String emailAccount, String password, String newPassword,
             String confirmationNewPassword) {
 
-        User foundUser = getUser(emailAccount, password, GetUserOperationType.BYCREDENTIALS);
-        return userRepository.updateUser(foundUser, newPassword, confirmationNewPassword, FormType.FORGOTCREDENTIALS);
+        return authService.updateNotLoggedAccount(emailAccount, password, newPassword, confirmationNewPassword,
+                FormType.FORGOTCREDENTIALS, userRepository);
     }
 
-    @Override
     public void logOut() {
-        sessionService.removeSession(currentSessionId);
-        currentSessionId = null;
+        authService.logOut();
     }
 
-    @Override
     public UserToken getLoggedUser() {
-        return sessionService.getUserTokenBySessionId(currentSessionId);
+        return authService.getLoggedUser();
     }
 
-    @Override
     public Image getImageProfile() {
-        User user = getUser(null, null, GetUserOperationType.BYTOKEN);
-
-        if (user != null && user.getProfileImage() != null) {
-            return FileConvertor.Base64ToImage(user.getProfileImage());
-        }
-        return null;
+        return accountService.getImageProfile(getLoggedUser(), userRepository);
     }
 
     // User actions
-    @Override
-    public boolean removeAccount(User user) {
-        UserToken userToken = getLoggedUser();
-        return userRepository.removeUser(userToken, user);
+    public boolean removeAccount(UserDTO userDTO) {
+        return accountService.removeAccount(getLoggedUser(), userDTO, userRepository);
     }
 
-    @Override
     public boolean updateLoggedInAccount(String newPassword, String confirmationNewPassword) {
-        UserToken userToken = getLoggedUser();
-        return userRepository.updateUser(userToken, newPassword, confirmationNewPassword, FormType.FORGOTCREDENTIALS);
+        return authService.updateLoggedInAccount(newPassword, confirmationNewPassword, FormType.FORGOTCREDENTIALS,
+                userRepository);
     }
 
-    @Override
     public void updateImageProfile(File file) {
-        UserToken userToken = getLoggedUser();
-        if (file == null) {
-            userRepository.updateUser(userToken, null);
-
-        } else {
-            userRepository.updateUser(userToken, file);
-        }
+        accountService.updateImageProfile(getLoggedUser(), file, userRepository);
     }
 
-    @Override
     public boolean addAnotherAccount(String emailAccount, String password, String confirmationPassword) {
-        UserToken userToken = getLoggedUser();
-        return userRepository.addUser(emailAccount, password, confirmationPassword, userToken,
-                AddOperationType.ANOTHERACCOUNT, FormType.ADDACCOUNT);
+        return authService.register(emailAccount, password, confirmationPassword, FormType.ADDACCOUNT,
+                AddOperationType.ANOTHERACCOUNT, userRepository);
     }
 
-    @Override
-    public boolean switchAccount(User switchtoUser) {
-        UserToken userToken = getLoggedUser();
-
-        if (userToken != null && switchtoUser != null
-                && !userToken.getMailAccount().equals(switchtoUser.getMailAccount())) {
-            logOut();
-            currentSessionId = sessionService.createSessionId(switchtoUser);
-            return true;
-        }
-
-        return false;
+    public boolean switchAccount(UserDTO switchToUserDTO) {
+        return authService.switchAccount(switchToUserDTO);
     }
 
-    @Override
     public List<UserDTO> getAllUserAccounts() {
-        UserToken userToken = getLoggedUser();
-        List<User> users = userRepository.getAllUserAccounts(userToken);
-        List<UserDTO> userDTOs = new ArrayList<>();
-
-        if (users == null || users.size() == 0) {
-            return List.of();
-        }
-
-        users.stream().filter(user -> !user.getUserId().equals(userToken.getUserId())
-                && !user.getMailAccount().equals(userToken.getMailAccount())).toList().forEach(user -> {
-                    userDTOs.add(new UserDTO(user.getMailAccount(), null, null, null, user.getProfileImage()));
-                });
-        ;
-
-        return userDTOs;
+        return accountService.getAllUserAccounts(getLoggedUser(), userRepository);
     }
 }

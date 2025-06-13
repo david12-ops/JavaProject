@@ -6,7 +6,7 @@ import java.util.List;
 import com.example.controller.MessageController;
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
-import com.example.model.User;
+import com.example.dto.UserDTO;
 import com.example.utils.enums.LayoutMode;
 import com.example.utils.services.StateEventService;
 import com.example.view.ForgotCredentialsScreen;
@@ -46,7 +46,7 @@ public class CustomGridPane extends HBox {
         }
     }
 
-    private List<List<User>> userLists;
+    private List<List<UserDTO>> userDTOsLists;
     private List<GridPane> gridPanes;
     private Integer page = 0;
     private Integer totalPages;
@@ -90,7 +90,7 @@ public class CustomGridPane extends HBox {
             page = Math.max(0, totalPages - 1);
         }
 
-        if (userLists.isEmpty()) {
+        if (userDTOsLists.isEmpty()) {
             Label textInfo = new Label("No accounts found");
             textInfo.setStyle("-fx-text-fill: orangered; -fx-font-size: 30px;");
             textInfo.setAlignment(Pos.CENTER);
@@ -99,20 +99,20 @@ public class CustomGridPane extends HBox {
             emptyBox.setAlignment(Pos.CENTER);
 
             contentBox.getChildren().setAll(emptyBox);
-        } else if (page < gridPanes.size() && page < userLists.size()) {
-            switchGridPane(gridPanes.get(page), userLists.get(page), stage, userController, screenController,
+        } else if (page < gridPanes.size() && page < userDTOsLists.size()) {
+            switchGridPane(gridPanes.get(page), userDTOsLists.get(page), stage, userController, screenController,
                     messageController, gridDimension.getColumns());
         }
     }
 
-    private void computeGridPanesAndList(List<User> users, GridDimension gridDimension) {
+    private void computeGridPanesAndList(List<UserDTO> userDTOs, GridDimension gridDimension) {
 
         int gridWidth = 0;
         int gridHeight = 0;
 
         int itemsPerPage = gridDimension.getColumns() * gridDimension.getRows();
-        totalPages = (int) Math.ceil((double) users.size() / itemsPerPage);
-        userLists = new ArrayList<>();
+        totalPages = (int) Math.ceil((double) userDTOs.size() / itemsPerPage);
+        userDTOsLists = new ArrayList<>();
         gridPanes = new ArrayList<>();
 
         if (gridDimension.getRows() == 1) {
@@ -137,7 +137,7 @@ public class CustomGridPane extends HBox {
 
         for (int i = 0; i < totalPages; i++) {
             int start = i * itemsPerPage;
-            int end = Math.min(start + itemsPerPage, users.size());
+            int end = Math.min(start + itemsPerPage, userDTOs.size());
 
             GridPane grid = new GridPane();
             grid.setStyle("-fx-padding: 20 0 0 0;");
@@ -154,7 +154,7 @@ public class CustomGridPane extends HBox {
             grid.setVgap(45);
 
             gridPanes.add(grid);
-            userLists.add(users.subList(start, end));
+            userDTOsLists.add(userDTOs.subList(start, end));
         }
     }
 
@@ -167,25 +167,25 @@ public class CustomGridPane extends HBox {
                 new SwitchUserScreen(stage, screenController, userController, messageController));
     }
 
-    private void switchGridPane(GridPane gridPane, List<User> users, Stage stage, UserController userController,
+    private void switchGridPane(GridPane gridPane, List<UserDTO> userDTOs, Stage stage, UserController userController,
             ScreenController screenController, MessageController messageController, int columns) {
 
         gridPane.getChildren().clear();
 
-        for (int i = 0; i < users.size(); i++) {
+        for (int i = 0; i < userDTOs.size(); i++) {
             int index = i;
             int col = i % columns;
             int row = i / columns;
-            Avatar avatar = new Avatar(stage, users.get(index));
+            Avatar avatar = new Avatar(stage, userDTOs.get(index));
 
-            Label textEmlLabel = new Label(users.get(index).getMailAccount());
+            Label textEmlLabel = new Label(userDTOs.get(index).getMailAccount());
             textEmlLabel.setStyle("-fx-font-family: Arial; -fx-font-weight: bold; -fx-font-size: 16px;");
             textEmlLabel.setWrapText(true);
 
             Button switchUserButton = new Button("switch");
             switchUserButton.getStyleClass().add("updateButton");
             switchUserButton.setOnAction(e -> {
-                boolean switched = userController.switchAccount(users.get(index));
+                boolean switched = userController.switchAccount(userDTOs.get(index));
                 if (switched) {
                     StateEventService.getInstance().emit("computeGrid", userController.getAllUserAccounts());
                     updateScreens(screenController, userController, messageController, stage);
@@ -196,7 +196,7 @@ public class CustomGridPane extends HBox {
             Button removeAccountButton = new Button("remove");
             removeAccountButton.getStyleClass().add("deleteButton");
             removeAccountButton.setOnAction(e -> {
-                boolean removed = userController.removeAccount(users.get(index));
+                boolean removed = userController.removeAccount(userDTOs.get(index));
                 if (removed) {
                     StateEventService.getInstance().emit("computeGrid", userController.getAllUserAccounts());
                 }
@@ -238,9 +238,9 @@ public class CustomGridPane extends HBox {
             if (page < totalPages - 1) {
                 GridDimension gridDimension = getGridDimension(stage.getWidth(), stage.getHeight());
                 page = page + 1;
-                if (page < gridPanes.size() && page < userLists.size()) {
-                    switchGridPane(gridPanes.get(page), userLists.get(page), stage, userController, screenController,
-                            messageController, gridDimension.getColumns());
+                if (page < gridPanes.size() && page < userDTOsLists.size()) {
+                    switchGridPane(gridPanes.get(page), userDTOsLists.get(page), stage, userController,
+                            screenController, messageController, gridDimension.getColumns());
                 } else {
                     System.err.println("Failed to load user accounts");
                 }
@@ -256,9 +256,9 @@ public class CustomGridPane extends HBox {
             if (page > 0) {
                 GridDimension gridDimension = getGridDimension(stage.getWidth(), stage.getHeight());
                 page = page - 1;
-                if (page < gridPanes.size() && page < userLists.size()) {
-                    switchGridPane(gridPanes.get(page), userLists.get(page), stage, userController, screenController,
-                            messageController, gridDimension.getColumns());
+                if (page < gridPanes.size() && page < userDTOsLists.size()) {
+                    switchGridPane(gridPanes.get(page), userDTOsLists.get(page), stage, userController,
+                            screenController, messageController, gridDimension.getColumns());
                 } else {
                     System.err.println("Failed to load user accounts");
                 }

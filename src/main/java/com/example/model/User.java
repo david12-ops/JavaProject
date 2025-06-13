@@ -22,17 +22,12 @@ public class User {
     private String profileImage;
 
     @JsonCreator
-    public User(@JsonProperty("user_id") String userId, @JsonProperty("group_id") String groupId,
-            @JsonProperty("mailAccount") String mailAccount, @JsonProperty("password") String password,
-            @JsonProperty("profileImage") String profileImage) {
-        this.userId = userId;
-        this.groupId = groupId;
-        this.mailAccount = mailAccount;
-        this.password = password;
-        this.profileImage = profileImage;
+    public User(@JsonProperty("user_id") String userId, @JsonProperty("group_id") String groupId) {
+        this.userId = (userId == null || userId.isBlank()) ? UUID.randomUUID().toString() : userId;
+        this.groupId = (groupId == null || groupId.isBlank()) ? UUID.randomUUID().toString() : groupId;
     }
 
-    public User(String userId, String groupId, String mailAccount, String password) {
+    public User(String userId, String groupId, String mailAccount, String password, String profileImage) {
         this.mailAccount = mailAccount;
         this.password = password;
         this.userId = (userId == null || userId.isBlank()) ? UUID.randomUUID().toString() : userId;
@@ -82,7 +77,7 @@ public class User {
         this.password = password;
     }
 
-    public void setImage(String profileImage) {
+    public void setProfileImage(String profileImage) {
         this.profileImage = profileImage;
     }
 

@@ -29,6 +29,7 @@ public class UpdateAvatar extends VBox {
 
         dropZone.setOnImageDropped(image -> {
             try {
+                dropZone.setVisibility(true);
                 imageErrorLabel.setText("");
                 userController.clearError("file");
                 File file = new File(new java.net.URI(image.getUrl()));

@@ -4,7 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.example.model.User;
+import com.example.dto.UserDTO;
 import com.example.model.UserToken;
 
 public class SessionService {
@@ -39,9 +39,10 @@ public class SessionService {
         return instance;
     }
 
-    public String createSessionId(User user) {
+    public String createSessionId(UserDTO userDTO) {
         String sessionId = UUID.randomUUID().toString();
-        this.activeSessions.put(sessionId, new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount()));
+        this.activeSessions.put(sessionId,
+                new UserToken(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount()));
         return sessionId;
     }
 

@@ -1,6 +1,9 @@
 package com.example.dto;
 
 public class UserDTO {
+    private String userId;
+
+    private String groupId;
 
     private String mailAccount;
 
@@ -15,13 +18,45 @@ public class UserDTO {
     public UserDTO() {
     }
 
-    public UserDTO(String mailAccount, String currentPassword, String password, String confirmPassword,
-            String profileImage) {
+    public UserDTO(String userId, String groupId, String mailAccount, String currentPassword, String password,
+            String confirmPassword, String profileImage) {
+        this.userId = userId;
+        this.groupId = groupId;
         this.mailAccount = mailAccount;
         this.currentPassword = currentPassword;
         this.password = password;
         this.confirmPassword = confirmPassword;
         this.profileImage = profileImage;
+    }
+
+    /*
+     * This method determines how the objects will be compared.
+     */
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
+        UserDTO userDTO = (UserDTO) obj;
+        return userId.equals(userDTO.userId);
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
 
     public String getMailAccount() {

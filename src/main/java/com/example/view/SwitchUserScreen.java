@@ -7,7 +7,7 @@ import com.example.components.Layout;
 import com.example.controller.MessageController;
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
-import com.example.model.User;
+import com.example.dto.UserDTO;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -21,7 +21,7 @@ public class SwitchUserScreen extends VBox {
     public SwitchUserScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController) {
 
-        List<User> users = userController.getAllUserAccounts();
+        List<UserDTO> userDTOs = userController.getAllUserAccounts();
         Layout layout = null;
         VBox content = null;
 
@@ -35,7 +35,7 @@ public class SwitchUserScreen extends VBox {
         textTitle.setAlignment(Pos.CENTER);
         textTitle.setMaxWidth(Double.MAX_VALUE);
 
-        if (users != null && users.size() > 0) {
+        if (userDTOs != null && userDTOs.size() > 0) {
 
             CustomGridPane gridPane = new CustomGridPane(screenController, userController, messageController, stage);
             content = new VBox(textTitle, gridPane);

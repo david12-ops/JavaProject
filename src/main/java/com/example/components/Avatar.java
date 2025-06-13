@@ -2,7 +2,7 @@ package com.example.components;
 
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
-import com.example.model.User;
+import com.example.dto.UserDTO;
 import com.example.model.UserToken;
 import com.example.utils.FileConvertor;
 
@@ -27,10 +27,10 @@ import javafx.stage.Stage;
 public class Avatar extends VBox {
     private final ObjectProperty<Image> imageProperty = new SimpleObjectProperty<>();
 
-    public Avatar(Stage stage, User user) {
+    public Avatar(Stage stage, UserDTO userDTO) {
 
-        Image imgaeProfile = FileConvertor.Base64ToImage(user.getProfileImage());
-        String firstLetter = user != null ? user.getMailAccount().substring(0, 1).toUpperCase() : null;
+        Image imgaeProfile = FileConvertor.Base64ToImage(userDTO.getProfileImage());
+        String firstLetter = userDTO != null ? userDTO.getMailAccount().substring(0, 1).toUpperCase() : null;
 
         Circle circle = new Circle(30);
         circle.setStroke(Color.DARKGRAY);

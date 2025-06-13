@@ -38,7 +38,7 @@ public class Message {
 
     @JsonCreator
     public Message(@JsonProperty("message_id") String messageId, @JsonProperty("sender_id") String senderId) {
-        this.messageId = messageId;
+        this.messageId = (messageId == null || messageId.isBlank()) ? UUID.randomUUID().toString() : messageId;
         this.senderId = senderId;
     }
 

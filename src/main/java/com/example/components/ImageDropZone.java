@@ -62,12 +62,16 @@ public class ImageDropZone extends StackPane {
         imageView.setImage(image);
     }
 
+    public void setVisibility(boolean visibility) {
+        imageView.setVisible(visibility);
+    }
+
     public void setOnImageDropped(Consumer<Image> handler) {
         this.onImageDropped = handler;
     }
 
     public void clear() {
         setImage(null);
-        imageView.setVisible(false);
+        setVisibility(false);
     }
 }

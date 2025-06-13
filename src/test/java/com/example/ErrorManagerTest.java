@@ -9,18 +9,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.example.utils.ErrorManager;
+import com.example.utils.interfaces.ErrorHandler;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ErrorToolManagerTest {
+public class ErrorManagerTest {
 
-    private ErrorManager errorToolManager;
+    private ErrorHandler errorHandler;
 
     @BeforeEach
     void setup() {
-        this.errorToolManager = new ErrorManager(new HashMap<>());
+        this.errorHandler = new ErrorManager(new HashMap<>());
     }
 
     private List<Entry<String, String>> sampleErrors() {
@@ -33,28 +35,28 @@ public class ErrorToolManagerTest {
     @DisplayName("Should log error with correct key and message")
     void testLogErrorStoresEntry() {
         for (Entry<String, String> error : sampleErrors()) {
-            errorToolManager.logError(error);
+            errorHandler.logError(error);
         }
 
         for (Entry<String, String> error : sampleErrors()) {
-            assertNotNull(errorToolManager.getError(error.getKey()));
+            assertNotNull(errorHandler.getError(error.getKey()));
         }
 
-        assertNull(errorToolManager.getError("registerError"));
-        assertNull(errorToolManager.getError("fetchError"));
-        assertNull(errorToolManager.getError("updateError"));
+        assertNull(errorHandler.getError("registerError"));
+        assertNull(errorHandler.getError("fetchError"));
+        assertNull(errorHandler.getError("updateError"));
     }
 
     @Test
     @DisplayName("Should remove error by name")
     void testRemoveErrorDeletesEntry() {
         for (Entry<String, String> error : sampleErrors()) {
-            errorToolManager.logError(error);
+            errorHandler.logError(error);
         }
 
         for (Entry<String, String> error : sampleErrors()) {
-            errorToolManager.removeError(error.getKey());
-            assertNull(errorToolManager.getError(error.getKey()));
+            errorHandler.removeError(error.getKey());
+            assertNull(errorHandler.getError(error.getKey()));
         }
     }
 
@@ -62,23 +64,23 @@ public class ErrorToolManagerTest {
     @DisplayName("Should retrieve correct error message")
     void testGetErrorReturnsCorrectValue() {
         for (Entry<String, String> error : sampleErrors()) {
-            errorToolManager.logError(error);
+            errorHandler.logError(error);
         }
 
-        assertEquals("Invalid username or password", errorToolManager.getError("loginError"));
-        assertEquals("Email already exists", errorToolManager.getError("addAccount"));
-        assertEquals("Required fields are missing", errorToolManager.getError("formValidation"));
+        assertEquals("Invalid username or password", errorHandler.getError("loginError"));
+        assertEquals("Email already exists", errorHandler.getError("addAccount"));
+        assertEquals("Required fields are missing", errorHandler.getError("formValidation"));
 
-        assertNotEquals("Required fiare missing", errorToolManager.getError("formValidation"));
-        assertNotEquals("Refiare missing", errorToolManager.getError("addAccount"));
+        assertNotEquals("Required fiare missing", errorHandler.getError("formValidation"));
+        assertNotEquals("Refiare missing", errorHandler.getError("addAccount"));
     }
 
     @Test
     @DisplayName("Should create error body with key and message")
     void testCreateErrorBodyProducesEntry() {
-        Entry<String, String> loginErr = errorToolManager.createErrorBody("loginError", "Invalid username or password");
-        Entry<String, String> addAccountErr = errorToolManager.createErrorBody("addAccount", "Email already exists");
-        Entry<String, String> formValidation = errorToolManager.createErrorBody("formValidation",
+        Entry<String, String> loginErr = errorHandler.createErrorBody("loginError", "Invalid username or password");
+        Entry<String, String> addAccountErr = errorHandler.createErrorBody("addAccount", "Email already exists");
+        Entry<String, String> formValidation = errorHandler.createErrorBody("formValidation",
                 "Required fields are missing");
 
         assertEquals("loginError", loginErr.getKey());

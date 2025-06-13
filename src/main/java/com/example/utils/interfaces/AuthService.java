@@ -1,22 +1,29 @@
 package com.example.utils.interfaces;
 
-import java.util.List;
-
-import com.example.model.User;
+import com.example.dto.UserDTO;
+import com.example.model.UserRepository;
 import com.example.model.UserToken;
+import com.example.utils.enums.AddOperationType;
+import com.example.utils.enums.FormType;
 
 public interface AuthService {
 
-    boolean register(String emailAccount, String password, String confirmationPassword);
+        boolean register(String emailAccount, String password, String confirmationPassword, FormType formType,
+                        AddOperationType addTypeOperation, UserRepository userRepository);
 
-    void login(String emailAccount, String password);
+        void login(String emailAccount, String password, UserRepository userRepository);
 
-    void logOut();
+        void logOut();
 
-    UserToken getLoggedUser();
+        UserToken getLoggedUser();
 
-    boolean updateNotLoggedAccount(String emailAccount, String password, String newPassword,
-            String confirmationPassword);
+        boolean updateNotLoggedAccount(String emailAccount, String password, String newPassword,
+                        String confirmationNewPassword, FormType formType, UserRepository userRepository);
 
-    boolean updateLoggedInAccount(String newPassword, String confirmationPassword);
+        boolean updateLoggedInAccount(String newPassword, String confirmationNewPassword, FormType formType,
+                        UserRepository userRepository);
+
+        boolean switchAccount(UserDTO switchToUserDTO);
+
+        ErrorHandler getErrorHandler();
 }

@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import com.example.model.User;
-import com.example.utils.ErrorManager;
+import com.example.dto.UserDTO;
+import com.example.utils.interfaces.ErrorHandler;
 import com.example.utils.enums.FormType;
 import com.example.utils.enums.OperationType;
 import com.example.utils.interfaces.MessageValidator;
@@ -27,18 +27,18 @@ public class ValidationService {
     private static final String SUPPORTED_FILES = "(?i).*\\.(docx?|xlsx?|pptx?|pdf|txt|rtf|jpg|jpeg|png|gif|bmp|tiff|webp|mp4|mov|avi|wmv|mp3|wav|m4a|zip|7z|tar)$";
 
     public class UserValidations implements UserValidator {
-        private ErrorManager errorToolManager;
+        private ErrorHandler errorHandler;
 
-        public UserValidations(ErrorManager errorToolManager) {
-            this.errorToolManager = errorToolManager;
+        public UserValidations(ErrorHandler errorHandler) {
+            this.errorHandler = errorHandler;
         }
 
         @Override
         public boolean validEmail(String email) {
 
             if (email == null || !EMAIL_REGEX.matcher(email).matches()) {
-                errorToolManager.logError(errorToolManager.createErrorBody("email",
-                        "Please enter a valid email address (e.g., user@example.com)"));
+                errorHandler.logError(errorHandler.createErrorBody("email",
+                        "Please enter a valid email address (e.g., user@example.com)."));
                 return false;
             }
 
@@ -50,14 +50,14 @@ public class ValidationService {
 
             if (password == null || !PASSWORD_REGEX.matcher(password).matches()) {
                 if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
-                    errorToolManager.logError(errorToolManager.createErrorBody("password",
-                            "Password must include uppercase, lowercase, number, and special character, and be at least 8 characters"));
+                    errorHandler.logError(errorHandler.createErrorBody("password",
+                            "Password must include uppercase, lowercase, number, and special character, and be at least 8 characters."));
                     return false;
                 }
 
                 if (form == FormType.FORGOTCREDENTIALS) {
-                    errorToolManager.logError(errorToolManager.createErrorBody("newPassword",
-                            "New password must include uppercase, lowercase, number, and special character, and be at least 8 characters"));
+                    errorHandler.logError(errorHandler.createErrorBody("newPassword",
+                            "New password must include uppercase, lowercase, number, and special character, and be at least 8 characters."));
                     return false;
                 }
             }
@@ -76,14 +76,14 @@ public class ValidationService {
                 for (String part : parts) {
                     if ((form == FormType.ADDACCOUNT || form == FormType.REGISTER) && lowerPassword.contains(part)
                             && emailPart.length() >= 4) {
-                        errorToolManager.logError(
-                                errorToolManager.createErrorBody("password", "Password is too similar to your email"));
+                        errorHandler.logError(
+                                errorHandler.createErrorBody("password", "Password is too similar to your email."));
                         return false;
                     }
 
                     if (form == FormType.FORGOTCREDENTIALS && lowerPassword.contains(part) && emailPart.length() >= 4) {
-                        errorToolManager.logError(errorToolManager.createErrorBody("newPassword",
-                                "New password is too similar to your email"));
+                        errorHandler.logError(errorHandler.createErrorBody("newPassword",
+                                "New password is too similar to your email."));
                         return false;
                     }
                 }
@@ -95,14 +95,14 @@ public class ValidationService {
             if (currentPassword != null) {
                 if ((form == FormType.ADDACCOUNT || form == FormType.REGISTER)
                         && BCrypt.checkpw(password, currentPassword)) {
-                    errorToolManager.logError(errorToolManager.createErrorBody("password",
-                            "Password must be different from the current password"));
+                    errorHandler.logError(errorHandler.createErrorBody("password",
+                            "Password must be different from the current password."));
                     return false;
                 }
 
                 if (form == FormType.FORGOTCREDENTIALS && BCrypt.checkpw(password, currentPassword)) {
-                    errorToolManager.logError(errorToolManager.createErrorBody("newPassword",
-                            "New password must be different from the current password"));
+                    errorHandler.logError(errorHandler.createErrorBody("newPassword",
+                            "New password must be different from the current password."));
                     return false;
                 }
             }
@@ -112,17 +112,17 @@ public class ValidationService {
 
         @Override
         public boolean nonDuplicateUserWithEmail(OperationType operation, String currentUserEmail, String newEmail,
-                List<User> users) {
+                List<UserDTO> userDTOs) {
 
-            if (users != null && !users.isEmpty()) {
-                List<User> list = operation == OperationType.UPDATE && currentUserEmail != null ? users.stream()
-                        .filter(user -> !user.getMailAccount().equals(currentUserEmail)).collect(Collectors.toList())
-                        : users;
+            if (userDTOs != null && !userDTOs.isEmpty()) {
+                List<UserDTO> fliteredUserDTOs = operation == OperationType.UPDATE && currentUserEmail != null
+                        ? userDTOs.stream().filter(userDTO -> !userDTO.getMailAccount().equals(currentUserEmail))
+                                .collect(Collectors.toList())
+                        : userDTOs;
 
-                for (User user : list) {
-                    if (user.getMailAccount().equals(newEmail)) {
-                        errorToolManager
-                                .logError(errorToolManager.createErrorBody("email", "Provided email is already used"));
+                for (UserDTO userDTO : fliteredUserDTOs) {
+                    if (userDTO.getMailAccount().equals(newEmail)) {
+                        errorHandler.logError(errorHandler.createErrorBody("email", "Provided email is already used."));
                         return false;
                     }
                 }
@@ -137,13 +137,13 @@ public class ValidationService {
 
             if (!password.equals(confirmationPassword)) {
                 if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
-                    errorToolManager.logError(errorToolManager.createErrorBody("confirmPassword",
-                            "Password does not match the confirmation"));
+                    errorHandler.logError(errorHandler.createErrorBody("confirmPassword",
+                            "Password does not match the confirmation."));
                 }
 
                 if (form == FormType.FORGOTCREDENTIALS) {
-                    errorToolManager.logError(errorToolManager.createErrorBody("confirmNewPassword",
-                            "New password does not match the confirmation"));
+                    errorHandler.logError(errorHandler.createErrorBody("confirmNewPassword",
+                            "New password does not match the confirmation."));
                 }
 
                 return false;
@@ -157,8 +157,8 @@ public class ValidationService {
             if (profileImage != null) {
                 String name = profileImage.getName().toLowerCase();
                 if (!name.matches(SUPPORTED_IMAGE_FILES)) {
-                    errorToolManager.logError(
-                            errorToolManager.createErrorBody("file", "Unsupported file type for profile image"));
+                    errorHandler
+                            .logError(errorHandler.createErrorBody("file", "Unsupported file type for profile image."));
                     return false;
                 }
 
@@ -170,11 +170,11 @@ public class ValidationService {
     }
 
     public class MessageValidations implements MessageValidator {
-        private ErrorManager errorToolManager;
+        private ErrorHandler errorHandler;
         Map<Integer, String> messagePartForNullFiles = new HashMap<>();
 
-        public MessageValidations(ErrorManager errorToolManager) {
-            this.errorToolManager = errorToolManager;
+        public MessageValidations(ErrorHandler errorHandler) {
+            this.errorHandler = errorHandler;
         }
 
         @Override
@@ -187,8 +187,8 @@ public class ValidationService {
             messagePartForNullFiles.put(5, "fifth");
 
             if (files != null && files.size() > 5) {
-                errorToolManager.logError(
-                        errorToolManager.createErrorBody("file", "Too much attached files in one message (max. 5)"));
+                errorHandler.logError(
+                        errorHandler.createErrorBody("file", "Too much attached files in one message (max. 5)."));
                 return false;
             }
 
@@ -197,23 +197,23 @@ public class ValidationService {
                 for (File file : files) {
 
                     if (file == null) {
-                        errorToolManager.logError(errorToolManager.createErrorBody("file",
+                        errorHandler.logError(errorHandler.createErrorBody("file",
                                 "We couldn't process your " + messagePartForNullFiles.get(files.indexOf(file) + 1)
-                                        + " file. Make sure it's uploaded and in a supported format"));
+                                        + " file. Make sure it's uploaded and in a supported format."));
                         return false;
                     }
 
                     String fileName = file.getName().toLowerCase();
 
                     if (file.length() > MAX_FILE_SIZE) {
-                        errorToolManager.logError(errorToolManager.createErrorBody("file", "The file \""
-                                + file.getName() + "\" is too big — only files smaller than 25 MB can be sent"));
+                        errorHandler.logError(errorHandler.createErrorBody("file", "The file \"" + file.getName()
+                                + "\" is too big — only files smaller than 25 MB can be sent."));
                         return false;
                     }
 
                     if (!fileName.matches(SUPPORTED_FILES)) {
-                        errorToolManager.logError(
-                                errorToolManager.createErrorBody("file", "Unsupported file type: " + file.getName()));
+                        errorHandler.logError(
+                                errorHandler.createErrorBody("file", "Unsupported file type: " + file.getName() + "."));
                         return false;
                     }
                 }
@@ -228,18 +228,18 @@ public class ValidationService {
         public boolean validMessageData(String whom, String subject, String message) {
 
             if (whom == null || !EMAIL_REGEX.matcher(whom).matches()) {
-                errorToolManager.logError(errorToolManager.createErrorBody("email",
-                        "Please enter a valid email address (e.g., user@example.com)"));
+                errorHandler.logError(errorHandler.createErrorBody("email",
+                        "Please enter a valid email address (e.g., user@example.com)."));
                 return false;
             }
 
             if (isTextTooLong(subject, 50)) {
-                errorToolManager.logError(errorToolManager.createErrorBody("subject", "Subject is too long"));
+                errorHandler.logError(errorHandler.createErrorBody("subject", "Subject is too long."));
                 return false;
             }
 
             if (isTextTooLong(message, 700)) {
-                errorToolManager.logError(errorToolManager.createErrorBody("message", "Message is too long"));
+                errorHandler.logError(errorHandler.createErrorBody("message", "Message is too long."));
                 return false;
             }
 

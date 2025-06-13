@@ -4,29 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.example.utils.enums.ValidationMode;
+import com.example.utils.interfaces.ErrorHandler;
 import com.example.utils.services.ValidationService;
 
 public class ValidationContext {
-    protected class ValidationBundle<T> {
-        private final T validator;
-        private final ErrorManager errorManager;
-
-        public ValidationBundle(T validator, ErrorManager errorManager) {
-            this.validator = validator;
-            this.errorManager = errorManager;
-        }
-
-        public T getValidator() {
-            return validator;
-        }
-
-        public ErrorManager getErrorManager() {
-            return errorManager;
-        }
-    }
-
     private Map<String, String> errorMap = new HashMap<>();
-    private final ErrorManager errorToolManager = new ErrorManager(errorMap);
+    private final ErrorHandler errorHandler = new ErrorManager(errorMap);
     private final ValidationService validationService = new ValidationService();
 
     private ValidationBundle<ValidationService.MessageValidations> messageValidatorBundle;
@@ -34,13 +17,13 @@ public class ValidationContext {
 
     public ValidationContext(ValidationMode mode) {
         if (mode == ValidationMode.USER) {
-            this.userValidatorBundle = new ValidationBundle<>(validationService.new UserValidations(errorToolManager),
-                    errorToolManager);
+            this.userValidatorBundle = new ValidationBundle<>(validationService.new UserValidations(errorHandler),
+                    errorHandler);
         }
 
         if (mode == ValidationMode.MESSAGE) {
-            this.messageValidatorBundle = new ValidationBundle<>(
-                    validationService.new MessageValidations(errorToolManager), errorToolManager);
+            this.messageValidatorBundle = new ValidationBundle<>(validationService.new MessageValidations(errorHandler),
+                    errorHandler);
         }
     }
 

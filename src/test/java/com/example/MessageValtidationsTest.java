@@ -21,20 +21,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.model.Message;
 import com.example.utils.ErrorManager;
 import com.example.utils.enums.MessageStatus;
+import com.example.utils.interfaces.ErrorHandler;
 import com.example.utils.services.ValidationService;
 import com.example.utils.services.ValidationService.MessageValidations;
 
 @ExtendWith(MockitoExtension.class)
 public class MessageValtidationsTest {
-    private ErrorManager errorToolManager;
+    private ErrorHandler errorHandler;
     private ValidationService validationService;
     private MessageValidations validator;
 
-    private void compareErrors(String expectedMessage, String key, ErrorManager errorToolManager) {
-        String errorMessage = errorToolManager.getError(key);
+    private void compareErrors(String expectedMessage, String key, ErrorHandler errorHandler) {
+        String errorMessage = errorHandler.getError(key);
         if (errorMessage != null) {
             assertEquals(expectedMessage, errorMessage, "Mismatch in error message for key " + key);
-            errorToolManager.removeError(key);
+            errorHandler.removeError(key);
         }
 
     }
@@ -49,9 +50,9 @@ public class MessageValtidationsTest {
 
     @BeforeEach
     void setup() {
-        this.errorToolManager = new ErrorManager(new HashMap<>());
+        this.errorHandler = new ErrorManager(new HashMap<>());
         this.validationService = new ValidationService();
-        this.validator = validationService.new MessageValidations(errorToolManager);
+        this.validator = validationService.new MessageValidations(errorHandler);
     }
 
     @Test
@@ -98,15 +99,15 @@ public class MessageValtidationsTest {
             boolean valid = validator.validMessageData(mess.getReceiver(), mess.getSubject(), mess.getMessage());
             if (i == 0) {
                 assertFalse(valid);
-                compareErrors("Please enter a valid email address (e.g., user@example.com)", "email", errorToolManager);
+                compareErrors("Please enter a valid email address (e.g., user@example.com).", "email", errorHandler);
             }
             if (i == 1) {
                 assertFalse(valid);
-                compareErrors("Subject is too long", "subject", errorToolManager);
+                compareErrors("Subject is too long.", "subject", errorHandler);
             }
             if (i == 2) {
                 assertFalse(valid);
-                compareErrors("Message is too long", "message", errorToolManager);
+                compareErrors("Message is too long.", "message", errorHandler);
             }
             if (i == 3) {
                 assertTrue(valid);
@@ -126,7 +127,7 @@ public class MessageValtidationsTest {
                         new File("/icons/icons8-default-file.png"), new File("/icons/icons8-default-file.png"),
                         new File("/icons/icons8-default-file.png"), new File("/icons/icons8-default-file.png")));
         assertFalse(withBiggerFileArr);
-        compareErrors("Too much attached files in one message (max. 5)", "file", errorToolManager);
+        compareErrors("Too much attached files in one message (max. 5).", "file", errorHandler);
 
         List<File> files = new ArrayList<>();
         files.add(new File("/icons/icons8-default-file.png"));
@@ -134,8 +135,8 @@ public class MessageValtidationsTest {
 
         boolean withUnsupportedFileArr = validator.validFiles(files);
         assertFalse(withUnsupportedFileArr);
-        compareErrors("We couldn't process your second file. Make sure it's uploaded and in a supported format", "file",
-                errorToolManager);
+        compareErrors("We couldn't process your second file. Make sure it's uploaded and in a supported format.",
+                "file", errorHandler);
 
     }
 

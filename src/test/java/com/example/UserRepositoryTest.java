@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.example.dto.UserDTO;
 import com.example.model.User;
 import com.example.model.UserRepository;
 import com.example.model.UserToken;
@@ -24,16 +25,33 @@ import com.example.utils.enums.FormType;
 @ExtendWith(MockitoExtension.class)
 public class UserRepositoryTest {
 
-    private UserRepository userModel;
-    private List<User> testDataUsers;
+    private UserRepository userRepository;
 
     @BeforeEach
     void setup() {
-        this.userModel = new UserRepository(EnvironmentType.TEST);
-        this.testDataUsers = createUsersWithNullProfileImages();
+        this.userRepository = new UserRepository(EnvironmentType.TEST);
     }
 
-    public List<User> createUsersWithNullProfileImages() {
+    private UserDTO getUserByEmailAndPassword(String email, String password, List<UserDTO> userDTOs) {
+        for (UserDTO userDTO : userDTOs) {
+            if (userDTO.getMailAccount().equals(email) && BCrypt.checkpw(password, userDTO.getCurrentPassword())) {
+                return userDTO;
+            }
+        }
+        return null;
+    }
+
+    private UserDTO getUserByToken(UserToken userToken, List<UserDTO> userDTOs) {
+        for (UserDTO userDTO : userDTOs) {
+            if (userDTO.getUserId().equals(userToken.getUserId())
+                    && userDTO.getMailAccount().equals(userToken.getMailAccount())) {
+                return userDTO;
+            }
+        }
+        return null;
+    }
+
+    private List<User> createUsersWithNullProfileImages() {
         List<User> users = new ArrayList<>();
 
         users.add(new User("1", "groupA", "alice@example.com", "hashedPassword1!", null));
@@ -45,197 +63,139 @@ public class UserRepositoryTest {
         return users;
     }
 
+    private void prepareData(List<UserToken> userTokens) {
+        userRepository.setTestData(createUsersWithNullProfileImages());
+        List<UserDTO> userDTOs = new ArrayList<>(userRepository.getAllUserDtos());
+
+        if (userTokens != null) {
+            for (UserDTO userDTO : userDTOs) {
+                userDTO.setCurrentPassword(BCrypt.hashpw(userDTO.getCurrentPassword(), BCrypt.gensalt()));
+                userTokens.add(new UserToken(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount()));
+            }
+        } else {
+            for (UserDTO userDTO : userDTOs) {
+                userDTO.setCurrentPassword(BCrypt.hashpw(userDTO.getCurrentPassword(), BCrypt.gensalt()));
+            }
+        }
+
+        List<User> data = new ArrayList<>();
+
+        userDTOs.forEach(user -> data.add(new User(user.getUserId(), user.getGroupId(), user.getMailAccount(),
+                user.getCurrentPassword(), user.getProfileImage())));
+
+        userRepository.setTestData(data);
+    }
+
     @Test
     @DisplayName("Should remove all users except the logged-in one")
     void testRemoveUser() {
-        userModel.setTestData(testDataUsers);
-        UserToken userToken = new UserToken("1", "groupA", "alice@example.com");
+        userRepository.setTestData(createUsersWithNullProfileImages());
 
-        for (User user : new ArrayList<>(testDataUsers)) {
-            userModel.removeUser(userToken, user);
+        for (UserDTO userDTO : userRepository.getAllUserDtos()) {
+            userRepository.removeUser(userDTO);
         }
 
-        List<User> remainingUsers = userModel.getTestData();
-        assertEquals(1, remainingUsers.size());
-        assertEquals("alice@example.com", remainingUsers.get(0).getMailAccount());
+        assertEquals(0, userRepository.getAllUserDtos().size());
     }
 
     @Test
     @DisplayName("Should update and clear user's profile image")
     void testUpdateUserProfileImage() {
-        userModel.setTestData(testDataUsers);
-        User alice = testDataUsers.get(0);
-        alice.setImage("fK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQ");
+        userRepository.setTestData(createUsersWithNullProfileImages());
+        UserDTO alice = userRepository.getAllUserDtos().get(0);
+        alice.setProfileImage("fK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQ");
 
         assertEquals(alice.getProfileImage(), "fK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQ");
 
-        alice.setImage(null);
+        alice.setProfileImage(null);
         assertNull(alice.getProfileImage());
-    }
-
-    @Test
-    @DisplayName("Should return user by valid credentials and null for invalid ones")
-    void testGetUserByCredentials() {
-        userModel.setTestData(testDataUsers);
-        List<User> data = new ArrayList<>(testDataUsers);
-
-        for (User user : data) {
-            user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
-        }
-        userModel.setTestData(data);
-
-        User user1 = userModel.getUserByCredentials("alice@example.com", "hashedPassword1!", null);
-        User user2 = userModel.getUserByCredentials("charlie@example.com", "hashedPassword1", null);
-        User user3 = userModel.getUserByCredentials("eve@example.com", "hashedPassword3!", null);
-        User user4 = userModel.getUserByCredentials(null, "hashedPassword3!", null);
-
-        assertEquals(user1.getMailAccount(), "alice@example.com");
-        assertNull(user2);
-        assertNull(user3);
-        assertNull(user4);
-    }
-
-    @Test
-    @DisplayName("Should return user by valid token and null for mismatched tokens")
-    void testGetUserByToken() {
-        userModel.setTestData(testDataUsers);
-        User user1 = userModel.getUserByCredentials(null, null, new UserToken("1", "groupA", "alice@example.com"));
-        User user2 = userModel.getUserByCredentials(null, null, new UserToken("3", "groupA", "eve@example.com"));
-        User user3 = userModel.getUserByCredentials(null, null, new UserToken("5", "groupA", "charlie@example.com"));
-        User user4 = userModel.getUserByCredentials(null, null, null);
-
-        assertEquals(user1.getMailAccount(), "alice@example.com");
-        assertNull(user2);
-        assertNull(user3);
-        assertNull(user4);
-    }
-
-    @Test
-    @DisplayName("Should return all users belonging to the same group as the token")
-    void testGetAllUserAccounts() {
-        userModel.setTestData(testDataUsers);
-        UserToken groupAToken = new UserToken("1", "groupA", "alice@example.com");
-        UserToken groupBToken = new UserToken("3", "groupB", "charlie@example.com");
-
-        List<User> groupA = userModel.getAllUserAccounts(groupAToken);
-        List<User> groupB = userModel.getAllUserAccounts(groupBToken);
-        List<User> groupC = userModel.getAllUserAccounts(null);
-
-        assertNotNull(groupA);
-        assertNotNull(groupB);
-        assertNull(groupC);
-        assertEquals(2, groupA.size());
-        assertEquals(2, groupB.size());
-
     }
 
     @Test
     @DisplayName("Should add another account")
     void testAddingAnotherAccount() {
-        userModel.setTestData(testDataUsers);
-        List<User> data = new ArrayList<>(testDataUsers);
+        prepareData(null);
 
-        for (User user : data) {
-            user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
-        }
-        userModel.setTestData(data);
+        userRepository.addUser(
+                new UserDTO(null, null, "test.addanother@gmail.com", null, "Example@123", "Example@123", null),
+                AddOperationType.ANOTHERACCOUNT);
 
-        UserToken userToken = new UserToken("1", "groupA", "alice@example.com");
+        assertTrue(userRepository.getAllUserDtos().stream()
+                .anyMatch(userDTO -> userDTO.getMailAccount().equals("test.addanother@gmail.com")));
 
-        userModel.addUser("test.addanother@gmail.com", "Example@123", "Example@123", userToken,
-                AddOperationType.ANOTHERACCOUNT, FormType.ADDACCOUNT);
+        userRepository.addUser(
+                new UserDTO(null, null, "test.addanother2@gmail.com", null, "Example@123", "Example@123", null),
+                AddOperationType.ANOTHERACCOUNT);
 
-        assertTrue(data.stream().anyMatch(user -> user.getMailAccount().equals("test.addanother@gmail.com")));
-
-        userModel.addUser("test.addanother@gmail.com", "Example@123", "Example@123", userToken,
-                AddOperationType.ANOTHERACCOUNT, FormType.ADDACCOUNT);
-
-        userModel.addUser("alice@example.com", "Example@123", "Example@123", userToken, AddOperationType.ANOTHERACCOUNT,
-                FormType.ADDACCOUNT);
-
-        assertTrue(data.size() == 6);
+        assertTrue(userRepository.getAllUserDtos().size() == 7);
     }
 
     @Test
     @DisplayName("Should add another account")
     void testRegisterNewAccount() {
-        userModel.setTestData(testDataUsers);
-        List<User> data = new ArrayList<>(testDataUsers);
+        prepareData(null);
 
-        for (User user : data) {
-            user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
-        }
-        userModel.setTestData(data);
+        userRepository.addUser(
+                new UserDTO(null, null, "test.addanother@gmail.com", null, "Example@123", "Example@123", null),
+                AddOperationType.NEWACCOUNT);
 
-        UserToken userToken = new UserToken("1", "groupA", "alice@example.com");
+        assertTrue(userRepository.getAllUserDtos().stream()
+                .anyMatch(userDTO -> userDTO.getMailAccount().equals("test.addanother@gmail.com")));
 
-        userModel.addUser("test.addanother@gmail.com", "Example@123", "Example@123", userToken,
-                AddOperationType.NEWACCOUNT, FormType.REGISTER);
+        userRepository.addUser(
+                new UserDTO(null, null, "test.addanother2@gmail.com", null, "Example@123", "Example@123", null),
+                AddOperationType.NEWACCOUNT);
 
-        assertTrue(data.stream().anyMatch(user -> user.getMailAccount().equals("test.addanother@gmail.com")));
-
-        userModel.addUser("test.addanother@gmail.com", "Example@123", "Example@123", userToken,
-                AddOperationType.NEWACCOUNT, FormType.REGISTER);
-
-        userModel.addUser("alice@example.com", "Example@123", "Example@123", userToken, AddOperationType.NEWACCOUNT,
-                FormType.REGISTER);
-
-        assertTrue(data.size() == 6);
+        assertTrue(userRepository.getAllUserDtos().size() == 7);
     }
 
     @Test
     @DisplayName("Should update account of not logged user")
     void testUpdateNotLoggedAccount() {
-        userModel.setTestData(testDataUsers);
-        List<User> data = new ArrayList<>(testDataUsers);
+        prepareData(null);
 
-        for (User user : data) {
-            user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
-        }
+        UserDTO foundUserDTO = getUserByEmailAndPassword("alice@example.com", "hashedPassword1!",
+                userRepository.getAllUserDtos());
+        assertNotNull(foundUserDTO);
 
-        userModel.setTestData(data);
+        foundUserDTO.setPassword("Example@123456");
+        foundUserDTO.setConfirmPassword("Example@123456");
+        userRepository.updateUser(foundUserDTO, FormType.FORGOTCREDENTIALS);
+        assertNotNull(
+                getUserByEmailAndPassword("alice@example.com", "Example@123456", userRepository.getAllUserDtos()));
 
-        User foundUser = userModel.getUserByCredentials("alice@example.com", "hashedPassword1!", null);
-        assertNotNull(foundUser);
+        UserDTO foundUserDTO2 = getUserByEmailAndPassword("bob@example.com", "hashedPassword2!",
+                userRepository.getAllUserDtos());
+        assertNotNull(foundUserDTO2);
 
-        userModel.updateUser(foundUser, "Example@123456", "Example@123456", FormType.FORGOTCREDENTIALS);
-
-        assertNotNull(userModel.getUserByCredentials("alice@example.com", "Example@123456", null));
-
-        User foundUser2 = userModel.getUserByCredentials("bob@example.com", "hashedPassword2!", null);
-        assertNotNull(foundUser2);
-
-        userModel.updateUser(foundUser2, "Example@123456789", "Example@123456789", FormType.FORGOTCREDENTIALS);
-
-        assertNull(userModel.getUserByCredentials("bob@example.com", "Example@123456", null));
+        foundUserDTO2.setPassword("Example@123456789");
+        foundUserDTO2.setConfirmPassword("Example@123456789");
+        userRepository.updateUser(foundUserDTO2, FormType.FORGOTCREDENTIALS);
+        assertNull(getUserByEmailAndPassword("bob@example.com", "Example@123456", userRepository.getAllUserDtos()));
     }
 
     @Test
     @DisplayName("Should update account logged user")
     void testUpdateLoggedAccount() {
-        userModel.setTestData(testDataUsers);
-        List<User> data = new ArrayList<>(testDataUsers);
         List<UserToken> tokens = new ArrayList<>();
+        prepareData(tokens);
 
-        for (User user : data) {
-            user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
-            tokens.add(new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount()));
-        }
+        UserDTO foundUserDTO = getUserByToken(tokens.get(0), userRepository.getAllUserDtos());
+        assertNotNull(foundUserDTO);
 
-        userModel.setTestData(data);
+        foundUserDTO.setPassword("Example@123456");
+        foundUserDTO.setConfirmPassword("Example@123456");
+        userRepository.updateUser(foundUserDTO, FormType.FORGOTCREDENTIALS);
+        assertNotNull(getUserByEmailAndPassword(foundUserDTO.getMailAccount(), "Example@123456",
+                userRepository.getAllUserDtos()));
 
-        User foundUser = userModel.getUserByCredentials(null, null, tokens.get(0));
-        assertNotNull(foundUser);
+        UserDTO foundUserDTO2 = getUserByToken(tokens.get(1), userRepository.getAllUserDtos());
+        assertNotNull(foundUserDTO2);
 
-        userModel.updateUser(foundUser, "Example@123456", "Example@123456", FormType.FORGOTCREDENTIALS);
-
-        assertNotNull(userModel.getUserByCredentials(foundUser.getMailAccount(), "Example@123456", null));
-
-        User foundUser2 = userModel.getUserByCredentials(null, null, tokens.get(1));
-        assertNotNull(foundUser2);
-
-        userModel.updateUser(foundUser2, "Example@123456789", "Example@123456789", FormType.FORGOTCREDENTIALS);
-
-        assertNull(userModel.getUserByCredentials(foundUser2.getMailAccount(), "Example@123456", null));
+        foundUserDTO2.setPassword("Example@123456789");
+        foundUserDTO2.setConfirmPassword("Example@123456789");
+        userRepository.updateUser(foundUserDTO2, FormType.FORGOTCREDENTIALS);
+        assertNull(getUserByEmailAndPassword(foundUserDTO2.getMailAccount(), "Example@123456",
+                userRepository.getAllUserDtos()));
     }
 }

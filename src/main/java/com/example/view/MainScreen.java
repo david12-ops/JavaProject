@@ -17,6 +17,7 @@ public class MainScreen extends VBox {
     // message
     // TODO - Better use of StateService
     // TODO - build tests - message part
+    // TODO - test on services too (auth, account)
 
     public MainScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController) {
