@@ -80,11 +80,11 @@ public class UserAccountService implements AccountService {
 
         boolean isValid = userValidator.validProfileImage(file);
 
-        if (isValid && userDTO != null && file == null) {
+        if (isValid && file == null) {
             userRepository.updateUser(userDTO, (File) null);
         }
 
-        if (isValid && userDTO != null && file != null) {
+        if (isValid && file != null) {
             userRepository.updateUser(userDTO, file);
         }
     }
