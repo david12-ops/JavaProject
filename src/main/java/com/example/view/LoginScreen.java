@@ -36,19 +36,19 @@ public class LoginScreen extends VBox {
             Label passwordErrorLabel, UserController userController, ScreenController screenController,
             MessageController messageController, Label labelError, Stage stage) {
 
-        boolean valid = true;
+        boolean isValid = true;
 
         if (emailField.getText().isBlank()) {
             emailErrorLabel.setText("Email is required");
-            valid = false;
+            isValid = false;
         }
 
         if (passwordField.getText().isBlank()) {
             passwordErrorLabel.setText("Password is required");
-            valid = false;
+            isValid = false;
         }
 
-        if (valid) {
+        if (isValid) {
             userController.login(emailField.getText(), passwordField.getText());
             if (userController.getLoggedUser() != null) {
                 emailField.clear();

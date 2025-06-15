@@ -23,7 +23,7 @@ public interface AuthService {
         boolean updateLoggedInAccount(String newPassword, String confirmationNewPassword, FormType formType,
                         UserRepository userRepository);
 
-        boolean switchAccount(UserDTO switchToUserDTO);
+        boolean switchAccount(UserDTO switchToUserDTO, UserRepository userRepository);
 
         ErrorHandler getErrorHandler();
 }

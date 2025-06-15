@@ -26,12 +26,20 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
-    public String getError(String errorName) {
+    public String getAuthError(String errorName) {
         return authService.getErrorHandler().getError(errorName);
     }
 
-    public void clearError(String errorName) {
+    public void clearAuthError(String errorName) {
         authService.getErrorHandler().removeError(errorName);
+    }
+
+    public String getAccountError(String errorName) {
+        return accountService.getErrorHandler().getError(errorName);
+    }
+
+    public void clearAccountError(String errorName) {
+        accountService.getErrorHandler().removeError(errorName);
     }
 
     // Auth
@@ -83,7 +91,7 @@ public class UserController {
     }
 
     public boolean switchAccount(UserDTO switchToUserDTO) {
-        return authService.switchAccount(switchToUserDTO);
+        return authService.switchAccount(switchToUserDTO, userRepository);
     }
 
     public List<UserDTO> getAllUserAccounts() {

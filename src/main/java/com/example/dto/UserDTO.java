@@ -1,5 +1,7 @@
 package com.example.dto;
 
+import com.example.utils.enums.ViewLevel;
+
 public class UserDTO {
     private String userId;
 
@@ -41,6 +43,13 @@ public class UserDTO {
             return false;
         UserDTO userDTO = (UserDTO) obj;
         return userId.equals(userDTO.userId);
+    }
+
+    public void sanitize(ViewLevel level) {
+        if (level == ViewLevel.PUBLIC) {
+            this.currentPassword = null;
+            this.groupId = null;
+        }
     }
 
     public String getUserId() {

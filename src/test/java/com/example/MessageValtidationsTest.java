@@ -96,21 +96,21 @@ public class MessageValtidationsTest {
 
         for (int i = 0; i < messsages.size(); i++) {
             Message mess = messsages.get(i);
-            boolean valid = validator.validMessageData(mess.getReceiver(), mess.getSubject(), mess.getMessage());
+            boolean isValid = validator.validMessageData(mess.getReceiver(), mess.getSubject(), mess.getMessage());
             if (i == 0) {
-                assertFalse(valid);
+                assertFalse(isValid);
                 compareErrors("Please enter a valid email address (e.g., user@example.com).", "email", errorHandler);
             }
             if (i == 1) {
-                assertFalse(valid);
+                assertFalse(isValid);
                 compareErrors("Subject is too long.", "subject", errorHandler);
             }
             if (i == 2) {
-                assertFalse(valid);
+                assertFalse(isValid);
                 compareErrors("Message is too long.", "message", errorHandler);
             }
             if (i == 3) {
-                assertTrue(valid);
+                assertTrue(isValid);
             }
         }
     }

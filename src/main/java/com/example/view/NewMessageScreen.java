@@ -72,15 +72,15 @@ public class NewMessageScreen extends VBox implements GuiErrorHelper {
             Label whomErrorLabel, Label subjectErrorLabel, Label messageTextAreaErrorLabel, Label attachFileErrorLabel,
             List<File> selectedFiles, Stage stage) {
 
-        boolean valid = true;
+        boolean isValid = true;
         clearErrorLabels(whomErrorLabel, subjectErrorLabel, messageTextAreaErrorLabel);
 
         if (whomField.getText().isBlank()) {
             whomErrorLabel.setText("Email is required");
-            valid = false;
+            isValid = false;
         }
 
-        if (valid) {
+        if (isValid) {
             messageController.addMessage(userController.getLoggedUser(), whomField.getText(), subjectField.getText(),
                     messageAreaField.getText(), selectedFiles);
 
@@ -91,11 +91,11 @@ public class NewMessageScreen extends VBox implements GuiErrorHelper {
 
             if (messageController.getError("email") != null || messageController.getError("subject") != null
                     || messageController.getError("message") != null || messageController.getError("file") != null) {
-                valid = false;
+                isValid = false;
             }
         }
 
-        if (valid) {
+        if (isValid) {
             clearFields(whomField, subjectField, messageAreaField, whomErrorLabel, subjectErrorLabel,
                     messageTextAreaErrorLabel, messageController);
             fileChooserUI.clearFileBox();

@@ -18,4 +18,6 @@ public interface AccountService {
     void updateImageProfile(UserToken userToken, File file, UserRepository userRepository);
 
     Image getImageProfile(UserToken userToken, UserRepository userRepository);
+
+    ErrorHandler getErrorHandler();
 }

@@ -49,25 +49,25 @@ public class ForgotCredentialsScreen extends VBox implements GuiErrorHelper {
         if (passwordErrorLabel != null && passwordField != null) {
             passwordField.clear();
             passwordErrorLabel.setText("");
-            userController.clearError("password");
+            userController.clearAuthError("password");
         }
 
         if (newPasswordErrorLabel != null && newPasswordField != null) {
             newPasswordField.clear();
             newPasswordErrorLabel.setText("");
-            userController.clearError("newPassword");
+            userController.clearAuthError("newPassword");
         }
 
         if (confirmNewPasswordErrorLabel != null && confirmNewPasswordField != null) {
             confirmNewPasswordField.clear();
             confirmNewPasswordErrorLabel.setText("");
-            userController.clearError("confirmNewPassword");
+            userController.clearAuthError("confirmNewPassword");
         }
 
         if (emailErrorLabel != null && emailField != null) {
             emailField.clear();
             emailErrorLabel.setText("");
-            userController.clearError("email");
+            userController.clearAuthError("email");
         }
 
         labelError.setText("");
@@ -92,79 +92,79 @@ public class ForgotCredentialsScreen extends VBox implements GuiErrorHelper {
             Label passwordErrorLabel, Label newPasswordErrorLabel, Label confirmNewPasswordErrorLabel,
             UserController userController, ScreenController screenController, Label labelError, UserToken userToken) {
 
-        boolean valid = true;
+        boolean isValid = true;
         labelError.setText("");
         clearErrorLabels(emailErrorLabel, passwordErrorLabel, newPasswordErrorLabel, confirmNewPasswordErrorLabel);
 
         if (userToken == null) {
             if (emailField.getText().isBlank()) {
                 emailErrorLabel.setText("Email is required");
-                valid = false;
+                isValid = false;
             }
 
             if (passwordField.getText().isBlank()) {
                 passwordErrorLabel.setText("Current password is required");
-                valid = false;
+                isValid = false;
             }
         }
 
         if (newPasswordField.getText().isBlank()) {
             newPasswordErrorLabel.setText("New password is required");
-            valid = false;
+            isValid = false;
         }
 
         if (confirmNewPasswordField.getText().isBlank()) {
             confirmNewPasswordErrorLabel.setText("Confirmation new password is required");
-            valid = false;
+            isValid = false;
         }
 
         boolean updated = false;
 
         if (userToken != null) {
-            if (valid) {
+            if (isValid) {
                 updated = userController.updateLoggedInAccount(newPasswordField.getText(),
                         confirmNewPasswordField.getText());
 
-                showIfError(userController.getError("newPassword"), newPasswordErrorLabel);
-                showIfError(userController.getError("confirmNewPassword"), confirmNewPasswordErrorLabel);
+                showIfError(userController.getAuthError("newPassword"), newPasswordErrorLabel);
+                showIfError(userController.getAuthError("confirmNewPassword"), confirmNewPasswordErrorLabel);
 
-                if (userController.getError("newPassword") != null
-                        || userController.getError("confirmNewPassword") != null) {
-                    valid = false;
+                if (userController.getAuthError("newPassword") != null
+                        || userController.getAuthError("confirmNewPassword") != null) {
+                    isValid = false;
                 }
             }
 
-            if (valid && updated) {
+            if (isValid && updated) {
                 clearFields(newPasswordField, confirmNewPasswordField, null, null, userController, null, null,
                         newPasswordErrorLabel, confirmNewPasswordErrorLabel, labelError);
                 userController.logOut();
                 screenController.activate("login", stage);
-            } else if (valid) {
+            } else if (isValid) {
                 labelError.setText(
                         "Password update failed due to an unexpected error or bad credentials. Please try again or contact support");
             }
         }
 
         if (userToken == null) {
-            if (valid) {
+            if (isValid) {
                 updated = userController.updateNotLoggedAccount(emailField.getText(), passwordField.getText(),
                         newPasswordField.getText(), confirmNewPasswordField.getText());
 
-                showIfError(userController.getError("newPassword"), newPasswordErrorLabel);
-                showIfError(userController.getError("confirmNewPassword"), confirmNewPasswordErrorLabel);
+                showIfError(userController.getAuthError("newPassword"), newPasswordErrorLabel);
+                showIfError(userController.getAuthError("confirmNewPassword"), confirmNewPasswordErrorLabel);
 
-                if (userController.getError("newPassword") != null
-                        || userController.getError("confirmNewPassword") != null) {
-                    valid = false;
+                if (userController.getAuthError("newPassword") != null
+                        || userController.getAuthError("confirmNewPassword") != null) {
+                    isValid = false;
                 }
             }
 
-            if (valid && updated) {
+            if (isValid && updated) {
                 clearFields(newPasswordField, confirmNewPasswordField, passwordField, emailField, userController,
                         emailErrorLabel, passwordErrorLabel, newPasswordErrorLabel, confirmNewPasswordErrorLabel,
                         labelError);
                 screenController.activate("login", stage);
-            } else if (valid) {
+            } else if (isValid) {
                 labelError.setText(
                         "Password update failed due to an unexpected error or bad credentials. Please try again or contact support");
             }
@@ -193,7 +193,7 @@ public class ForgotCredentialsScreen extends VBox implements GuiErrorHelper {
             if (!newValue.isBlank()) {
                 newPasswordErrorLabel.setText("");
                 labelError.setText("");
-                userController.clearError("newPassword");
+                userController.clearAuthError("newPassword");
             }
         });
 
@@ -201,7 +201,7 @@ public class ForgotCredentialsScreen extends VBox implements GuiErrorHelper {
             if (!newValue.isBlank()) {
                 confirmNewPasswordErrorLabel.setText("");
                 labelError.setText("");
-                userController.clearError("confirmNewPassword");
+                userController.clearAuthError("confirmNewPassword");
             }
         });
     }

@@ -31,18 +31,18 @@ public class UpdateAvatar extends VBox {
             try {
                 dropZone.setVisibility(true);
                 imageErrorLabel.setText("");
-                userController.clearError("file");
+                userController.clearAccountError("file");
                 File file = new File(new java.net.URI(image.getUrl()));
                 userController.updateImageProfile(file);
 
-                if (userController.getError("file") == null) {
+                if (userController.getAccountError("file") == null) {
                     screenController.updateScreen("main",
                             new MainScreen(stage, screenController, userController, messageController));
                     screenController.updateScreen("switchUser",
                             new SwitchUserScreen(stage, screenController, userController, messageController));
                     screenController.activate("main", stage);
                 } else {
-                    imageErrorLabel.setText(userController.getError("file"));
+                    imageErrorLabel.setText(userController.getAccountError("file"));
                 }
 
             } catch (Exception ex) {

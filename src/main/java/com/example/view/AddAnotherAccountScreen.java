@@ -49,9 +49,9 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
         emailField.clear();
         passwordField.clear();
         confirmPasswordField.setText("");
-        userController.clearError("confirmPassword");
-        userController.clearError("email");
-        userController.clearError("password");
+        userController.clearAuthError("confirmPassword");
+        userController.clearAuthError("email");
+        userController.clearAuthError("password");
     }
 
     private void addButtonAction(Stage stage, TextField emailField, PasswordField passwordField,
@@ -59,47 +59,47 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
             Label passwordErrorLabel, UserController userController, ScreenController screenController,
             MessageController messageControll, Label labelError) {
 
-        boolean valid = true;
+        boolean isValid = true;
         labelError.setText("");
         clearErrorLabels(emailErrorLabel, passwordErrorLabel, confirmPasswordErrorLabel);
 
         if (emailField.getText().isBlank()) {
             emailErrorLabel.setText("Email is required");
-            valid = false;
+            isValid = false;
         }
         if (passwordField.getText().isBlank()) {
             passwordErrorLabel.setText("Password is required");
-            valid = false;
+            isValid = false;
         }
         if (confirmPasswordField.getText().isBlank()) {
             confirmPasswordErrorLabel.setText("Confirmation password is required");
-            valid = false;
+            isValid = false;
         }
 
         boolean addedAccount = false;
 
-        if (valid) {
+        if (isValid) {
             addedAccount = userController.addAnotherAccount(emailField.getText(), passwordField.getText(),
                     confirmPasswordField.getText());
 
-            showIfError(userController.getError("email"), emailErrorLabel);
-            showIfError(userController.getError("password"), passwordErrorLabel);
-            showIfError(userController.getError("confirmPassword"), confirmPasswordErrorLabel);
+            showIfError(userController.getAuthError("email"), emailErrorLabel);
+            showIfError(userController.getAuthError("password"), passwordErrorLabel);
+            showIfError(userController.getAuthError("confirmPassword"), confirmPasswordErrorLabel);
 
-            if (userController.getError("email") != null || userController.getError("password") != null
-                    || userController.getError("confirmPassword") != null) {
-                valid = false;
+            if (userController.getAuthError("email") != null || userController.getAuthError("password") != null
+                    || userController.getAuthError("confirmPassword") != null) {
+                isValid = false;
             }
         }
 
-        if (valid && addedAccount) {
+        if (isValid && addedAccount) {
             clearFields(emailErrorLabel, passwordErrorLabel, confirmPasswordErrorLabel, emailField, passwordField,
                     confirmPasswordField, userController);
 
             screenController.updateScreen("switchUser",
                     new SwitchUserScreen(stage, screenController, userController, messageControll));
             screenController.activate("main", stage);
-        } else if (valid) {
+        } else if (isValid) {
             labelError.setText(
                     "Adding new account failed due to an unexpected error or session issue. Please try again or contact support");
         }
@@ -112,7 +112,7 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
             if (!newValue.isBlank()) {
                 emailErrorLabel.setText("");
                 labelError.setText("");
-                userController.clearError("email");
+                userController.clearAuthError("email");
             }
         });
 
@@ -120,7 +120,7 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
             if (!newValue.isBlank()) {
                 passwordErrorLabel.setText("");
                 labelError.setText("");
-                userController.clearError("password");
+                userController.clearAuthError("password");
             }
         });
 
@@ -128,7 +128,7 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
             if (!newValue.isBlank()) {
                 confirmPasswordErrorLabel.setText("");
                 labelError.setText("");
-                userController.clearError("confirmPassword");
+                userController.clearAuthError("confirmPassword");
             }
         });
     }
