@@ -56,14 +56,12 @@ public class UserAuthService implements AuthService {
 
     private boolean validatePasswords(String email, String currentPassword, String password,
             String confirmationPassword, FormType form) {
-
         return userValidator.validPassword(currentPassword, password, email, form)
                 && userValidator.confirmedPassword(password, confirmationPassword, form);
     }
 
     private boolean validateData(OperationType operation, String currentEmail, String newEmail, String currentPassword,
             String password, String confirmationPassword, FormType form, List<UserDTO> userDTOs) {
-
         return userValidator.validEmail(newEmail)
                 && userValidator.nonDuplicateUserWithEmail(operation, currentEmail, newEmail, userDTOs)
                 && validatePasswords(newEmail, currentPassword, password, confirmationPassword, form);
@@ -92,7 +90,6 @@ public class UserAuthService implements AuthService {
     @Override
     public boolean register(String emailAccount, String password, String confirmationPassword, FormType formType,
             AddOperationType addTypeOperation, UserRepository userRepository) {
-
         UserDTO userDTO;
         boolean isFormTypeSupported;
 

@@ -13,7 +13,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class Layout extends BorderPane {
-
     public Layout(Stage stage, Node content, ScreenController screenController, UserController userController,
             MessageController messageController) {
 

@@ -1,7 +1,6 @@
 package com.example.model;
 
 public class UserToken {
-
     private final String mailAccount;
     private final String groupId;
     private final String userId;

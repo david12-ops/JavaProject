@@ -17,7 +17,6 @@ import com.example.utils.services.UserAuthService;
 import javafx.scene.image.Image;
 
 public class UserController {
-
     private UserRepository userRepository;
     private final AuthService authService = new UserAuthService(SessionService.getInstance());
     private final AccountService accountService = new UserAccountService();

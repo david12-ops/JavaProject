@@ -18,7 +18,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.github.cdimascio.dotenv.Dotenv;
 
 public class UserRepository {
-
     static Dotenv dotenv = Dotenv.load();
     private List<User> listOfUsers;
     private JsonStorageTool<User> storageTool;
@@ -115,5 +114,4 @@ public class UserRepository {
         });
         return userDTOs;
     }
-
 }

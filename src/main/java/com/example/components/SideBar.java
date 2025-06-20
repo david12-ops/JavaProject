@@ -17,7 +17,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class SideBar extends VBox {
-
         public SideBar(Stage stage, ScreenController screenController) {
                 setPadding(new Insets(20));
                 setSpacing(10);

@@ -10,7 +10,6 @@ import java.io.File;
 import java.util.function.Consumer;
 
 public class ImageDropZone extends StackPane {
-
     private static final String SUPPORTED_IMAGE_FILES = "(?i).*\\.(png|jpg|jpeg|gif)$";
     private final ImageView imageView = new ImageView();
     private Consumer<Image> onImageDropped;

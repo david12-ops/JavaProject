@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
 public class User {
-
     @JsonProperty("user_id")
     private final String userId;
 

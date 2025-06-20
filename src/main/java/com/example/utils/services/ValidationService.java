@@ -35,19 +35,16 @@ public class ValidationService {
 
         @Override
         public boolean validEmail(String email) {
-
             if (email == null || !EMAIL_REGEX.matcher(email).matches()) {
                 errorHandler.logError(errorHandler.createErrorBody("email",
                         "Please enter a valid email address (e.g., user@example.com)."));
                 return false;
             }
-
             return true;
         }
 
         @Override
         public boolean validPassword(String currentPassword, String password, String email, FormType form) {
-
             if (password == null || !PASSWORD_REGEX.matcher(password).matches()) {
                 if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
                     errorHandler.logError(errorHandler.createErrorBody("password",
@@ -63,7 +60,6 @@ public class ValidationService {
             }
 
             if (email != null) {
-
                 int atIndex = email.indexOf('@');
                 String emailPart = atIndex == -1 ? null : email.substring(0, atIndex).toLowerCase().trim();
                 String lowerPassword = password.toLowerCase();
@@ -106,14 +102,12 @@ public class ValidationService {
                     return false;
                 }
             }
-
             return true;
         }
 
         @Override
         public boolean nonDuplicateUserWithEmail(OperationType operation, String currentUserEmail, String newEmail,
                 List<UserDTO> userDTOs) {
-
             if (userDTOs != null && !userDTOs.isEmpty()) {
                 List<UserDTO> fliteredUserDTOs = operation == OperationType.UPDATE && currentUserEmail != null
                         ? userDTOs.stream().filter(userDTO -> !userDTO.getMailAccount().equals(currentUserEmail))
@@ -134,7 +128,6 @@ public class ValidationService {
 
         @Override
         public boolean confirmedPassword(String password, String confirmationPassword, FormType form) {
-
             if (!password.equals(confirmationPassword)) {
                 if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
                     errorHandler.logError(errorHandler.createErrorBody("confirmPassword",
@@ -145,10 +138,8 @@ public class ValidationService {
                     errorHandler.logError(errorHandler.createErrorBody("confirmNewPassword",
                             "New password does not match the confirmation."));
                 }
-
                 return false;
             }
-
             return true;
         }
 
@@ -161,10 +152,8 @@ public class ValidationService {
                             .logError(errorHandler.createErrorBody("file", "Unsupported file type for profile image."));
                     return false;
                 }
-
                 return true;
             }
-
             return true;
         }
     }
@@ -179,7 +168,6 @@ public class ValidationService {
 
         @Override
         public boolean validFiles(List<File> files) {
-
             messagePartForNullFiles.put(1, "first");
             messagePartForNullFiles.put(2, "second");
             messagePartForNullFiles.put(3, "third");
@@ -193,9 +181,7 @@ public class ValidationService {
             }
 
             if (files != null) {
-
                 for (File file : files) {
-
                     if (file == null) {
                         errorHandler.logError(errorHandler.createErrorBody("file",
                                 "We couldn't process your " + messagePartForNullFiles.get(files.indexOf(file) + 1)
@@ -217,16 +203,13 @@ public class ValidationService {
                         return false;
                     }
                 }
-
                 return true;
             }
-
             return true;
         }
 
         @Override
         public boolean validMessageData(String whom, String subject, String message) {
-
             if (whom == null || !EMAIL_REGEX.matcher(whom).matches()) {
                 errorHandler.logError(errorHandler.createErrorBody("email",
                         "Please enter a valid email address (e.g., user@example.com)."));
@@ -242,7 +225,6 @@ public class ValidationService {
                 errorHandler.logError(errorHandler.createErrorBody("message", "Message is too long."));
                 return false;
             }
-
             return true;
         }
 

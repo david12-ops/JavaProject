@@ -14,7 +14,6 @@ import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 
 public class Table extends HBox {
-
     private Label createLabel(String displayText) {
         Label colLabel = new Label(displayText);
         colLabel.setStyle(

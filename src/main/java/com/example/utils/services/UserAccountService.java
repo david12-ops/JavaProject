@@ -18,7 +18,6 @@ import com.example.utils.interfaces.UserValidator;
 import javafx.scene.image.Image;
 
 public class UserAccountService implements AccountService {
-
     private final ValidationContext validationContext = new ValidationContext(ValidationMode.USER);
     private ErrorHandler errorHandler;
     private UserValidator userValidator;

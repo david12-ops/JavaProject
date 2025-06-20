@@ -26,7 +26,6 @@ import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 public class CustomGridPane extends HBox {
-
     private class GridDimension {
 
         private Integer rows;

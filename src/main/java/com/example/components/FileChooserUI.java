@@ -20,7 +20,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 public class FileChooserUI extends VBox {
-
     private static final Map<String, String> EXTENSION_ICON_MAP = Map.ofEntries(
             Map.entry("doc", "/icons/icons8-microsoft-word-file.png"),
             Map.entry("docx", "/icons/icons8-microsoft-word-file.png"), Map.entry("xls", "/icons/icons8-xls-file.png"),
