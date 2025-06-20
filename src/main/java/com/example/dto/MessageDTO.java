@@ -1,12 +1,17 @@
 package com.example.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.example.utils.enums.MessageStatus;
+import com.example.utils.enums.ViewLevel;
 
 public class MessageDTO {
+    private String messageId;
+
+    private String senderId;
 
     private Map<String, Set<MessageStatus>> statuses;
 
@@ -18,16 +23,46 @@ public class MessageDTO {
 
     private List<String> attachedFiles;
 
+    private LocalDateTime timestamp;
+
     public MessageDTO() {
     }
 
-    public MessageDTO(Map<String, Set<MessageStatus>> statuses, String receiver, String subject, String message,
-            List<String> attachedFiles) {
-        this.statuses = statuses;
+    public MessageDTO(String messageId, String senderId, String receiver, String subject, String message,
+            LocalDateTime timestamp, List<String> attachedFiles, Map<String, Set<MessageStatus>> statuses) {
+        this.messageId = messageId;
+        this.senderId = senderId;
         this.receiver = receiver;
         this.subject = subject;
         this.message = message;
+        this.timestamp = timestamp;
+        this.statuses = statuses;
         this.attachedFiles = attachedFiles;
+    }
+
+    public void sanitize(ViewLevel level) {
+        if (level == ViewLevel.PUBLIC) {
+            this.receiver = null;
+            this.messageId = null;
+            this.senderId = null;
+            this.timestamp = null;
+        }
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
+    }
+
+    public String getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
     }
 
     public Map<String, Set<MessageStatus>> getStatuses() {
@@ -68,5 +103,13 @@ public class MessageDTO {
 
     public void setAttachedFiles(List<String> attachedFiles) {
         this.attachedFiles = attachedFiles;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 }
