@@ -127,5 +127,4 @@ public class UserAccountService implements AccountService {
     public ErrorHandler getErrorHandler() {
         return errorHandler;
     }
-
 }

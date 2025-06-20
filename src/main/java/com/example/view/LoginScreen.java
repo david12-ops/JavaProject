@@ -81,7 +81,6 @@ public class LoginScreen extends VBox {
 
     public LoginScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController) {
-
         Label labelError = createErrorLabel();
 
         Label emailLabel = new Label("Email:");

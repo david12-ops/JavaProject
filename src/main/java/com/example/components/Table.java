@@ -114,5 +114,4 @@ public class Table extends HBox {
         this.getChildren().add(table);
         this.setAlignment(Pos.CENTER);
     }
-
 }

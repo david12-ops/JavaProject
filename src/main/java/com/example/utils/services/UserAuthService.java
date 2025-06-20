@@ -221,5 +221,4 @@ public class UserAuthService implements AuthService {
     public ErrorHandler getErrorHandler() {
         return errorHandler;
     }
-
 }

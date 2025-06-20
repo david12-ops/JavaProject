@@ -14,7 +14,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 class FilePersistence<T> {
-
     Dotenv dotenv = Dotenv.load();
     private final String FOLDER_PATH = dotenv.get("FOLDER_DATA_LOCATION");
 

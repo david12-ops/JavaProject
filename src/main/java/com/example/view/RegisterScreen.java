@@ -16,7 +16,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class RegisterScreen extends VBox implements GuiErrorHelper {
-
     @Override
     public Label createErrorLabel() {
         Label label = new Label();
@@ -132,7 +131,6 @@ public class RegisterScreen extends VBox implements GuiErrorHelper {
     }
 
     public RegisterScreen(Stage stage, ScreenController screenController, UserController userController) {
-
         Label labelError = createErrorLabel();
 
         Label emailLabel = new Label("Email:");

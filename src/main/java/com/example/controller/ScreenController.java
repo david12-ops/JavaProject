@@ -89,5 +89,4 @@ public class ScreenController {
             throw new IllegalArgumentException("Screen not found: " + name);
         }
     }
-
 }

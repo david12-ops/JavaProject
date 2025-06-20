@@ -10,7 +10,6 @@ import java.io.File;
 import java.util.List;
 
 public interface AccountService {
-
     boolean removeAccount(UserToken userToken, UserDTO userDTO, UserRepository userRepository);
 
     List<UserDTO> getAllUserAccounts(UserToken userToken, UserRepository userRepository);

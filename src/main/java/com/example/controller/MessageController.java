@@ -53,5 +53,4 @@ public class MessageController {
 
         return messages;
     }
-
 }

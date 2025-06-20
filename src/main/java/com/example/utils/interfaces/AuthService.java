@@ -7,7 +7,6 @@ import com.example.utils.enums.AddOperationType;
 import com.example.utils.enums.FormType;
 
 public interface AuthService {
-
         boolean register(String emailAccount, String password, String confirmationPassword, FormType formType,
                         AddOperationType addTypeOperation, UserRepository userRepository);
 

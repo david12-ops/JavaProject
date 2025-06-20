@@ -44,5 +44,4 @@ public class Layout extends BorderPane {
         this.setLeft(sideBar);
         this.setCenter(contentArea);
     }
-
 }

@@ -135,7 +135,6 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
 
     public AddAnotherAccountScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageControll) {
-
         Label labelError = createErrorLabel();
 
         Label emailLabel = new Label("Email:");

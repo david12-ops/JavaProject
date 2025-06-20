@@ -20,7 +20,6 @@ public class SwitchUserScreen extends VBox {
 
     public SwitchUserScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController) {
-
         List<UserDTO> userDTOs = userController.getAllUserAccounts();
         Layout layout = null;
         VBox content = null;
@@ -36,7 +35,6 @@ public class SwitchUserScreen extends VBox {
         textTitle.setMaxWidth(Double.MAX_VALUE);
 
         if (userDTOs != null && userDTOs.size() > 0) {
-
             CustomGridPane gridPane = new CustomGridPane(screenController, userController, messageController, stage);
             content = new VBox(textTitle, gridPane);
 
@@ -44,7 +42,6 @@ public class SwitchUserScreen extends VBox {
         } else {
             HBox textInfHBox = new HBox(textInfoLabel);
             textInfHBox.setAlignment(Pos.CENTER);
-
             content = new VBox(20, textTitle, textInfHBox);
 
             layout = new Layout(stage, content, screenController, userController, messageController);

@@ -207,7 +207,6 @@ public class ForgotCredentialsScreen extends VBox implements GuiErrorHelper {
     }
 
     public ForgotCredentialsScreen(Stage stage, ScreenController screenController, UserController userController) {
-
         UserToken userToken = userController.getLoggedUser();
 
         Label labelError = createErrorLabel();

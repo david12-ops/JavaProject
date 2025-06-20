@@ -135,7 +135,6 @@ public class NewMessageScreen extends VBox implements GuiErrorHelper {
 
     public NewMessageScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController) {
-
         Label attachFileErrorLabel = createErrorLabel();
         fileChooserUI = new FileChooserUI(attachFileErrorLabel, messageController);
 

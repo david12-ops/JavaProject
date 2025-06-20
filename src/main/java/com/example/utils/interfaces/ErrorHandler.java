@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public interface ErrorHandler {
-
     void logError(Entry<String, String> error);
 
     boolean retryOperation(Runnable operation, int maxRetries);
