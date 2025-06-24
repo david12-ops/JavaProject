@@ -65,6 +65,24 @@ public class MailboxService implements MailService {
         defineMessageStatusTransition();
     }
 
+    @Override
+    public void sendMessage() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'sendMessage'");
+    }
+
+    @Override
+    public void updateStatus() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updateStatus'");
+    }
+
+    @Override
+    public void removeMessage() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeMessage'");
+    }
+
     // public List<Message> getAllReceviedMessagesByUser(String recevierEmail) {
     // return listOfMessages.stream().filter(message ->
     // message.getReceiver().equals(recevierEmail)).toList();
