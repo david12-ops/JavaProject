@@ -8,9 +8,15 @@ import com.example.dto.MessageDTO;
 import com.example.model.UserToken;
 import com.example.model.repository.MessageRepository;
 import com.example.utils.enums.MessageStatus;
+import com.example.utils.enums.ViewLevel;
 import com.example.utils.services.MailboxService;
 
 public class MessageController {
+    /*
+     * controlers will not have direct access to register because of limitations
+     * that come with this do factory to repository to have shred one instance
+     * across services (optional private constructor)
+     */
     private MessageRepository messageRegister;
     private final MailboxService mailboxService = MailboxService.getInstance();
 
@@ -40,6 +46,8 @@ public class MessageController {
     }
 
     public List<MessageDTO> getMessages(MessageStatus type, UserToken userToken) {
-        return messageRegister.getAllMessageDtos();
+        List<MessageDTO> messageDTOs = messageRegister.getAllMessageDtos();
+        messageDTOs.forEach(messageDTO -> messageDTO.sanitize(ViewLevel.PUBLIC));
+        return messageDTOs;
     }
 }
