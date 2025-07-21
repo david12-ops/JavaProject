@@ -1,9 +1,7 @@
 package com.example.utils.services;
 
-import com.example.model.UserToken;
 import com.example.utils.ValidationContext;
 import com.example.utils.enums.ValidationMode;
-import com.example.utils.interfaces.AuthService;
 import com.example.utils.interfaces.ErrorHandler;
 import com.example.utils.interfaces.MailService;
 import com.example.utils.interfaces.MessageValidator;
@@ -33,10 +31,7 @@ public class MailboxService implements MailService {
     }
 
     @Override
-    public void sendMessage(UserToken userToken, ) {
-        if (userToken != null) {
-
-        }
+    public void sendMessage() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'sendMessage'");
     }
