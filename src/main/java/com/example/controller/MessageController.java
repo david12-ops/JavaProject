@@ -1,10 +1,10 @@
 package com.example.controller;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.model.Message;
+import com.example.dto.MessageDTO;
 import com.example.model.UserToken;
 import com.example.model.repository.MessageRepository;
 import com.example.utils.enums.MessageStatus;
@@ -27,29 +27,19 @@ public class MessageController {
     }
 
     public void addMessage(UserToken senderToken, String recevierId, String subject, String message, List<File> files) {
-        messageRegister.addMessage(senderToken, recevierId, subject, message, files);
+        messageRegister.addMessage(senderToken,
+                new MessageDTO(null, null, recevierId, subject, message, LocalDateTime.now(), null, null, files));
     }
 
     public void responseToMessage() {
         throw new UnsupportedOperationException("Unimplemented method 'responseToMessage'");
     }
 
-    public void removeMessage(Message message) {
-        messageRegister.removeMessage(message);
+    public void removeMessage(MessageDTO messageDTO) {
+        messageRegister.removeMessage(messageDTO);
     }
 
-    public List<Message> getMessages(MessageStatus type, UserToken userToken) {
-        List<Message> messages = new ArrayList<>();
-
-        // if (type == MessageStatus.SENT && userToken != null) {
-        // messages = messageRegister.getAllSentMessagesByUser(userToken.getUserId());
-        // }
-
-        // if (type == MessageStatus.INBOX && userToken != null) {
-        // messages =
-        // messageRegister.getAllReceviedMessagesByUser(userToken.getMailAccount());
-        // }
-
-        return messages;
+    public List<MessageDTO> getMessages(MessageStatus type, UserToken userToken) {
+        return messageRegister.getAllMessageDtos();
     }
 }

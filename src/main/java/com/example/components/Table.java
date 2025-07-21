@@ -3,7 +3,7 @@ package com.example.components;
 import java.time.LocalDateTime;
 
 import com.example.controller.MessageController;
-import com.example.model.Message;
+import com.example.dto.MessageDTO;
 import com.example.model.UserToken;
 import com.example.utils.enums.MessageStatus;
 
@@ -21,7 +21,7 @@ public class Table extends HBox {
         return colLabel;
     }
 
-    private void styleTable(TableView<Message> table) {
+    private void styleTable(TableView<MessageDTO> table) {
         table.setStyle(
                 "-fx-background-color: white; -fx-background-radius: 15; -fx-border-radius: 15; -fx-border-color: #D9D89F; -fx-border-width: 1; -fx-padding: 10");
 
@@ -36,7 +36,7 @@ public class Table extends HBox {
 
         table.setRowFactory(tv -> new TableRow<>() {
             @Override
-            protected void updateItem(Message item, boolean empty) {
+            protected void updateItem(MessageDTO item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setStyle("");
@@ -52,20 +52,20 @@ public class Table extends HBox {
     }
 
     public Table(MessageController messageController, UserToken userToken, MessageStatus messageStatus) {
-        TableView<Message> table = new TableView<>();
+        TableView<MessageDTO> table = new TableView<>();
         styleTable(table);
 
-        TableColumn<Message, String> subjectCol = new TableColumn<>();
+        TableColumn<MessageDTO, String> subjectCol = new TableColumn<>();
         subjectCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getSubject()));
         subjectCol.setGraphic(createLabel("Subject"));
         subjectCol.setStyle("-fx-alignment: CENTER;");
 
-        TableColumn<Message, String> messageCol = new TableColumn<>();
+        TableColumn<MessageDTO, String> messageCol = new TableColumn<>();
         messageCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getMessage()));
         messageCol.setGraphic(createLabel("Message"));
         messageCol.setStyle("-fx-alignment: CENTER;");
 
-        TableColumn<Message, String> timestampCol = new TableColumn<>();
+        TableColumn<MessageDTO, String> timestampCol = new TableColumn<>();
         timestampCol.setCellValueFactory(data -> {
             LocalDateTime ts = data.getValue().getTimestamp();
             String formatted = ts != null
@@ -79,8 +79,8 @@ public class Table extends HBox {
         timestampCol.setMaxWidth(100);
         timestampCol.setMinWidth(75);
 
-        TableColumn<Message, Void> actionsCol = new TableColumn<>();
-        actionsCol.setCellFactory(col -> new TableCell<Message, Void>() {
+        TableColumn<MessageDTO, Void> actionsCol = new TableColumn<>();
+        actionsCol.setCellFactory(col -> new TableCell<MessageDTO, Void>() {
             private final Button removeButton = new Button("Remove");
 
             {

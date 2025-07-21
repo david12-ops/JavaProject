@@ -1,5 +1,6 @@
 package com.example.dto;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,9 @@ public class MessageDTO {
 
     private String message;
 
-    private List<String> attachedFiles;
+    private List<String> attachedBase64Files;
+
+    private List<File> attachedFiles;
 
     private LocalDateTime timestamp;
 
@@ -29,7 +32,8 @@ public class MessageDTO {
     }
 
     public MessageDTO(String messageId, String senderId, String receiver, String subject, String message,
-            LocalDateTime timestamp, List<String> attachedFiles, Map<String, Set<MessageStatus>> statuses) {
+            LocalDateTime timestamp, List<String> attachedBase64Files, Map<String, Set<MessageStatus>> statuses,
+            List<File> attachedFiles) {
         this.messageId = messageId;
         this.senderId = senderId;
         this.receiver = receiver;
@@ -37,15 +41,16 @@ public class MessageDTO {
         this.message = message;
         this.timestamp = timestamp;
         this.statuses = statuses;
+        this.attachedBase64Files = attachedBase64Files;
         this.attachedFiles = attachedFiles;
     }
 
     public void sanitize(ViewLevel level) {
         if (level == ViewLevel.PUBLIC) {
+            // ?
             this.receiver = null;
             this.messageId = null;
             this.senderId = null;
-            this.timestamp = null;
         }
     }
 
@@ -97,11 +102,19 @@ public class MessageDTO {
         this.message = message;
     }
 
-    public List<String> getAttachedFiles() {
+    public List<String> getAttachedBase64Files() {
+        return attachedBase64Files;
+    }
+
+    public void setAttachedBase64Files(List<String> attachedBase64Files) {
+        this.attachedBase64Files = attachedBase64Files;
+    }
+
+    public List<File> getAttachedFiles() {
         return attachedFiles;
     }
 
-    public void setAttachedFiles(List<String> attachedFiles) {
+    public void setAttachedFiles(List<File> attachedFiles) {
         this.attachedFiles = attachedFiles;
     }
 

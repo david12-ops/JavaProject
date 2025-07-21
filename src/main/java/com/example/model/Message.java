@@ -30,7 +30,7 @@ public class Message {
     private String message;
 
     @JsonProperty("attached_files")
-    private List<String> attachedFiles;
+    private List<String> attachedBase64Files;
 
     @JsonProperty("timestamp")
     private LocalDateTime timestamp;
@@ -42,7 +42,7 @@ public class Message {
     }
 
     public Message(String messageId, String senderId, String receiver, String subject, String message,
-            LocalDateTime timestamp, List<String> attachedFiles, Map<String, Set<MessageStatus>> statuses) {
+            LocalDateTime timestamp, List<String> attachedBase64Files, Map<String, Set<MessageStatus>> statuses) {
         this.messageId = (messageId == null || messageId.isBlank()) ? UUID.randomUUID().toString() : messageId;
         this.senderId = senderId;
         this.receiver = receiver;
@@ -50,7 +50,7 @@ public class Message {
         this.message = message;
         this.timestamp = timestamp;
         this.statuses = statuses;
-        this.attachedFiles = attachedFiles;
+        this.attachedBase64Files = attachedBase64Files;
     }
 
     /*
@@ -91,8 +91,8 @@ public class Message {
         return timestamp;
     }
 
-    public List<String> getAttachedFiles() {
-        return attachedFiles;
+    public List<String> getAttachedBase64Files() {
+        return attachedBase64Files;
     }
 
     public Map<String, Set<MessageStatus>> getStatuses() {

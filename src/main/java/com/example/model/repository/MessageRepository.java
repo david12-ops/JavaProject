@@ -13,7 +13,6 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,8 +56,9 @@ public class MessageRepository {
         return listOfMessages;
     }
 
-    public void addMessage(UserToken senderToken, String recevierEmail, String subject, String message,
-            List<File> files) {
+    public void addMessage(UserToken senderToken, MessageDTO messageDTO) {
+        // String recevier, String subject, String message, List<File> files
+        List<File> files = messageDTO.getAttachedFiles();
         List<String> base64Files = (files != null && !files.isEmpty()) ? files.stream().map(file -> {
             try {
                 return FileConvertor.imageToBase64(file);
@@ -70,36 +70,49 @@ public class MessageRepository {
 
         Map<String, Set<MessageStatus>> messageStatuses = new HashMap<>();
         messageStatuses.put(senderToken.getUserId(), Set.of(MessageStatus.SENT));
-        messageStatuses.put(recevierEmail, Set.of(MessageStatus.INBOX));
+        messageStatuses.put(messageDTO.getReceiver(), Set.of(MessageStatus.INBOX));
 
-        Message newMessage = new Message(null, senderToken.getUserId(), recevierEmail, subject, message,
-                LocalDateTime.now(), base64Files, messageStatuses);
+        Message newMessage = new Message(null, senderToken.getUserId(), messageDTO.getReceiver(),
+                messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(), base64Files,
+                messageStatuses);
 
         applyMessageAdding(newMessage);
     }
 
-    public void removeMessage(Message message) {
+    public void removeMessage(MessageDTO messageDTO) {
+        // Message message
+        Message messageToRemove = new Message(messageDTO.getMessageId(), messageDTO.getSenderId(),
+                messageDTO.getReceiver(), messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
+                messageDTO.getAttachedBase64Files(), messageDTO.getStatuses());
         if (environmentType == EnvironmentType.PRODUCTION) {
-            storageTool.removeItem(message);
+            storageTool.removeItem(messageToRemove);
             listOfMessages = storageTool.getItems();
         } else if (environmentType == EnvironmentType.TEST) {
-            listOfMessages.remove(message);
+            listOfMessages.remove(messageToRemove);
         }
     }
 
-    public void updateMessageStatus(Message message, MessageStatus statusFrom, MessageStatus statusTo,
+    public void updateMessageStatus(MessageDTO messageDTO, MessageStatus statusFrom, MessageStatus statusTo,
             UserToken userToken) {
+        // Message message, MessageStatus statusFrom, MessageStatus statusTo, UserToken
+        // userToken
         String userKey = statusFrom == MessageStatus.INBOX ? userToken.getMailAccount() : userToken.getUserId();
 
-        Set<MessageStatus> currenMessageStatuses = new HashSet<>(message.getStatuses().getOrDefault(userKey, Set.of()));
+        Set<MessageStatus> currenMessageStatuses = new HashSet<>(
+                messageDTO.getStatuses().getOrDefault(userKey, Set.of()));
         currenMessageStatuses.add(statusTo);
-        message.setStatuses(userKey, currenMessageStatuses);
+
+        Message messageToUpdate = new Message(messageDTO.getMessageId(), messageDTO.getSenderId(),
+                messageDTO.getReceiver(), messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
+                messageDTO.getAttachedBase64Files(), null);
+
+        messageToUpdate.setStatuses(userKey, currenMessageStatuses);
 
         if (environmentType == EnvironmentType.PRODUCTION) {
-            storageTool.updateItem(message, message);
+            storageTool.updateItem(messageToUpdate, messageToUpdate);
             listOfMessages = storageTool.getItems();
         } else if (environmentType == EnvironmentType.TEST) {
-            listOfMessages.set(listOfMessages.indexOf(message), message);
+            listOfMessages.set(listOfMessages.indexOf(messageToUpdate), messageToUpdate);
         }
     }
 
@@ -107,8 +120,8 @@ public class MessageRepository {
         List<MessageDTO> messageDTOs = new ArrayList<>();
         listOfMessages.forEach(message -> {
             messageDTOs.add(new MessageDTO(message.getMessageId(), message.getSenderId(), message.getReceiver(),
-                    message.getSubject(), message.getMessage(), message.getTimestamp(), message.getAttachedFiles(),
-                    message.getStatuses()));
+                    message.getSubject(), message.getMessage(), message.getTimestamp(),
+                    message.getAttachedBase64Files(), message.getStatuses(), null));
         });
         return messageDTOs;
     }
