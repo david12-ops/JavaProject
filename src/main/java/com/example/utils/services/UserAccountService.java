@@ -91,10 +91,10 @@ public class UserAccountService implements AccountService {
     @Override
     public List<UserDTO> getAllUserAccounts(UserToken userToken, UserRepository userRepository) {
         List<UserDTO> userDTOs = userRepository.getAllUserDtos();
-        boolean containsNull = containsDataNull("getAllUserAccounts", new LabeledValue("token", userToken))
-                || containsDataNull("getAllUserAccounts", new LabeledValue("DTOs", userDTOs));
+        boolean containsNull = containsDataNull("getAllUserAccounts", new LabeledValue("token", userToken),
+                new LabeledValue("DTOs", userDTOs));
 
-        if (containsNull || userDTOs.size() == 0)
+        if (containsNull)
             return null;
 
         userDTOs = userDTOs.stream().filter(userDTO -> !userDTO.getUserId().equals(userToken.getUserId())
