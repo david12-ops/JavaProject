@@ -114,7 +114,7 @@ public class LoginScreen extends VBox {
             screenController.activate("register", stage);
         });
 
-        Hyperlink resetLink = new Hyperlink("Don't remember password? Reset password");
+        Hyperlink resetLink = new Hyperlink("Reset password");
         resetLink.setOnAction(event -> {
             emailField.clear();
             passwordField.clear();

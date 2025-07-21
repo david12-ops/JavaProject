@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.List;
 
 import com.example.dto.UserDTO;
-import com.example.model.UserRepository;
 import com.example.model.UserToken;
+import com.example.model.repository.UserRepository;
 import com.example.utils.enums.AddOperationType;
 import com.example.utils.enums.FormType;
 import com.example.utils.interfaces.AuthService;

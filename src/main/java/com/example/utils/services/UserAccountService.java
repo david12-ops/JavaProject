@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import com.example.dto.UserDTO;
-import com.example.model.UserRepository;
 import com.example.model.UserToken;
+import com.example.model.repository.UserRepository;
 import com.example.utils.FileConvertor;
 import com.example.utils.ValidationContext;
 import com.example.utils.enums.ValidationMode;

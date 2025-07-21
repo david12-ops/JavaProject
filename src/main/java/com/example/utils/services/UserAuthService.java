@@ -6,8 +6,8 @@ import java.util.List;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.example.dto.UserDTO;
-import com.example.model.UserRepository;
 import com.example.model.UserToken;
+import com.example.model.repository.UserRepository;
 import com.example.utils.ValidationContext;
 import com.example.utils.enums.AddOperationType;
 import com.example.utils.enums.FormType;

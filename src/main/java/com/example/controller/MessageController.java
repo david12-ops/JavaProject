@@ -5,30 +5,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.example.model.Message;
-import com.example.model.MessageRepository;
 import com.example.model.UserToken;
+import com.example.model.repository.MessageRepository;
 import com.example.utils.enums.MessageStatus;
 import com.example.utils.services.MailboxService;
 
 public class MessageController {
     private MessageRepository messageRegister;
-    private final MailboxService mailboxService = new MailboxService();
+    private final MailboxService mailboxService = MailboxService.getInstance();
 
     public MessageController(MessageRepository MessageRegister) {
         this.messageRegister = MessageRegister;
     }
 
     public String getError(String errorName) {
-        // return messageRegister.getError(errorName);
+        return mailboxService.getErrorHandler().getError(errorName);
     }
 
     public void clearError(String errorName) {
-        // messageRegister.clearError(errorName);
+        mailboxService.getErrorHandler().removeError(errorName);
     }
 
-    public void addMessage(UserToken senderToken, String recevierEmail, String subject, String message,
-            List<File> files) {
-        messageRegister.addMessage(senderToken, recevierEmail, subject, message, files);
+    public void addMessage(UserToken senderToken, String recevierId, String subject, String message, List<File> files) {
+        messageRegister.addMessage(senderToken, recevierId, subject, message, files);
     }
 
     public void responseToMessage() {

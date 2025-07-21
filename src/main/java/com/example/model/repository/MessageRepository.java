@@ -1,6 +1,8 @@
-package com.example.model;
+package com.example.model.repository;
 
 import com.example.dto.MessageDTO;
+import com.example.model.Message;
+import com.example.model.UserToken;
 import com.example.utils.FileConvertor;
 import com.example.utils.JsonStorageTool;
 import com.example.utils.enums.EnvironmentType;

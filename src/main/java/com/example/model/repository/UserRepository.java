@@ -1,4 +1,4 @@
-package com.example.model;
+package com.example.model.repository;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +8,7 @@ import java.util.List;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.example.dto.UserDTO;
+import com.example.model.User;
 import com.example.utils.FileConvertor;
 import com.example.utils.JsonStorageTool;
 import com.example.utils.enums.AddOperationType;
