@@ -2,8 +2,6 @@ package com.example.utils.interfaces;
 
 import com.example.dto.UserDTO;
 import com.example.model.UserToken;
-import com.example.model.repository.UserRepository;
-
 import javafx.scene.image.Image;
 
 import java.io.File;
