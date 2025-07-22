@@ -81,7 +81,7 @@ public class NewMessageScreen extends VBox implements GuiErrorHelper {
         }
 
         if (isValid) {
-            messageController.addMessage(userController.getLoggedUser(), whomField.getText(), subjectField.getText(),
+            messageController.sendMessage(userController.getLoggedUser(), whomField.getText(), subjectField.getText(),
                     messageAreaField.getText(), selectedFiles);
 
             showIfError(messageController.getError("email"), whomErrorLabel);
