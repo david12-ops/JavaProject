@@ -8,6 +8,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import com.example.dto.UserDTO;
 import com.example.model.UserToken;
 import com.example.model.repository.UserRepository;
+import com.example.utils.RepositoryFactory;
 import com.example.utils.ValidationContext;
 import com.example.utils.enums.AddOperationType;
 import com.example.utils.enums.FormType;
@@ -18,11 +19,12 @@ import com.example.utils.interfaces.ErrorHandler;
 import com.example.utils.interfaces.UserValidator;
 
 public class UserAuthService implements AuthService {
-    private SessionService sessionService;
     private final ValidationContext validationContext = new ValidationContext(ValidationMode.USER);
+    private final UserRepository userRepository = RepositoryFactory.getUserRepository();
+
+    private SessionService sessionService;
     private ErrorHandler errorHandler;
     private UserValidator userValidator;
-
     private String currentSessionId;
 
     public UserAuthService(SessionService sessionService) {
@@ -89,7 +91,7 @@ public class UserAuthService implements AuthService {
 
     @Override
     public boolean register(String emailAccount, String password, String confirmationPassword, FormType formType,
-            AddOperationType addTypeOperation, UserRepository userRepository) {
+            AddOperationType addTypeOperation) {
         UserDTO userDTO;
         boolean isFormTypeSupported;
 
@@ -129,7 +131,7 @@ public class UserAuthService implements AuthService {
     }
 
     @Override
-    public void login(String emailAccount, String password, UserRepository userRepository) {
+    public void login(String emailAccount, String password) {
         UserDTO userDTO = getUserDTOByEmailAndPassword(emailAccount, password, userRepository.getAllUserDtos());
 
         if (!containsDataNull("login", new LabeledValue("dto", userDTO)) && userDTO.getUserId() != null
@@ -140,7 +142,7 @@ public class UserAuthService implements AuthService {
 
     @Override
     public boolean updateNotLoggedAccount(String emailAccount, String password, String newPassword,
-            String confirmationNewPassword, FormType formType, UserRepository userRepository) {
+            String confirmationNewPassword, FormType formType) {
         UserDTO foundUserDTO = getUserDTOByEmailAndPassword(emailAccount, password, userRepository.getAllUserDtos());
 
         boolean containsNull = containsDataNull("updateNotLoggedAccount", new LabeledValue("dto", foundUserDTO));
@@ -161,7 +163,7 @@ public class UserAuthService implements AuthService {
     }
 
     @Override
-    public boolean switchAccount(UserDTO switchToUserDTO, UserRepository userRepository) {
+    public boolean switchAccount(UserDTO switchToUserDTO) {
         UserToken userToken = getLoggedUser();
 
         boolean containsNull = containsDataNull("switchAccount", new LabeledValue("token", userToken),
@@ -180,8 +182,7 @@ public class UserAuthService implements AuthService {
     }
 
     @Override
-    public boolean updateLoggedInAccount(String newPassword, String confirmationNewPassword, FormType formType,
-            UserRepository userRepository) {
+    public boolean updateLoggedInAccount(String newPassword, String confirmationNewPassword, FormType formType) {
         UserDTO foundUserDTO;
         UserToken userToken = getLoggedUser();
         List<UserDTO> userDTOs = userRepository.getAllUserDtos();

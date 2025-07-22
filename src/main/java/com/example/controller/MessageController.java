@@ -1,14 +1,12 @@
 package com.example.controller;
 
 import java.io.File;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.example.dto.MessageDTO;
 import com.example.model.UserToken;
-import com.example.model.repository.MessageRepository;
 import com.example.utils.enums.MessageStatus;
-import com.example.utils.enums.ViewLevel;
 import com.example.utils.services.MailboxService;
 
 public class MessageController {
@@ -17,11 +15,9 @@ public class MessageController {
      * that come with this do factory to repository to have shred one instance
      * across services (optional private constructor)
      */
-    private MessageRepository messageRegister;
-    private final MailboxService mailboxService = MailboxService.getInstance();
+    private final MailboxService mailboxService = new MailboxService();
 
-    public MessageController(MessageRepository MessageRegister) {
-        this.messageRegister = MessageRegister;
+    public MessageController() {
     }
 
     public String getError(String errorName) {
@@ -32,22 +28,26 @@ public class MessageController {
         mailboxService.getErrorHandler().removeError(errorName);
     }
 
-    public void addMessage(UserToken senderToken, String recevierId, String subject, String message, List<File> files) {
-        messageRegister.addMessage(senderToken,
-                new MessageDTO(null, null, recevierId, subject, message, LocalDateTime.now(), null, null, files));
+    public void sendMessage(UserToken senderToken, String recevierId, String subject, String message,
+            List<File> files) {
+        mailboxService.sendMessage(senderToken, recevierId, subject, message, files);
     }
 
     public void responseToMessage() {
         throw new UnsupportedOperationException("Unimplemented method 'responseToMessage'");
     }
 
+    public void updateStatus() {
+        mailboxService.updateStatus();
+    }
+
     public void removeMessage(MessageDTO messageDTO) {
-        messageRegister.removeMessage(messageDTO);
+        mailboxService.removeMessage(messageDTO);
     }
 
     public List<MessageDTO> getMessages(MessageStatus type, UserToken userToken) {
-        List<MessageDTO> messageDTOs = messageRegister.getAllMessageDtos();
-        messageDTOs.forEach(messageDTO -> messageDTO.sanitize(ViewLevel.PUBLIC));
-        return messageDTOs;
+        // List<MessageDTO> messageDTOs = messageRegister.getAllMessageDtos();
+        // messageDTOs.forEach(messageDTO -> messageDTO.sanitize(ViewLevel.PUBLIC));
+        return new ArrayList<>();
     }
 }

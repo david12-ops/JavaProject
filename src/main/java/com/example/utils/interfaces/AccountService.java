@@ -10,13 +10,13 @@ import java.io.File;
 import java.util.List;
 
 public interface AccountService {
-    boolean removeAccount(UserToken userToken, UserDTO userDTO, UserRepository userRepository);
+    boolean removeAccount(UserToken userToken, UserDTO userDTO);
 
-    List<UserDTO> getAllUserAccounts(UserToken userToken, UserRepository userRepository);
+    List<UserDTO> getAllUserAccounts(UserToken userToken);
 
-    void updateImageProfile(UserToken userToken, File file, UserRepository userRepository);
+    void updateImageProfile(UserToken userToken, File file);
 
-    Image getImageProfile(UserToken userToken, UserRepository userRepository);
+    Image getImageProfile(UserToken userToken);
 
     ErrorHandler getErrorHandler();
 }

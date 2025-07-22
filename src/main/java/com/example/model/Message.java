@@ -20,8 +20,8 @@ public class Message {
     @JsonProperty("statuses")
     private Map<String, Set<MessageStatus>> statuses;
 
-    @JsonProperty("recevier")
-    private String receiver;
+    @JsonProperty("recevierId")
+    private String receiverId;
 
     @JsonProperty("subject")
     private String subject;
@@ -41,11 +41,11 @@ public class Message {
         this.senderId = senderId;
     }
 
-    public Message(String messageId, String senderId, String receiver, String subject, String message,
+    public Message(String messageId, String senderId, String receiverId, String subject, String message,
             LocalDateTime timestamp, List<String> attachedBase64Files, Map<String, Set<MessageStatus>> statuses) {
         this.messageId = (messageId == null || messageId.isBlank()) ? UUID.randomUUID().toString() : messageId;
         this.senderId = senderId;
-        this.receiver = receiver;
+        this.receiverId = receiverId;
         this.subject = subject;
         this.message = message;
         this.timestamp = timestamp;
@@ -75,8 +75,8 @@ public class Message {
         return senderId;
     }
 
-    public String getReceiver() {
-        return receiver;
+    public String getRecevierId() {
+        return receiverId;
     }
 
     public String getSubject() {
@@ -105,7 +105,7 @@ public class Message {
 
     @Override
     public String toString() {
-        return "Message{" + "messageId=" + messageId + ", senderId=" + senderId + ", receiver=" + receiver
+        return "Message{" + "messageId=" + messageId + ", senderId=" + senderId + ", receiverId=" + receiverId
                 + ", message='" + message + '\'' + ", timestamp=" + timestamp + '}';
     }
 }

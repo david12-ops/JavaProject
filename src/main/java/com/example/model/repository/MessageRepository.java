@@ -70,9 +70,9 @@ public class MessageRepository {
 
         Map<String, Set<MessageStatus>> messageStatuses = new HashMap<>();
         messageStatuses.put(senderToken.getUserId(), Set.of(MessageStatus.SENT));
-        messageStatuses.put(messageDTO.getReceiver(), Set.of(MessageStatus.INBOX));
+        messageStatuses.put(messageDTO.getRecevierId(), Set.of(MessageStatus.INBOX));
 
-        Message newMessage = new Message(null, senderToken.getUserId(), messageDTO.getReceiver(),
+        Message newMessage = new Message(null, senderToken.getUserId(), messageDTO.getRecevierId(),
                 messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(), base64Files,
                 messageStatuses);
 
@@ -82,7 +82,7 @@ public class MessageRepository {
     public void removeMessage(MessageDTO messageDTO) {
         // Message message
         Message messageToRemove = new Message(messageDTO.getMessageId(), messageDTO.getSenderId(),
-                messageDTO.getReceiver(), messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
+                messageDTO.getRecevierId(), messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
                 messageDTO.getAttachedBase64Files(), messageDTO.getStatuses());
         if (environmentType == EnvironmentType.PRODUCTION) {
             storageTool.removeItem(messageToRemove);
@@ -103,7 +103,7 @@ public class MessageRepository {
         currenMessageStatuses.add(statusTo);
 
         Message messageToUpdate = new Message(messageDTO.getMessageId(), messageDTO.getSenderId(),
-                messageDTO.getReceiver(), messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
+                messageDTO.getRecevierId(), messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
                 messageDTO.getAttachedBase64Files(), null);
 
         messageToUpdate.setStatuses(userKey, currenMessageStatuses);
@@ -119,7 +119,7 @@ public class MessageRepository {
     public List<MessageDTO> getAllMessageDtos() {
         List<MessageDTO> messageDTOs = new ArrayList<>();
         listOfMessages.forEach(message -> {
-            messageDTOs.add(new MessageDTO(message.getMessageId(), message.getSenderId(), message.getReceiver(),
+            messageDTOs.add(new MessageDTO(message.getMessageId(), message.getSenderId(), message.getRecevierId(),
                     message.getSubject(), message.getMessage(), message.getTimestamp(),
                     message.getAttachedBase64Files(), message.getStatuses(), null));
         });

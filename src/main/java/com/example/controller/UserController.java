@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.example.dto.UserDTO;
 import com.example.model.UserToken;
-import com.example.model.repository.UserRepository;
 import com.example.utils.enums.AddOperationType;
 import com.example.utils.enums.FormType;
 import com.example.utils.interfaces.AuthService;
@@ -17,12 +16,10 @@ import com.example.utils.services.UserAuthService;
 import javafx.scene.image.Image;
 
 public class UserController {
-    private UserRepository userRepository;
     private final AuthService authService = new UserAuthService(SessionService.getInstance());
     private final AccountService accountService = new UserAccountService();
 
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserController() {
     }
 
     public String getAuthError(String errorName) {
@@ -44,18 +41,18 @@ public class UserController {
     // Auth
     public boolean register(String emailAccount, String password, String confirmationPassword) {
         return authService.register(emailAccount, password, confirmationPassword, FormType.REGISTER,
-                AddOperationType.NEWACCOUNT, userRepository);
+                AddOperationType.NEWACCOUNT);
     }
 
     public void login(String emailAccount, String password) {
-        authService.login(emailAccount, password, userRepository);
+        authService.login(emailAccount, password);
     }
 
     public boolean updateNotLoggedAccount(String emailAccount, String password, String newPassword,
             String confirmationNewPassword) {
 
         return authService.updateNotLoggedAccount(emailAccount, password, newPassword, confirmationNewPassword,
-                FormType.FORGOTCREDENTIALS, userRepository);
+                FormType.FORGOTCREDENTIALS);
     }
 
     public void logOut() {
@@ -67,33 +64,32 @@ public class UserController {
     }
 
     public Image getImageProfile() {
-        return accountService.getImageProfile(getLoggedUser(), userRepository);
+        return accountService.getImageProfile(getLoggedUser());
     }
 
     // User actions
     public boolean removeAccount(UserDTO userDTO) {
-        return accountService.removeAccount(getLoggedUser(), userDTO, userRepository);
+        return accountService.removeAccount(getLoggedUser(), userDTO);
     }
 
     public boolean updateLoggedInAccount(String newPassword, String confirmationNewPassword) {
-        return authService.updateLoggedInAccount(newPassword, confirmationNewPassword, FormType.FORGOTCREDENTIALS,
-                userRepository);
+        return authService.updateLoggedInAccount(newPassword, confirmationNewPassword, FormType.FORGOTCREDENTIALS);
     }
 
     public void updateImageProfile(File file) {
-        accountService.updateImageProfile(getLoggedUser(), file, userRepository);
+        accountService.updateImageProfile(getLoggedUser(), file);
     }
 
     public boolean addAnotherAccount(String emailAccount, String password, String confirmationPassword) {
         return authService.register(emailAccount, password, confirmationPassword, FormType.ADDACCOUNT,
-                AddOperationType.ANOTHERACCOUNT, userRepository);
+                AddOperationType.ANOTHERACCOUNT);
     }
 
     public boolean switchAccount(UserDTO switchToUserDTO) {
-        return authService.switchAccount(switchToUserDTO, userRepository);
+        return authService.switchAccount(switchToUserDTO);
     }
 
     public List<UserDTO> getAllUserAccounts() {
-        return accountService.getAllUserAccounts(getLoggedUser(), userRepository);
+        return accountService.getAllUserAccounts(getLoggedUser());
     }
 }

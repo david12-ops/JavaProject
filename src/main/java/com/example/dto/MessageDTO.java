@@ -16,7 +16,7 @@ public class MessageDTO {
 
     private Map<String, Set<MessageStatus>> statuses;
 
-    private String receiver;
+    private String recevierId;
 
     private String subject;
 
@@ -31,12 +31,12 @@ public class MessageDTO {
     public MessageDTO() {
     }
 
-    public MessageDTO(String messageId, String senderId, String receiver, String subject, String message,
+    public MessageDTO(String messageId, String senderId, String recevierId, String subject, String message,
             LocalDateTime timestamp, List<String> attachedBase64Files, Map<String, Set<MessageStatus>> statuses,
             List<File> attachedFiles) {
         this.messageId = messageId;
         this.senderId = senderId;
-        this.receiver = receiver;
+        this.recevierId = recevierId;
         this.subject = subject;
         this.message = message;
         this.timestamp = timestamp;
@@ -47,9 +47,7 @@ public class MessageDTO {
 
     public void sanitize(ViewLevel level) {
         if (level == ViewLevel.PUBLIC) {
-            // ?
-            this.receiver = null;
-            this.messageId = null;
+            this.recevierId = null;
             this.senderId = null;
         }
     }
@@ -78,12 +76,12 @@ public class MessageDTO {
         this.statuses = statuses;
     }
 
-    public String getReceiver() {
-        return receiver;
+    public String getRecevierId() {
+        return recevierId;
     }
 
-    public void setReceiver(String receiver) {
-        this.receiver = receiver;
+    public void setRecevierId(String recevierId) {
+        this.recevierId = recevierId;
     }
 
     public String getSubject() {

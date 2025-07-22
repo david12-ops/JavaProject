@@ -96,7 +96,7 @@ public class MessageValtidationsTest {
 
         for (int i = 0; i < messsages.size(); i++) {
             Message mess = messsages.get(i);
-            boolean isValid = validator.validMessageData(mess.getReceiver(), mess.getSubject(), mess.getMessage());
+            boolean isValid = validator.validMessageData(mess.getRecevierId(), mess.getSubject(), mess.getMessage());
             if (i == 0) {
                 assertFalse(isValid);
                 compareErrors("Please enter a valid email address (e.g., user@example.com).", "email", errorHandler);
