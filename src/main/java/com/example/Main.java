@@ -3,9 +3,6 @@ package com.example;
 import com.example.controller.MessageController;
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
-import com.example.model.repository.MessageRepository;
-import com.example.model.repository.UserRepository;
-import com.example.utils.enums.EnvironmentType;
 import com.example.view.AddAnotherAccountScreen;
 import com.example.view.ForgotCredentialsScreen;
 import com.example.view.LoginScreen;
@@ -22,10 +19,8 @@ import javafx.stage.Stage;
 public class Main extends Application {
 
         // Icons use from - https://icons8.com
-        private UserRepository userModel = new UserRepository(EnvironmentType.PRODUCTION);
-        private MessageRepository messageRegister = new MessageRepository(EnvironmentType.PRODUCTION);
-        private UserController userController = new UserController(userModel);
-        private MessageController messageController = new MessageController(messageRegister);
+        private UserController userController = new UserController();
+        private MessageController messageController = new MessageController();
         private ScreenController screenController;
 
         @Override
