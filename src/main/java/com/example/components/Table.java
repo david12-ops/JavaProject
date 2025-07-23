@@ -55,6 +55,11 @@ public class Table extends HBox {
         TableView<MessageDTO> table = new TableView<>();
         styleTable(table);
 
+        TableColumn<MessageDTO, String> sender = new TableColumn<>();
+        sender.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getSenderMailAccount()));
+        sender.setGraphic(createLabel("Subject"));
+        sender.setStyle("-fx-alignment: CENTER;");
+
         TableColumn<MessageDTO, String> subjectCol = new TableColumn<>();
         subjectCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getSubject()));
         subjectCol.setGraphic(createLabel("Subject"));
@@ -108,7 +113,7 @@ public class Table extends HBox {
         actionsCol.setMinWidth(100);
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
-        table.getColumns().addAll(subjectCol, messageCol, timestampCol, actionsCol);
+        table.getColumns().addAll(sender, subjectCol, messageCol, timestampCol, actionsCol);
         table.setItems(FXCollections.observableArrayList(messageController.getMessages(messageStatus, userToken)));
 
         this.getChildren().add(table);
