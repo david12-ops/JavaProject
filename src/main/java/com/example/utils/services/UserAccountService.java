@@ -39,8 +39,12 @@ public class UserAccountService implements AccountService {
 
     private UserDTO getUserDTOByToken(UserToken userToken, List<UserDTO> userDTOs) {
         for (UserDTO userDTO : userDTOs) {
-            if (userDTO.getUserId().equals(userToken.getUserId())
-                    && userDTO.getMailAccount().equals(userToken.getMailAccount())) {
+            String userIdFromDTO = userDTO.getUserId();
+            String userMailAccountFromDTO = userDTO.getMailAccount();
+            boolean dtoContainsData = userIdFromDTO != null && userMailAccountFromDTO != null;
+
+            if (dtoContainsData && userIdFromDTO.equals(userToken.getUserId())
+                    && userMailAccountFromDTO.equals(userToken.getMailAccount())) {
                 return userDTO;
             }
         }
