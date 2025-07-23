@@ -1,7 +1,6 @@
 package com.example.controller;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.example.dto.MessageDTO;
@@ -28,9 +27,9 @@ public class MessageController {
         mailboxService.getErrorHandler().removeError(errorName);
     }
 
-    public void sendMessage(UserToken senderToken, String recevierId, String subject, String message,
+    public void sendMessage(UserToken senderToken, String recevierEmail, String subject, String message,
             List<File> files) {
-        mailboxService.sendMessage(senderToken, recevierId, subject, message, files);
+        mailboxService.sendMessage(senderToken, recevierEmail, subject, message, files);
     }
 
     public void responseToMessage() {
@@ -46,8 +45,6 @@ public class MessageController {
     }
 
     public List<MessageDTO> getMessages(MessageStatus type, UserToken userToken) {
-        // List<MessageDTO> messageDTOs = messageRegister.getAllMessageDtos();
-        // messageDTOs.forEach(messageDTO -> messageDTO.sanitize(ViewLevel.PUBLIC));
-        return new ArrayList<>();
+        return mailboxService.getMessageDTOs(userToken, type);
     }
 }
