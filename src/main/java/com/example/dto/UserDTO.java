@@ -56,10 +56,6 @@ public class UserDTO {
         return userId;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
     public String getGroupId() {
         return groupId;
     }

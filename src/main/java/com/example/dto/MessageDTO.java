@@ -14,9 +14,13 @@ public class MessageDTO {
 
     private String senderId;
 
+    private String senderMailAccount;
+
     private Map<String, Set<MessageStatus>> statuses;
 
     private String recevierId;
+
+    private String recevierMailAccount;
 
     private String subject;
 
@@ -31,12 +35,14 @@ public class MessageDTO {
     public MessageDTO() {
     }
 
-    public MessageDTO(String messageId, String senderId, String recevierId, String subject, String message,
-            LocalDateTime timestamp, List<String> attachedBase64Files, Map<String, Set<MessageStatus>> statuses,
-            List<File> attachedFiles) {
+    public MessageDTO(String messageId, String senderId, String senderMailAccount, String recevierId,
+            String recevierMailAccount, String subject, String message, LocalDateTime timestamp,
+            List<String> attachedBase64Files, Map<String, Set<MessageStatus>> statuses, List<File> attachedFiles) {
         this.messageId = messageId;
         this.senderId = senderId;
+        this.senderMailAccount = senderMailAccount;
         this.recevierId = recevierId;
+        this.recevierMailAccount = recevierMailAccount;
         this.subject = subject;
         this.message = message;
         this.timestamp = timestamp;
@@ -64,8 +70,8 @@ public class MessageDTO {
         return senderId;
     }
 
-    public void setSenderId(String senderId) {
-        this.senderId = senderId;
+    public String getSenderMailAccount() {
+        return senderMailAccount;
     }
 
     public Map<String, Set<MessageStatus>> getStatuses() {
@@ -80,8 +86,8 @@ public class MessageDTO {
         return recevierId;
     }
 
-    public void setRecevierId(String recevierId) {
-        this.recevierId = recevierId;
+    public String getRecevierMailAccount() {
+        return recevierMailAccount;
     }
 
     public String getSubject() {
