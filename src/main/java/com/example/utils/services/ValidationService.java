@@ -2,17 +2,22 @@ package com.example.utils.services;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.example.dto.UserDTO;
+import com.example.model.Message;
 import com.example.utils.interfaces.ErrorHandler;
 import com.example.utils.enums.FormType;
+import com.example.utils.enums.MessageStatus;
 import com.example.utils.enums.OperationType;
 import com.example.utils.interfaces.MessageValidator;
 import com.example.utils.interfaces.UserValidator;
@@ -160,10 +165,26 @@ public class ValidationService {
 
     public class MessageValidations implements MessageValidator {
         private ErrorHandler errorHandler;
-        Map<Integer, String> messagePartForNullFiles = new HashMap<>();
+        private Map<Integer, String> messagePartForNullFiles = new HashMap<>();
+        private Map<MessageStatus, Set<MessageStatus>> allowedByStatus;
+
+        private void defineMessageStatusTransition() {
+            Map<MessageStatus, Set<MessageStatus>> map = new HashMap<>();
+
+            map.put(MessageStatus.INBOX, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED, MessageStatus.SNOOZED));
+            map.put(MessageStatus.SENT, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED, MessageStatus.SNOOZED));
+            map.put(MessageStatus.STARRED, EnumSet.of(MessageStatus.TRASH, MessageStatus.SNOOZED));
+
+            map.put(MessageStatus.SNOOZED, Set.of());
+            map.put(MessageStatus.DRAFTS, Set.of());
+            map.put(MessageStatus.TRASH, Set.of());
+
+            allowedByStatus = Collections.unmodifiableMap(map);
+        }
 
         public MessageValidations(ErrorHandler errorHandler) {
             this.errorHandler = errorHandler;
+            defineMessageStatusTransition();
         }
 
         @Override
@@ -234,6 +255,19 @@ public class ValidationService {
 
             return Arrays.stream(text.trim().split("(?<=\\S)\\s+(?=\\S)")).mapToInt(w -> w.trim().length())
                     .sum() > limit;
+        }
+
+        @Override
+        public boolean containsOnlySupportedStatuses(Map<String, Set<MessageStatus>> messageStatuses,
+                List<MessageStatus> expectedMessageStatus) {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'containsOnlySupportedStatuses'");
+        }
+
+        @Override
+        public boolean isStatusUpdateAllowed(Message message, MessageStatus newStatus, String userKey) {
+            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException("Unimplemented method 'isStatusUpdateAllowed'");
         }
     }
 }
