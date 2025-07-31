@@ -14,12 +14,9 @@ import io.github.cdimascio.dotenv.Dotenv;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class MessageRepository {
     static Dotenv dotenv = Dotenv.load();
@@ -56,7 +53,7 @@ public class MessageRepository {
         return listOfMessages;
     }
 
-    public void addMessage(UserToken senderToken, MessageDTO messageDTO) {
+    public void addMessage(UserToken userToken, MessageDTO messageDTO) {
         List<File> files = messageDTO.getAttachedFiles();
         List<String> base64Files = (files != null && !files.isEmpty()) ? files.stream().map(file -> {
             try {
@@ -67,22 +64,9 @@ public class MessageRepository {
             }
         }).filter(Objects::nonNull).toList() : null;
 
-        Map<String, Set<MessageStatus>> messageStatuses = new HashMap<>();
-
-        /*
-         * In this case, i accept to send message myself and it is represented by id
-         * (key) - status (value)
-         */
-        if (senderToken.getUserId().equals(messageDTO.getRecevierId())) {
-            messageStatuses.put(senderToken.getUserId(), Set.of(MessageStatus.SENT, MessageStatus.INBOX));
-        } else {
-            messageStatuses.put(senderToken.getUserId(), Set.of(MessageStatus.SENT));
-            messageStatuses.put(messageDTO.getRecevierId(), Set.of(MessageStatus.INBOX));
-        }
-
-        Message newMessage = new Message(null, senderToken.getUserId(), messageDTO.getRecevierId(),
+        Message newMessage = new Message(null, userToken.getUserId(), messageDTO.getRecevierId(),
                 messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(), base64Files,
-                messageStatuses);
+                messageDTO.getStatuses());
 
         applyMessageAdding(newMessage);
     }
@@ -99,21 +83,20 @@ public class MessageRepository {
         }
     }
 
-    public void updateMessageStatus(MessageDTO messageDTO, MessageStatus statusFrom, MessageStatus statusTo,
-            UserToken userToken) {
-        // Message message, MessageStatus statusFrom, MessageStatus statusTo, UserToken
-        // userToken
+    public void updateMessageStatus(MessageDTO messageDTO) {
+        // Sem se vrátit pak
         String userKey = statusFrom == MessageStatus.INBOX ? userToken.getMailAccount() : userToken.getUserId();
 
-        Set<MessageStatus> currenMessageStatuses = new HashSet<>(
-                messageDTO.getStatuses().getOrDefault(userKey, Set.of()));
-        currenMessageStatuses.add(statusTo);
+        EnumSet<MessageStatus> currentMessageStatuses = EnumSet
+                .copyOf(messageDTO.getStatuses().getOrDefault(userKey, EnumSet.noneOf(MessageStatus.class)));
+
+        currentMessageStatuses.add(statusTo);
 
         Message messageToUpdate = new Message(messageDTO.getMessageId(), messageDTO.getSenderId(),
                 messageDTO.getRecevierId(), messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
                 messageDTO.getAttachedBase64Files(), null);
 
-        messageToUpdate.setStatuses(userKey, currenMessageStatuses);
+        messageToUpdate.setStatuses(userKey, currentMessageStatuses);
 
         if (environmentType == EnvironmentType.PRODUCTION) {
             storageTool.updateItem(messageToUpdate, messageToUpdate);

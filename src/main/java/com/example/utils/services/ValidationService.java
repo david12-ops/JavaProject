@@ -7,14 +7,12 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.example.dto.UserDTO;
-import com.example.model.Message;
 import com.example.utils.interfaces.ErrorHandler;
 import com.example.utils.enums.FormType;
 import com.example.utils.enums.MessageStatus;
@@ -166,18 +164,18 @@ public class ValidationService {
     public class MessageValidations implements MessageValidator {
         private ErrorHandler errorHandler;
         private Map<Integer, String> messagePartForNullFiles = new HashMap<>();
-        private Map<MessageStatus, Set<MessageStatus>> allowedByStatus;
+        private Map<MessageStatus, EnumSet<MessageStatus>> allowedByStatus;
 
         private void defineMessageStatusTransition() {
-            Map<MessageStatus, Set<MessageStatus>> map = new HashMap<>();
+            Map<MessageStatus, EnumSet<MessageStatus>> map = new HashMap<>();
 
             map.put(MessageStatus.INBOX, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED, MessageStatus.SNOOZED));
             map.put(MessageStatus.SENT, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED, MessageStatus.SNOOZED));
             map.put(MessageStatus.STARRED, EnumSet.of(MessageStatus.TRASH, MessageStatus.SNOOZED));
 
-            map.put(MessageStatus.SNOOZED, Set.of());
-            map.put(MessageStatus.DRAFTS, Set.of());
-            map.put(MessageStatus.TRASH, Set.of());
+            map.put(MessageStatus.SNOOZED, EnumSet.noneOf(MessageStatus.class));
+            map.put(MessageStatus.DRAFTS, EnumSet.noneOf(MessageStatus.class));
+            map.put(MessageStatus.TRASH, EnumSet.noneOf(MessageStatus.class));
 
             allowedByStatus = Collections.unmodifiableMap(map);
         }
@@ -258,16 +256,26 @@ public class ValidationService {
         }
 
         @Override
-        public boolean containsOnlySupportedStatuses(Map<String, Set<MessageStatus>> messageStatuses,
-                List<MessageStatus> expectedMessageStatus) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'containsOnlySupportedStatuses'");
+        public boolean containsOnlyAllowedStatuses(Map<String, EnumSet<MessageStatus>> messageStatuses,
+                EnumSet<MessageStatus> expectedMessageStatus) {
+            for (EnumSet<MessageStatus> statuses : messageStatuses.values()) {
+                for (MessageStatus status : statuses) {
+                    if (!expectedMessageStatus.contains(status)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         @Override
-        public boolean isStatusUpdateAllowed(Message message, MessageStatus newStatus, String userKey) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'isStatusUpdateAllowed'");
+        public boolean isStatusUpdateAllowed(EnumSet<MessageStatus> messageStatuses, MessageStatus newStatus) {
+            for (MessageStatus messageStatus : messageStatuses) {
+                if (!allowedByStatus.get(messageStatus).contains(newStatus)) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
