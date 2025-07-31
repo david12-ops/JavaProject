@@ -7,10 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,10 +40,10 @@ public class MessageValtidationsTest {
 
     }
 
-    private Map<String, Set<MessageStatus>> getMesssageStatus(String senderId, String recevierEmail) {
-        Map<String, Set<MessageStatus>> messageStatus = new HashMap<>();
-        messageStatus.put(senderId, Set.of(MessageStatus.SENT));
-        messageStatus.put(recevierEmail, Set.of(MessageStatus.INBOX));
+    private Map<String, EnumSet<MessageStatus>> getMesssageStatus(String senderId, String recevierEmail) {
+        Map<String, EnumSet<MessageStatus>> messageStatus = new HashMap<>();
+        messageStatus.put(senderId, EnumSet.of(MessageStatus.SENT));
+        messageStatus.put(recevierEmail, EnumSet.of(MessageStatus.INBOX));
 
         return messageStatus;
     }

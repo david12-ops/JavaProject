@@ -2,9 +2,9 @@ package com.example.dto;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.example.utils.enums.MessageStatus;
 import com.example.utils.enums.ViewLevel;
@@ -16,7 +16,7 @@ public class MessageDTO {
 
     private String senderMailAccount;
 
-    private Map<String, Set<MessageStatus>> statuses;
+    private Map<String, EnumSet<MessageStatus>> statuses;
 
     private String recevierId;
 
@@ -37,7 +37,7 @@ public class MessageDTO {
 
     public MessageDTO(String messageId, String senderId, String senderMailAccount, String recevierId,
             String recevierMailAccount, String subject, String message, LocalDateTime timestamp,
-            List<String> attachedBase64Files, Map<String, Set<MessageStatus>> statuses, List<File> attachedFiles) {
+            List<String> attachedBase64Files, Map<String, EnumSet<MessageStatus>> statuses, List<File> attachedFiles) {
         this.messageId = messageId;
         this.senderId = senderId;
         this.senderMailAccount = senderMailAccount;
@@ -74,11 +74,11 @@ public class MessageDTO {
         return senderMailAccount;
     }
 
-    public Map<String, Set<MessageStatus>> getStatuses() {
+    public Map<String, EnumSet<MessageStatus>> getStatuses() {
         return statuses;
     }
 
-    public void setStatuses(Map<String, Set<MessageStatus>> statuses) {
+    public void setStatuses(Map<String, EnumSet<MessageStatus>> statuses) {
         this.statuses = statuses;
     }
 

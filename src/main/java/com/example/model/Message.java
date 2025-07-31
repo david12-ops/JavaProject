@@ -3,7 +3,7 @@ package com.example.model;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.EnumSet;
 import java.util.UUID;
 
 import com.example.utils.enums.MessageStatus;
@@ -18,7 +18,7 @@ public class Message {
     private final String senderId;
 
     @JsonProperty("statuses")
-    private Map<String, Set<MessageStatus>> statuses;
+    private Map<String, EnumSet<MessageStatus>> statuses;
 
     @JsonProperty("recevierId")
     private String receiverId;
@@ -42,7 +42,7 @@ public class Message {
     }
 
     public Message(String messageId, String senderId, String receiverId, String subject, String message,
-            LocalDateTime timestamp, List<String> attachedBase64Files, Map<String, Set<MessageStatus>> statuses) {
+            LocalDateTime timestamp, List<String> attachedBase64Files, Map<String, EnumSet<MessageStatus>> statuses) {
         this.messageId = (messageId == null || messageId.isBlank()) ? UUID.randomUUID().toString() : messageId;
         this.senderId = senderId;
         this.receiverId = receiverId;
@@ -95,11 +95,11 @@ public class Message {
         return attachedBase64Files;
     }
 
-    public Map<String, Set<MessageStatus>> getStatuses() {
+    public Map<String, EnumSet<MessageStatus>> getStatuses() {
         return statuses;
     }
 
-    public void setStatuses(String key, Set<MessageStatus> statuses) {
+    public void setStatuses(String key, EnumSet<MessageStatus> statuses) {
         this.statuses.put(key, statuses);
     }
 
