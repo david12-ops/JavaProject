@@ -93,7 +93,7 @@ public class Table extends HBox {
                 removeButton.setStyle("-fx-padding: 10px 15px; -fx-font-size: 12px;");
 
                 removeButton.setOnAction(e -> {
-                    messageController.removeMessage(getTableView().getItems().get(getIndex()));
+                    messageController.removeMessage(userToken, getTableView().getItems().get(getIndex()));
                     getTableView().getItems().remove(getIndex());
                 });
             }
