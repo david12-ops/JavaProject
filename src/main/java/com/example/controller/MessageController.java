@@ -27,21 +27,21 @@ public class MessageController {
         mailboxService.getErrorHandler().removeError(errorName);
     }
 
-    public void sendMessage(UserToken senderToken, String recevierEmail, String subject, String message,
+    public void sendMessage(UserToken userToken, String recevierEmail, String subject, String message,
             List<File> files) {
-        mailboxService.sendMessage(senderToken, recevierEmail, subject, message, files);
+        mailboxService.sendMessage(userToken, recevierEmail, subject, message, files);
     }
 
     public void responseToMessage() {
         throw new UnsupportedOperationException("Unimplemented method 'responseToMessage'");
     }
 
-    public void updateStatus() {
-        mailboxService.updateStatus();
+    public void updateStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus newStatus) {
+        mailboxService.updateStatus(userToken, messageDTO, newStatus);
     }
 
-    public void removeMessage(MessageDTO messageDTO) {
-        mailboxService.removeMessage(messageDTO);
+    public void removeMessage(UserToken userToken, MessageDTO messageDTO) {
+        mailboxService.removeMessage(userToken, messageDTO);
     }
 
     public List<MessageDTO> getMessages(MessageStatus type, UserToken userToken) {

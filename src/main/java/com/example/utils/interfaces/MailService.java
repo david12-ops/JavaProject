@@ -8,11 +8,11 @@ import com.example.model.UserToken;
 import com.example.utils.enums.MessageStatus;
 
 public interface MailService {
-    void sendMessage(UserToken senderToken, String recevierId, String subject, String message, List<File> files);
+    void sendMessage(UserToken userToken, String recevierId, String subject, String message, List<File> files);
 
-    void updateStatus();
+    void updateStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus newStatus);
 
-    void removeMessage(MessageDTO messageDTO);
+    void removeMessage(UserToken userToken, MessageDTO messageDTO);
 
     List<MessageDTO> getMessageDTOs(UserToken userToken, MessageStatus messageStatus);
 
