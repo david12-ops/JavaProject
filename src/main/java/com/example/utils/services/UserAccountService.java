@@ -60,6 +60,7 @@ public class UserAccountService implements AccountService {
     public boolean removeAccount(UserToken userToken, UserDTO userDTO) {
         boolean containsNull = containsDataNull("removeAccount", new LabeledValue("token", userToken),
                 new LabeledValue("dto", userDTO));
+
         if (containsNull)
             return false;
 
@@ -78,6 +79,7 @@ public class UserAccountService implements AccountService {
 
         boolean containsNull = containsDataNull("updateImageProfile", new LabeledValue("token", userToken),
                 new LabeledValue("dto", getUserDTOByToken(userToken, userDTOs)));
+
         if (containsNull)
             return;
         else
@@ -113,6 +115,7 @@ public class UserAccountService implements AccountService {
     @Override
     public Image getImageProfile(UserToken userToken) {
         boolean containsNull = containsDataNull("getImageProfile", new LabeledValue("token", userToken));
+
         if (containsNull)
             return null;
 

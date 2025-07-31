@@ -177,6 +177,7 @@ public class UserAuthService implements AuthService {
 
         boolean containsNull = containsDataNull("switchAccount", new LabeledValue("token", userToken),
                 new LabeledValue("dto", switchToUserDTO));
+
         if (containsNull)
             return false;
 
@@ -198,6 +199,7 @@ public class UserAuthService implements AuthService {
 
         boolean containsNull = containsDataNull("switchAccount", new LabeledValue("token", userToken),
                 new LabeledValue("dto", getUserDTOByToken(userToken, userDTOs)));
+
         if (containsNull)
             return false;
         else
