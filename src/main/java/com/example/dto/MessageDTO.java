@@ -78,8 +78,8 @@ public class MessageDTO {
         return statuses;
     }
 
-    public void setStatuses(Map<String, EnumSet<MessageStatus>> statuses) {
-        this.statuses = statuses;
+    public void setStatuses(String key, EnumSet<MessageStatus> statuses) {
+        this.statuses.put(key, statuses);
     }
 
     public String getRecevierId() {
