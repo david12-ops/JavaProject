@@ -6,7 +6,6 @@ import com.example.model.UserToken;
 import com.example.utils.FileConvertor;
 import com.example.utils.JsonStorageTool;
 import com.example.utils.enums.EnvironmentType;
-import com.example.utils.enums.MessageStatus;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.github.cdimascio.dotenv.Dotenv;
@@ -14,7 +13,6 @@ import io.github.cdimascio.dotenv.Dotenv;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,6 +40,18 @@ public class MessageRepository {
             listOfMessages = storageTool.getItems();
         } else if (environmentType == EnvironmentType.TEST) {
             listOfMessages.add(message);
+        }
+    }
+
+    private void applyMessageUpdate(Message currentMessage, Message updatedMessage) {
+        if (environmentType == EnvironmentType.PRODUCTION) {
+            storageTool.updateItem(currentMessage, updatedMessage);
+            listOfMessages = storageTool.getItems();
+        } else if (environmentType == EnvironmentType.TEST) {
+            int index = listOfMessages.indexOf(currentMessage);
+            if (index >= 0) {
+                listOfMessages.set(index, updatedMessage);
+            }
         }
     }
 
@@ -83,27 +93,17 @@ public class MessageRepository {
         }
     }
 
-    public void updateMessageStatus(MessageDTO messageDTO) {
-        // Sem se vrátit pak
-        String userKey = statusFrom == MessageStatus.INBOX ? userToken.getMailAccount() : userToken.getUserId();
+    public void updateMessageStatus(MessageDTO currentMessageDTO, MessageDTO updadMessageDTO) {
+        Message currentMessage = new Message(currentMessageDTO.getMessageId(), currentMessageDTO.getSenderId(),
+                currentMessageDTO.getRecevierId(), currentMessageDTO.getSubject(), currentMessageDTO.getMessage(),
+                currentMessageDTO.getTimestamp(), currentMessageDTO.getAttachedBase64Files(),
+                currentMessageDTO.getStatuses());
+        Message updatedMessage = new Message(updadMessageDTO.getMessageId(), updadMessageDTO.getSenderId(),
+                updadMessageDTO.getRecevierId(), updadMessageDTO.getSubject(), updadMessageDTO.getMessage(),
+                updadMessageDTO.getTimestamp(), updadMessageDTO.getAttachedBase64Files(),
+                updadMessageDTO.getStatuses());
 
-        EnumSet<MessageStatus> currentMessageStatuses = EnumSet
-                .copyOf(messageDTO.getStatuses().getOrDefault(userKey, EnumSet.noneOf(MessageStatus.class)));
-
-        currentMessageStatuses.add(statusTo);
-
-        Message messageToUpdate = new Message(messageDTO.getMessageId(), messageDTO.getSenderId(),
-                messageDTO.getRecevierId(), messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
-                messageDTO.getAttachedBase64Files(), null);
-
-        messageToUpdate.setStatuses(userKey, currentMessageStatuses);
-
-        if (environmentType == EnvironmentType.PRODUCTION) {
-            storageTool.updateItem(messageToUpdate, messageToUpdate);
-            listOfMessages = storageTool.getItems();
-        } else if (environmentType == EnvironmentType.TEST) {
-            listOfMessages.set(listOfMessages.indexOf(messageToUpdate), messageToUpdate);
-        }
+        applyMessageUpdate(currentMessage, updatedMessage);
     }
 
     public List<MessageDTO> getAllMessageDtos() {
