@@ -88,7 +88,6 @@ public class MailboxService implements MailService {
     @Override
     public void sendMessage(UserToken userToken, String recevierEmail, String subject, String message,
             List<File> files) {
-
         if (containsDataNull("sendMessage", new LabeledValue("token", userToken)))
             return;
 
@@ -124,9 +123,23 @@ public class MailboxService implements MailService {
 
     @Override
     public void updateStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus newStatus) {
-        if (messageValidator.isStatusUpdateAllowed(messageDTO.getStatuses().get(userToken.getUserId()), newStatus))
-            messageDTO.getStatuses().get(userToken.getUserId()).add(newStatus);
-        messageRepository.updateMessageStatus(messageDTO, newStatus, newStatus, userToken);
+        if (containsDataNull("updateStatus", new LabeledValue("status", newStatus),
+                new LabeledValue("messageDTO", messageDTO), new LabeledValue("token", userToken)))
+            return;
+
+        EnumSet<MessageStatus> currentMessageStatuses = EnumSet.copyOf(
+                messageDTO.getStatuses().getOrDefault(userToken.getUserId(), EnumSet.noneOf(MessageStatus.class)));
+
+        if (messageValidator.isStatusUpdateAllowed(messageDTO.getStatuses().get(userToken.getUserId()), newStatus)) {
+            currentMessageStatuses.add(newStatus);
+            MessageDTO updadMessageDTO = createMessageDTO(messageDTO.getMessageId(), messageDTO.getSenderId(),
+                    messageDTO.getSenderMailAccount(), messageDTO.getRecevierId(), messageDTO.getRecevierMailAccount(),
+                    messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
+                    messageDTO.getAttachedBase64Files(), null, messageDTO.getAttachedFiles());
+            updadMessageDTO.setStatuses(userToken.getUserId(), currentMessageStatuses);
+
+            messageRepository.updateMessageStatus(messageDTO, updadMessageDTO);
+        }
     }
 
     @Override
