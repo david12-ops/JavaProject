@@ -160,11 +160,12 @@ public class UserAuthService implements AuthService {
 
         if (validatePasswords(foundUserDTO.getMailAccount(), foundUserDTO.getCurrentPassword(), newPassword,
                 confirmationNewPassword, formType)) {
-            foundUserDTO.setPassword(newPassword);
-            foundUserDTO.setConfirmPassword(confirmationNewPassword);
+            UserDTO updatedUserDTO = creaUserDTO(foundUserDTO.getUserId(), foundUserDTO.getGroupId(),
+                    foundUserDTO.getCurrentPassword(), foundUserDTO.getMailAccount(), newPassword,
+                    confirmationNewPassword, foundUserDTO.getProfileImage());
 
-            userRepository.updateUser(foundUserDTO, FormType.FORGOTCREDENTIALS);
-            return getUserDTOByEmailAndPassword(foundUserDTO.getMailAccount(), foundUserDTO.getPassword(),
+            userRepository.updateUser(foundUserDTO, updatedUserDTO);
+            return getUserDTOByEmailAndPassword(updatedUserDTO.getMailAccount(), updatedUserDTO.getConfirmPassword(),
                     userRepository.getAllUserDtos()) != null ? true : false;
         }
 
@@ -207,11 +208,12 @@ public class UserAuthService implements AuthService {
 
         if (validatePasswords(foundUserDTO.getMailAccount(), foundUserDTO.getCurrentPassword(), newPassword,
                 confirmationNewPassword, formType)) {
-            foundUserDTO.setPassword(newPassword);
-            foundUserDTO.setConfirmPassword(confirmationNewPassword);
+            UserDTO updatedUserDTO = creaUserDTO(foundUserDTO.getUserId(), foundUserDTO.getGroupId(),
+                    foundUserDTO.getCurrentPassword(), foundUserDTO.getMailAccount(), newPassword,
+                    confirmationNewPassword, foundUserDTO.getProfileImage());
 
-            userRepository.updateUser(foundUserDTO, FormType.FORGOTCREDENTIALS);
-            return getUserDTOByEmailAndPassword(foundUserDTO.getMailAccount(), foundUserDTO.getPassword(),
+            userRepository.updateUser(foundUserDTO, updatedUserDTO);
+            return getUserDTOByEmailAndPassword(updatedUserDTO.getMailAccount(), updatedUserDTO.getConfirmPassword(),
                     userRepository.getAllUserDtos()) != null ? true : false;
         }
 

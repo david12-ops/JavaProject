@@ -13,7 +13,6 @@ import com.example.utils.FileConvertor;
 import com.example.utils.JsonStorageTool;
 import com.example.utils.enums.AddOperationType;
 import com.example.utils.enums.EnvironmentType;
-import com.example.utils.enums.FormType;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import io.github.cdimascio.dotenv.Dotenv;
@@ -22,25 +21,25 @@ public class UserRepository {
     static Dotenv dotenv = Dotenv.load();
     private List<User> listOfUsers;
     private JsonStorageTool<User> storageTool;
-    private EnvironmentType environment;
+    private EnvironmentType environmentType;
 
-    public UserRepository(EnvironmentType environment) {
-        this.environment = environment;
-        if (environment == EnvironmentType.PRODUCTION) {
+    public UserRepository(EnvironmentType environmentType) {
+        this.environmentType = environmentType;
+        if (environmentType == EnvironmentType.PRODUCTION) {
             storageTool = new JsonStorageTool<User>(dotenv.get("FILE_PATH_USERS"), new TypeReference<List<User>>() {
             });
             this.listOfUsers = storageTool.getItems();
-        } else if (environment == EnvironmentType.TEST) {
+        } else if (environmentType == EnvironmentType.TEST) {
             this.listOfUsers = new ArrayList<>();
         }
     }
 
-    private void applyUserUpdate(User user, User updatedUser) {
-        if (environment == EnvironmentType.PRODUCTION) {
-            storageTool.updateItem(user, updatedUser);
+    private void applyUserUpdate(User currentUser, User updatedUser) {
+        if (environmentType == EnvironmentType.PRODUCTION) {
+            storageTool.updateItem(currentUser, updatedUser);
             listOfUsers = storageTool.getItems();
-        } else if (environment == EnvironmentType.TEST) {
-            int index = listOfUsers.indexOf(user);
+        } else if (environmentType == EnvironmentType.TEST) {
+            int index = listOfUsers.indexOf(currentUser);
             if (index >= 0) {
                 listOfUsers.set(index, updatedUser);
             }
@@ -48,10 +47,10 @@ public class UserRepository {
     }
 
     private void applyUserAdding(User user) {
-        if (environment == EnvironmentType.PRODUCTION) {
+        if (environmentType == EnvironmentType.PRODUCTION) {
             storageTool.addItem(user);
             listOfUsers = storageTool.getItems();
-        } else if (environment == EnvironmentType.TEST) {
+        } else if (environmentType == EnvironmentType.TEST) {
             listOfUsers.add(user);
         }
     }
@@ -73,35 +72,33 @@ public class UserRepository {
     public void removeUser(UserDTO userDTO) {
         User user = new User(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount(), userDTO.getPassword(),
                 userDTO.getProfileImage());
-        if (environment == EnvironmentType.PRODUCTION) {
+        if (environmentType == EnvironmentType.PRODUCTION) {
             storageTool.removeItem(user);
             listOfUsers = storageTool.getItems();
-        } else if (environment == EnvironmentType.TEST) {
+        } else if (environmentType == EnvironmentType.TEST) {
             listOfUsers.remove(user);
         }
     }
 
-    public void updateUser(UserDTO userDTO, FormType form) {
-        User currentUser = new User(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount(),
-                userDTO.getCurrentPassword(), userDTO.getProfileImage());
-        User updatedUser = new User(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount(),
-                BCrypt.hashpw(userDTO.getPassword(), BCrypt.gensalt()), userDTO.getProfileImage());
+    public void updateUser(UserDTO currentUserDTO, UserDTO updatedUserDTO) {
+        User currentUser = new User(currentUserDTO.getUserId(), currentUserDTO.getGroupId(),
+                currentUserDTO.getMailAccount(), currentUserDTO.getCurrentPassword(), currentUserDTO.getProfileImage());
+        User updatedUser = new User(updatedUserDTO.getUserId(), updatedUserDTO.getGroupId(),
+                updatedUserDTO.getMailAccount(), BCrypt.hashpw(updatedUserDTO.getPassword(), BCrypt.gensalt()),
+                updatedUserDTO.getProfileImage());
 
         applyUserUpdate(currentUser, updatedUser);
     }
 
     public void updateUser(UserDTO userDTO, File profileImage) {
         try {
-            User user = new User(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount(),
+            User currentUser = new User(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount(),
                     userDTO.getCurrentPassword(), userDTO.getProfileImage());
             String base64 = profileImage != null ? FileConvertor.imageToBase64(profileImage) : null;
-            user.setProfileImage(base64);
-            if (environment == EnvironmentType.PRODUCTION) {
-                storageTool.updateItem(user, user);
-                listOfUsers = storageTool.getItems();
-            } else if (environment == EnvironmentType.TEST) {
-                listOfUsers.set(listOfUsers.indexOf(user), user);
-            }
+            User updatedUser = new User(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount(),
+                    userDTO.getCurrentPassword(), base64);
+
+            applyUserUpdate(currentUser, updatedUser);
         } catch (IOException e) {
             System.err.println("Error converting image: " + e.getMessage());
         }
