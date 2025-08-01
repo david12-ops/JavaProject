@@ -20,7 +20,6 @@ import com.example.model.UserToken;
 import com.example.model.repository.UserRepository;
 import com.example.utils.enums.AddOperationType;
 import com.example.utils.enums.EnvironmentType;
-import com.example.utils.enums.FormType;
 
 @ExtendWith(MockitoExtension.class)
 public class UserRepositoryTest {
@@ -158,20 +157,25 @@ public class UserRepositoryTest {
                 userRepository.getAllUserDtos());
         assertNotNull(foundUserDTO);
 
-        foundUserDTO.setPassword("Example@123456");
-        foundUserDTO.setConfirmPassword("Example@123456");
-        userRepository.updateUser(foundUserDTO, FormType.FORGOTCREDENTIALS);
-        assertNotNull(
-                getUserByEmailAndPassword("alice@example.com", "Example@123456", userRepository.getAllUserDtos()));
+        UserDTO updatedUserDTO = new UserDTO(foundUserDTO.getUserId(), foundUserDTO.getGroupId(),
+                foundUserDTO.getMailAccount(), foundUserDTO.getCurrentPassword(), "Example@123456", "Example@123456",
+                foundUserDTO.getProfileImage());
+
+        userRepository.updateUser(foundUserDTO, updatedUserDTO);
+        assertNotNull(getUserByEmailAndPassword(updatedUserDTO.getMailAccount(), updatedUserDTO.getConfirmPassword(),
+                userRepository.getAllUserDtos()));
 
         UserDTO foundUserDTO2 = getUserByEmailAndPassword("bob@example.com", "hashedPassword2!",
                 userRepository.getAllUserDtos());
         assertNotNull(foundUserDTO2);
 
-        foundUserDTO2.setPassword("Example@123456789");
-        foundUserDTO2.setConfirmPassword("Example@123456789");
-        userRepository.updateUser(foundUserDTO2, FormType.FORGOTCREDENTIALS);
-        assertNull(getUserByEmailAndPassword("bob@example.com", "Example@123456", userRepository.getAllUserDtos()));
+        UserDTO updatedUserDTO2 = new UserDTO(foundUserDTO2.getUserId(), foundUserDTO2.getGroupId(),
+                foundUserDTO2.getMailAccount(), foundUserDTO2.getCurrentPassword(), "Example@123456789",
+                "Example@123456789", foundUserDTO2.getProfileImage());
+
+        userRepository.updateUser(foundUserDTO2, updatedUserDTO2);
+        assertNull(getUserByEmailAndPassword(updatedUserDTO2.getMailAccount(), "Example@123456",
+                userRepository.getAllUserDtos()));
     }
 
     @Test
@@ -183,19 +187,23 @@ public class UserRepositoryTest {
         UserDTO foundUserDTO = getUserByToken(tokens.get(0), userRepository.getAllUserDtos());
         assertNotNull(foundUserDTO);
 
-        foundUserDTO.setPassword("Example@123456");
-        foundUserDTO.setConfirmPassword("Example@123456");
-        userRepository.updateUser(foundUserDTO, FormType.FORGOTCREDENTIALS);
-        assertNotNull(getUserByEmailAndPassword(foundUserDTO.getMailAccount(), "Example@123456",
+        UserDTO updatedUserDTO = new UserDTO(foundUserDTO.getUserId(), foundUserDTO.getGroupId(),
+                foundUserDTO.getMailAccount(), foundUserDTO.getCurrentPassword(), "Example@123456", "Example@123456",
+                foundUserDTO.getProfileImage());
+
+        userRepository.updateUser(foundUserDTO, updatedUserDTO);
+        assertNotNull(getUserByEmailAndPassword(updatedUserDTO.getMailAccount(), updatedUserDTO.getConfirmPassword(),
                 userRepository.getAllUserDtos()));
 
         UserDTO foundUserDTO2 = getUserByToken(tokens.get(1), userRepository.getAllUserDtos());
         assertNotNull(foundUserDTO2);
 
-        foundUserDTO2.setPassword("Example@123456789");
-        foundUserDTO2.setConfirmPassword("Example@123456789");
-        userRepository.updateUser(foundUserDTO2, FormType.FORGOTCREDENTIALS);
-        assertNull(getUserByEmailAndPassword(foundUserDTO2.getMailAccount(), "Example@123456",
+        UserDTO updatedUserDTO2 = new UserDTO(foundUserDTO2.getUserId(), foundUserDTO2.getGroupId(),
+                foundUserDTO2.getMailAccount(), foundUserDTO2.getCurrentPassword(), "Example@123456789",
+                "Example@123456789", foundUserDTO2.getProfileImage());
+
+        userRepository.updateUser(foundUserDTO2, updatedUserDTO2);
+        assertNull(getUserByEmailAndPassword(updatedUserDTO2.getMailAccount(), "Example@123456",
                 userRepository.getAllUserDtos()));
     }
 }
