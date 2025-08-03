@@ -22,7 +22,6 @@ public class FileConvertor {
     }
 
     public static Image base64ToImage(String base64) {
-
         if (base64 == null || base64.trim().isEmpty()) {
             return null;
         }
