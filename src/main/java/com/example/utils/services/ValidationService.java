@@ -172,8 +172,6 @@ public class ValidationService {
             map.put(MessageStatus.INBOX, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED));
             map.put(MessageStatus.SENT, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED));
             map.put(MessageStatus.STARRED, EnumSet.of(MessageStatus.TRASH));
-
-            map.put(MessageStatus.DRAFTS, EnumSet.noneOf(MessageStatus.class));
             map.put(MessageStatus.TRASH, EnumSet.noneOf(MessageStatus.class));
 
             allowedByStatus = Collections.unmodifiableMap(map);
