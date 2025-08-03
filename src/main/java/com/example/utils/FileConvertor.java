@@ -12,7 +12,6 @@ import org.apache.tika.Tika;
 import javafx.scene.image.Image;
 
 public class FileConvertor {
-
     private FileConvertor() {
     }
 
