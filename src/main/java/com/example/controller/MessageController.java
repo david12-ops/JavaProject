@@ -1,6 +1,7 @@
 package com.example.controller;
 
 import java.io.File;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.example.dto.MessageDTO;
@@ -44,7 +45,7 @@ public class MessageController {
         mailboxService.removeMessage(userToken, messageDTO);
     }
 
-    public List<MessageDTO> getMessages(MessageStatus type, UserToken userToken) {
-        return mailboxService.getMessageDTOs(userToken, type);
+    public List<MessageDTO> getMessages(EnumSet<MessageStatus> messageStatuses, UserToken userToken) {
+        return mailboxService.getMessageDTOs(userToken, messageStatuses);
     }
 }

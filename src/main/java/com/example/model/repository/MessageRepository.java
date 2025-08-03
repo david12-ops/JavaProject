@@ -67,7 +67,7 @@ public class MessageRepository {
         List<File> files = messageDTO.getAttachedFiles();
         List<String> base64Files = (files != null && !files.isEmpty()) ? files.stream().map(file -> {
             try {
-                return FileConvertor.imageToBase64(file);
+                return FileConvertor.fileToBase64(file);
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;

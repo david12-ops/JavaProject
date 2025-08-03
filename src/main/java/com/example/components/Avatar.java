@@ -29,7 +29,7 @@ public class Avatar extends VBox {
 
     public Avatar(Stage stage, UserDTO userDTO) {
 
-        Image imgaeProfile = FileConvertor.Base64ToImage(userDTO.getProfileImage());
+        Image imgaeProfile = FileConvertor.base64ToImage(userDTO.getProfileImage());
         String firstLetter = userDTO != null ? userDTO.getMailAccount().substring(0, 1).toUpperCase() : null;
 
         Circle circle = new Circle(30);

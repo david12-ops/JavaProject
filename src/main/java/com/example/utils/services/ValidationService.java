@@ -169,11 +169,10 @@ public class ValidationService {
         private void defineMessageStatusTransition() {
             Map<MessageStatus, EnumSet<MessageStatus>> map = new HashMap<>();
 
-            map.put(MessageStatus.INBOX, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED, MessageStatus.SNOOZED));
-            map.put(MessageStatus.SENT, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED, MessageStatus.SNOOZED));
-            map.put(MessageStatus.STARRED, EnumSet.of(MessageStatus.TRASH, MessageStatus.SNOOZED));
+            map.put(MessageStatus.INBOX, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED));
+            map.put(MessageStatus.SENT, EnumSet.of(MessageStatus.TRASH, MessageStatus.STARRED));
+            map.put(MessageStatus.STARRED, EnumSet.of(MessageStatus.TRASH));
 
-            map.put(MessageStatus.SNOOZED, EnumSet.noneOf(MessageStatus.class));
             map.put(MessageStatus.DRAFTS, EnumSet.noneOf(MessageStatus.class));
             map.put(MessageStatus.TRASH, EnumSet.noneOf(MessageStatus.class));
 

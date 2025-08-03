@@ -17,9 +17,6 @@ public class UserDTO {
 
     private String profileImage;
 
-    public UserDTO() {
-    }
-
     public UserDTO(String userId, String groupId, String mailAccount, String currentPassword, String password,
             String confirmPassword, String profileImage) {
         this.userId = userId;
@@ -47,6 +44,7 @@ public class UserDTO {
 
     public void sanitize(ViewLevel level) {
         if (level == ViewLevel.PUBLIC) {
+            this.userId = null;
             this.currentPassword = null;
             this.groupId = null;
         }
@@ -102,5 +100,11 @@ public class UserDTO {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "UserDTO{" + "userId='" + userId + '\'' + ", groupId='" + groupId + '\'' + ", mailAccount='"
+                + mailAccount + '\'' + ", profileImage='" + profileImage + '\'' + '}';
     }
 }

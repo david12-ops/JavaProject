@@ -1,8 +1,11 @@
 package com.example.view;
 
+import java.util.EnumSet;
+
 import com.example.controller.MessageController;
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
+import com.example.utils.enums.MessageStatus;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -25,8 +28,8 @@ public class LoginScreen extends VBox {
 
     private void updateScreens(ScreenController screenController, UserController userController,
             MessageController messageController, Stage stage) {
-        screenController.updateScreen("main",
-                new MainScreen(stage, screenController, userController, messageController));
+        screenController.updateScreen("main", new MainScreen(stage, screenController, userController, messageController,
+                EnumSet.of(MessageStatus.INBOX)));
         screenController.updateScreen("reset", new ForgotCredentialsScreen(stage, screenController, userController));
         screenController.updateScreen("switchUser",
                 new SwitchUserScreen(stage, screenController, userController, messageController));

@@ -31,7 +31,7 @@ public class User {
         this.password = password;
         this.userId = (userId == null || userId.isBlank()) ? UUID.randomUUID().toString() : userId;
         this.groupId = (groupId == null || groupId.isBlank()) ? UUID.randomUUID().toString() : groupId;
-        this.profileImage = null;
+        this.profileImage = profileImage;
     }
 
     /*

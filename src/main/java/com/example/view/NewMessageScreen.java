@@ -1,12 +1,15 @@
 package com.example.view;
 
 import java.io.File;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.example.components.FileChooserUI;
 import com.example.controller.MessageController;
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
+import com.example.utils.enums.FileChooserUIState;
+import com.example.utils.enums.MessageStatus;
 import com.example.utils.interfaces.GuiErrorHelper;
 
 import javafx.geometry.Pos;
@@ -99,8 +102,8 @@ public class NewMessageScreen extends VBox implements GuiErrorHelper {
             clearFields(whomField, subjectField, messageAreaField, whomErrorLabel, subjectErrorLabel,
                     messageTextAreaErrorLabel, messageController);
             fileChooserUI.clearFileBox();
-            screenController.updateScreen("main",
-                    new MainScreen(stage, screenController, userController, messageController));
+            screenController.updateScreen("main", new MainScreen(stage, screenController, userController,
+                    messageController, EnumSet.of(MessageStatus.INBOX)));
             screenController.activate("main", stage);
         }
 
@@ -136,7 +139,7 @@ public class NewMessageScreen extends VBox implements GuiErrorHelper {
     public NewMessageScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController) {
         Label attachFileErrorLabel = createErrorLabel();
-        fileChooserUI = new FileChooserUI(attachFileErrorLabel, messageController);
+        fileChooserUI = new FileChooserUI(attachFileErrorLabel, messageController, FileChooserUIState.MODIFIABLE);
 
         TextField whomField = new TextField();
         whomField.setPromptText("Whom:");

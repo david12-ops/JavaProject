@@ -1,11 +1,13 @@
 package com.example.view;
 
 import java.io.File;
+import java.util.EnumSet;
 
 import com.example.components.ImageDropZone;
 import com.example.controller.MessageController;
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
+import com.example.utils.enums.MessageStatus;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -36,8 +38,8 @@ public class UpdateAvatar extends VBox {
                 userController.updateImageProfile(file);
 
                 if (userController.getAccountError("file") == null) {
-                    screenController.updateScreen("main",
-                            new MainScreen(stage, screenController, userController, messageController));
+                    screenController.updateScreen("main", new MainScreen(stage, screenController, userController,
+                            messageController, EnumSet.of(MessageStatus.INBOX)));
                     screenController.updateScreen("switchUser",
                             new SwitchUserScreen(stage, screenController, userController, messageController));
                     screenController.activate("main", stage);
@@ -56,8 +58,8 @@ public class UpdateAvatar extends VBox {
             userController.updateImageProfile(null);
             dropZone.clear();
             imageErrorLabel.setText("");
-            screenController.updateScreen("main",
-                    new MainScreen(stage, screenController, userController, messageController));
+            screenController.updateScreen("main", new MainScreen(stage, screenController, userController,
+                    messageController, EnumSet.of(MessageStatus.INBOX)));
             screenController.updateScreen("switchUser",
                     new SwitchUserScreen(stage, screenController, userController, messageController));
             screenController.activate("main", stage);

@@ -30,7 +30,7 @@ public class Layout extends BorderPane {
             screenController.activate("login", stage);
         });
 
-        SideBar sideBar = new SideBar(stage, screenController);
+        SideBar sideBar = new SideBar(stage, screenController, userController, messageController);
         sideBar.setVisible(false);
         sideBar.setManaged(false);
 

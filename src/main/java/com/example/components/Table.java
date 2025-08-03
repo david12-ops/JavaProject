@@ -1,13 +1,18 @@
 package com.example.components;
 
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 
 import com.example.controller.MessageController;
+import com.example.controller.ScreenController;
+import com.example.controller.UserController;
 import com.example.dto.MessageDTO;
 import com.example.model.UserToken;
 import com.example.utils.enums.MessageStatus;
+import com.example.view.DetailMessageScreen;
 
 import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.*;
 import javafx.collections.FXCollections;
@@ -51,13 +56,15 @@ public class Table extends HBox {
         });
     }
 
-    public Table(MessageController messageController, UserToken userToken, MessageStatus messageStatus) {
+    public Table(Stage stage, ScreenController screenController, MessageController messageController,
+            UserController userController, EnumSet<MessageStatus> messageStatuses) {
         TableView<MessageDTO> table = new TableView<>();
+        UserToken userToken = userController.getLoggedUser();
         styleTable(table);
 
         TableColumn<MessageDTO, String> sender = new TableColumn<>();
         sender.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getSenderMailAccount()));
-        sender.setGraphic(createLabel("Subject"));
+        sender.setGraphic(createLabel("Sender"));
         sender.setStyle("-fx-alignment: CENTER;");
 
         TableColumn<MessageDTO, String> subjectCol = new TableColumn<>();
@@ -87,14 +94,23 @@ public class Table extends HBox {
         TableColumn<MessageDTO, Void> actionsCol = new TableColumn<>();
         actionsCol.setCellFactory(col -> new TableCell<MessageDTO, Void>() {
             private final Button removeButton = new Button("Remove");
+            private final Button detailButton = new Button("Detail");
 
             {
                 removeButton.getStyleClass().add("deleteButton");
+                detailButton.getStyleClass().add("appButton");
                 removeButton.setStyle("-fx-padding: 10px 15px; -fx-font-size: 12px;");
+                detailButton.setStyle("-fx-padding: 10px 15px; -fx-font-size: 12px;");
 
                 removeButton.setOnAction(e -> {
                     messageController.removeMessage(userToken, getTableView().getItems().get(getIndex()));
                     getTableView().getItems().remove(getIndex());
+                });
+
+                detailButton.setOnAction(e -> {
+                    screenController.updateScreen("detailMessage", new DetailMessageScreen(stage, userController,
+                            screenController, messageController, getTableView().getItems().get(getIndex())));
+                    screenController.activate("detailMessage", stage);
                 });
             }
 
@@ -104,17 +120,18 @@ public class Table extends HBox {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    setGraphic(removeButton);
+                    HBox boxButton = new HBox(10, removeButton, detailButton);
+                    boxButton.setAlignment(Pos.CENTER);
+                    setGraphic(boxButton);
                 }
             }
         });
-        actionsCol.setStyle("-fx-alignment: CENTER;");
-        actionsCol.setMaxWidth(125);
+        actionsCol.setMaxWidth(175);
         actionsCol.setMinWidth(100);
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.getColumns().addAll(sender, subjectCol, messageCol, timestampCol, actionsCol);
-        table.setItems(FXCollections.observableArrayList(messageController.getMessages(messageStatus, userToken)));
+        table.setItems(FXCollections.observableArrayList(messageController.getMessages(messageStatuses, userToken)));
 
         this.getChildren().add(table);
         this.setAlignment(Pos.CENTER);

@@ -81,6 +81,10 @@ public class ScreenController {
                 stage.setTitle("New message");
                 stage.setMaximized(true);
                 break;
+            case "detailMessage":
+                stage.setTitle("Message detail");
+                stage.setMaximized(true);
+                break;
             default:
                 stage.setTitle("Application");
                 stage.setMaximized(true);

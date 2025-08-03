@@ -1,6 +1,7 @@
 package com.example.utils.interfaces;
 
 import java.io.File;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.example.dto.MessageDTO;
@@ -14,7 +15,7 @@ public interface MailService {
 
     void removeMessage(UserToken userToken, MessageDTO messageDTO);
 
-    List<MessageDTO> getMessageDTOs(UserToken userToken, MessageStatus messageStatus);
+    List<MessageDTO> getMessageDTOs(UserToken userToken, EnumSet<MessageStatus> messageStatuses);
 
     ErrorHandler getErrorHandler();
 }

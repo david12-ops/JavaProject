@@ -1,6 +1,12 @@
 package com.example.components;
 
+import java.util.EnumSet;
+
+import com.example.controller.MessageController;
 import com.example.controller.ScreenController;
+import com.example.controller.UserController;
+import com.example.utils.enums.MessageStatus;
+import com.example.view.MainScreen;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,7 +23,15 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class SideBar extends VBox {
-        public SideBar(Stage stage, ScreenController screenController) {
+        private void showContent(Stage stage, ScreenController screenController, UserController userController,
+                        MessageController messageController, EnumSet<MessageStatus> messageStatuses) {
+                screenController.updateScreen("main", new MainScreen(stage, screenController, userController,
+                                messageController, messageStatuses));
+                screenController.activate("main", stage);
+        }
+
+        public SideBar(Stage stage, ScreenController screenController, UserController userController,
+                        MessageController messageController) {
                 setPadding(new Insets(20));
                 setSpacing(10);
                 setPrefWidth(200);
@@ -40,30 +54,53 @@ public class SideBar extends VBox {
                 });
 
                 Button inboxButton = new Button("Inbox");
-                Button starredButton = new Button("Starred");
-                Button snoozedButton = new Button("Snoozed");
-                Button sentButton = new Button("Sent");
-                Button draftsButton = new Button("Drafts");
-                Button moreButton = new Button("More");
+                inboxButton.setOnAction(e -> {
+                        showContent(stage, screenController, userController, messageController,
+                                        EnumSet.of(MessageStatus.INBOX));
+                });
 
-                Button importantButton = new Button("Important");
-                Button scheduledButton = new Button("Scheduled");
+                Button starredButton = new Button("Starred");
+                starredButton.setOnAction(e -> {
+                        showContent(stage, screenController, userController, messageController,
+                                        EnumSet.of(MessageStatus.STARRED));
+                });
+
+                Button sentButton = new Button("Sent");
+                sentButton.setOnAction(e -> {
+                        showContent(stage, screenController, userController, messageController,
+                                        EnumSet.of(MessageStatus.SENT));
+                });
+
+                Button draftsButton = new Button("Drafts");
+                draftsButton.setOnAction(e -> {
+                        showContent(stage, screenController, userController, messageController,
+                                        EnumSet.of(MessageStatus.DRAFTS));
+                });
+
+                Button moreButton = new Button("More");
                 Button allMailButton = new Button("All Mail");
+                allMailButton.setOnAction(e -> {
+                        showContent(stage, screenController, userController, messageController,
+                                        EnumSet.of(MessageStatus.INBOX, MessageStatus.SENT, MessageStatus.STARRED,
+                                                        MessageStatus.DRAFTS, MessageStatus.TRASH));
+                });
+
                 Button trashButton = new Button("Trash");
+                trashButton.setOnAction(e -> {
+                        showContent(stage, screenController, userController, messageController,
+                                        EnumSet.of(MessageStatus.TRASH));
+                });
 
                 addButton.getStyleClass().add("addButton");
                 inboxButton.getStyleClass().add("appButton");
                 starredButton.getStyleClass().add("appButton");
-                snoozedButton.getStyleClass().add("appButton");
                 sentButton.getStyleClass().add("appButton");
                 draftsButton.getStyleClass().add("appButton");
                 moreButton.getStyleClass().add("appButton");
-                importantButton.getStyleClass().add("appButton");
-                scheduledButton.getStyleClass().add("appButton");
                 allMailButton.getStyleClass().add("appButton");
                 trashButton.getStyleClass().add("deleteButton");
 
-                VBox extraButtonsBox = new VBox(10, importantButton, scheduledButton, allMailButton, trashButton);
+                VBox extraButtonsBox = new VBox(10, allMailButton, trashButton);
                 extraButtonsBox.setAlignment(Pos.CENTER);
                 extraButtonsBox.setVisible(false);
                 extraButtonsBox.setManaged(false);
@@ -81,7 +118,7 @@ public class SideBar extends VBox {
                         moreButton.setText(isVisible ? "More" : "Less");
                 });
 
-                getChildren().addAll(addButton, inboxButton, starredButton, snoozedButton, sentButton, draftsButton,
-                                moreButton, extraButtonsBox);
+                getChildren().addAll(addButton, inboxButton, starredButton, sentButton, draftsButton, moreButton,
+                                extraButtonsBox);
         }
 }

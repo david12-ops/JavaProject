@@ -51,6 +51,26 @@ public class UserAuthService implements AuthService {
         return supportedTypes.contains(formType);
     }
 
+    private UserToken checkUserToken(UserToken userToken) {
+        if (userToken == null || userToken.getMailAccount() == null || userToken.getUserId() == null) {
+            return null;
+        }
+
+        return userToken;
+    }
+
+    private String resolveIdByEmail(String email) {
+        if (email == null)
+            return null;
+
+        for (UserDTO userDTO : userRepository.getAllUserDtos()) {
+            if (email.equals(userDTO.getMailAccount())) {
+                return userDTO.getUserId();
+            }
+        }
+        return null;
+    }
+
     private UserDTO creaUserDTO(String userId, String groupId, String currentPassword, String mailAccount,
             String password, String confirmationPassword, String profileImage) {
         return new UserDTO(userId, groupId, mailAccount, currentPassword, confirmationPassword, password, profileImage);
@@ -70,8 +90,8 @@ public class UserAuthService implements AuthService {
 
     }
 
-    private UserDTO getUserDTOByEmailAndPassword(String email, String password, List<UserDTO> userDTOs) {
-        for (UserDTO userDTO : userDTOs) {
+    private UserDTO getUserDTOByEmailAndPassword(String email, String password) {
+        for (UserDTO userDTO : userRepository.getAllUserDtos()) {
             String userMailAccountFromDTO = userDTO.getMailAccount();
             String userCurrentPasswordFromDTO = userDTO.getCurrentPassword();
             boolean dtoContainsData = userMailAccountFromDTO != null && userCurrentPasswordFromDTO != null;
@@ -84,8 +104,8 @@ public class UserAuthService implements AuthService {
         return null;
     }
 
-    private UserDTO getUserDTOByToken(UserToken userToken, List<UserDTO> userDTOs) {
-        for (UserDTO userDTO : userDTOs) {
+    private UserDTO getUserDTOByToken(UserToken userToken) {
+        for (UserDTO userDTO : userRepository.getAllUserDtos()) {
             String userIdFromDTO = userDTO.getUserId();
             String userMailAccountFromDTO = userDTO.getMailAccount();
             boolean dtoContainsData = userIdFromDTO != null && userMailAccountFromDTO != null;
@@ -110,10 +130,10 @@ public class UserAuthService implements AuthService {
             UserToken userToken = getLoggedUser();
 
             if (addTypeOperation == AddOperationType.ANOTHERACCOUNT) {
-                boolean isValid = !containsDataNull("register", new LabeledValue("token", userToken))
+                boolean isValid = !containsDataNull("register", new LabeledValue("token", checkUserToken(userToken)))
                         && validateData(OperationType.CREATE, null, emailAccount,
-                                getUserDTOByToken(userToken, userRepository.getAllUserDtos()).getCurrentPassword(),
-                                password, confirmationPassword, formType, userRepository.getAllUserDtos());
+                                getUserDTOByToken(userToken).getCurrentPassword(), password, confirmationPassword,
+                                formType, userRepository.getAllUserDtos());
 
                 if (!isValid)
                     return false;
@@ -121,8 +141,8 @@ public class UserAuthService implements AuthService {
                 userDTO = creaUserDTO(null, userToken.getGroupId(), null, emailAccount, password, confirmationPassword,
                         null);
                 userRepository.addUser(userDTO, addTypeOperation);
-                return getUserDTOByEmailAndPassword(userDTO.getMailAccount(), userDTO.getPassword(),
-                        userRepository.getAllUserDtos()) != null ? true : false;
+                return getUserDTOByEmailAndPassword(userDTO.getMailAccount(), userDTO.getPassword()) != null ? true
+                        : false;
             }
 
             if (addTypeOperation == AddOperationType.NEWACCOUNT && validateData(OperationType.CREATE, null,
@@ -130,8 +150,8 @@ public class UserAuthService implements AuthService {
 
                 userDTO = creaUserDTO(null, null, null, emailAccount, password, confirmationPassword, null);
                 userRepository.addUser(userDTO, addTypeOperation);
-                return getUserDTOByEmailAndPassword(userDTO.getMailAccount(), userDTO.getPassword(),
-                        userRepository.getAllUserDtos()) != null ? true : false;
+                return getUserDTOByEmailAndPassword(userDTO.getMailAccount(), userDTO.getPassword()) != null ? true
+                        : false;
             }
         }
 
@@ -141,7 +161,7 @@ public class UserAuthService implements AuthService {
 
     @Override
     public void login(String emailAccount, String password) {
-        UserDTO userDTO = getUserDTOByEmailAndPassword(emailAccount, password, userRepository.getAllUserDtos());
+        UserDTO userDTO = getUserDTOByEmailAndPassword(emailAccount, password);
 
         if (!containsDataNull("login", new LabeledValue("dto", userDTO)) && userDTO.getUserId() != null
                 && !sessionService.isUserLoggedIn(userDTO.getUserId())) {
@@ -152,7 +172,7 @@ public class UserAuthService implements AuthService {
     @Override
     public boolean updateNotLoggedAccount(String emailAccount, String password, String newPassword,
             String confirmationNewPassword, FormType formType) {
-        UserDTO foundUserDTO = getUserDTOByEmailAndPassword(emailAccount, password, userRepository.getAllUserDtos());
+        UserDTO foundUserDTO = getUserDTOByEmailAndPassword(emailAccount, password);
 
         boolean containsNull = containsDataNull("updateNotLoggedAccount", new LabeledValue("dto", foundUserDTO));
         if (containsNull)
@@ -165,8 +185,8 @@ public class UserAuthService implements AuthService {
                     confirmationNewPassword, foundUserDTO.getProfileImage());
 
             userRepository.updateUser(foundUserDTO, updatedUserDTO);
-            return getUserDTOByEmailAndPassword(updatedUserDTO.getMailAccount(), updatedUserDTO.getConfirmPassword(),
-                    userRepository.getAllUserDtos()) != null ? true : false;
+            return getUserDTOByEmailAndPassword(updatedUserDTO.getMailAccount(),
+                    updatedUserDTO.getConfirmPassword()) != null ? true : false;
         }
 
         return false;
@@ -176,16 +196,22 @@ public class UserAuthService implements AuthService {
     public boolean switchAccount(UserDTO switchToUserDTO) {
         UserToken userToken = getLoggedUser();
 
-        boolean containsNull = containsDataNull("switchAccount", new LabeledValue("token", userToken),
+        boolean containsNull = containsDataNull("switchAccount", new LabeledValue("token", checkUserToken(userToken)),
                 new LabeledValue("dto", switchToUserDTO));
 
         if (containsNull)
             return false;
 
-        if (!userToken.getMailAccount().equals(switchToUserDTO.getMailAccount())) {
-            switchToUserDTO.setGroupId(userToken.getGroupId());
+        String userId = resolveIdByEmail(switchToUserDTO.getMailAccount());
+
+        if (userId != null && !userToken.getMailAccount().equals(switchToUserDTO.getMailAccount())) {
+            UserDTO switchToUserDTOwithId = creaUserDTO(userId, userToken.getGroupId(),
+                    switchToUserDTO.getCurrentPassword(), switchToUserDTO.getMailAccount(),
+                    switchToUserDTO.getPassword(), switchToUserDTO.getConfirmPassword(),
+                    switchToUserDTO.getProfileImage());
+
             logOut();
-            currentSessionId = sessionService.createSessionId(switchToUserDTO);
+            currentSessionId = sessionService.createSessionId(switchToUserDTOwithId);
             return true;
         }
 
@@ -196,15 +222,14 @@ public class UserAuthService implements AuthService {
     public boolean updateLoggedInAccount(String newPassword, String confirmationNewPassword, FormType formType) {
         UserDTO foundUserDTO;
         UserToken userToken = getLoggedUser();
-        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
 
-        boolean containsNull = containsDataNull("switchAccount", new LabeledValue("token", userToken),
-                new LabeledValue("dto", getUserDTOByToken(userToken, userDTOs)));
+        boolean containsNull = containsDataNull("switchAccount", new LabeledValue("token", checkUserToken(userToken)),
+                new LabeledValue("dto", getUserDTOByToken(userToken)));
 
         if (containsNull)
             return false;
         else
-            foundUserDTO = getUserDTOByToken(userToken, userDTOs);
+            foundUserDTO = getUserDTOByToken(userToken);
 
         if (validatePasswords(foundUserDTO.getMailAccount(), foundUserDTO.getCurrentPassword(), newPassword,
                 confirmationNewPassword, formType)) {
@@ -213,8 +238,8 @@ public class UserAuthService implements AuthService {
                     confirmationNewPassword, foundUserDTO.getProfileImage());
 
             userRepository.updateUser(foundUserDTO, updatedUserDTO);
-            return getUserDTOByEmailAndPassword(updatedUserDTO.getMailAccount(), updatedUserDTO.getConfirmPassword(),
-                    userRepository.getAllUserDtos()) != null ? true : false;
+            return getUserDTOByEmailAndPassword(updatedUserDTO.getMailAccount(),
+                    updatedUserDTO.getConfirmPassword()) != null ? true : false;
         }
 
         return false;

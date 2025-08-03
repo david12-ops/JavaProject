@@ -1,11 +1,14 @@
 package com.example.components;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.example.controller.MessageController;
+import com.example.utils.FileConvertor;
+import com.example.utils.enums.FileChooserUIState;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,6 +41,8 @@ public class FileChooserUI extends VBox {
             "*.mp4", "*.mov", "*.avi", "*.wmv", "*.mp3", "*.wav", "*.m4a", "*.zip", "*.7z", "*.tar");
 
     private Button attachButton = new Button("Attach Files");
+    private Button removeButton = new Button("✖");
+
     private HBox fileBox = new HBox(5);
     private List<File> selectedFiles = null;
 
@@ -73,7 +78,6 @@ public class FileChooserUI extends VBox {
 
         Label fileNameLabel = new Label(file.getName());
 
-        Button removeButton = new Button("✖");
         removeButton.getStyleClass().add("deleteButton");
         removeButton.setStyle("-fx-font-size: 10px; -fx-padding: 2px 4px;");
 
@@ -89,7 +93,24 @@ public class FileChooserUI extends VBox {
         return filePreview;
     }
 
-    public FileChooserUI(Label attachedFilesErrorLabel, MessageController messageController) {
+    private void disableFileControls(Button addFileButton, Button removeFileButton) {
+        addFileButton.setDisable(true);
+        removeFileButton.setDisable(true);
+        fileBox.setMouseTransparent(true);
+        fileBox.setFocusTraversable(false);
+    }
+
+    public FileChooserUI(Label attachedFilesErrorLabel, MessageController messageController,
+            FileChooserUIState fileChooserUIState) {
+
+        if (fileChooserUIState == FileChooserUIState.READONLY)
+            disableFileControls(attachButton, removeButton);
+
+        if (fileChooserUIState == FileChooserUIState.MODIFIABLE) {
+            removeButton.setDisable(false);
+            attachButton.setDisable(false);
+        }
+
         attachButton.getStyleClass().add("appButton");
         attachButton.setOnAction(e -> {
             FileChooser fileChooser = new FileChooser();
@@ -130,7 +151,7 @@ public class FileChooserUI extends VBox {
         scrollPane.setMaxWidth(400);
         scrollPane.getStyleClass().add("files-field");
 
-        VBox attachFileBox = new VBox(attachButton);
+        VBox attachFileBox = fileChooserUIState == FileChooserUIState.READONLY ? new VBox() : new VBox(attachButton);
         attachFileBox.setAlignment(Pos.CENTER);
 
         fileBox.getChildren().addListener((javafx.collections.ListChangeListener<javafx.scene.Node>) change -> {
@@ -158,5 +179,31 @@ public class FileChooserUI extends VBox {
 
     public void clearFileBox() {
         fileBox.getChildren().clear();
+    }
+
+    public void setFilesToDisplay(List<String> base64Files) {
+        if (base64Files == null || base64Files.isEmpty()) {
+            return;
+        }
+
+        selectedFiles = new ArrayList<>();
+        fileBox.getChildren().clear();
+        try {
+            for (String base64File : base64Files) {
+                File outputDir = new File("temp");
+                File file = FileConvertor.base64ToFile(base64File, outputDir);
+                file.deleteOnExit();
+
+                selectedFiles.add(file);
+            }
+
+            for (File file : selectedFiles) {
+                VBox filePreview = createFilePreview(file);
+                fileBox.getChildren().add(filePreview);
+            }
+        } catch (IOException e) {
+            System.out.println("Invalid Base64 string: " + e.getMessage());
+            return;
+        }
     }
 }

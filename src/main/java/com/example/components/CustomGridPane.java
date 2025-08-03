@@ -1,6 +1,7 @@
 package com.example.components;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.example.controller.MessageController;
@@ -8,6 +9,7 @@ import com.example.controller.ScreenController;
 import com.example.controller.UserController;
 import com.example.dto.UserDTO;
 import com.example.utils.enums.LayoutMode;
+import com.example.utils.enums.MessageStatus;
 import com.example.utils.services.StateEventService;
 import com.example.view.ForgotCredentialsScreen;
 import com.example.view.MainScreen;
@@ -159,8 +161,8 @@ public class CustomGridPane extends HBox {
 
     private void updateScreens(ScreenController screenController, UserController userController,
             MessageController messageController, Stage stage) {
-        screenController.updateScreen("main",
-                new MainScreen(stage, screenController, userController, messageController));
+        screenController.updateScreen("main", new MainScreen(stage, screenController, userController, messageController,
+                EnumSet.of(MessageStatus.INBOX)));
         screenController.updateScreen("reset", new ForgotCredentialsScreen(stage, screenController, userController));
         screenController.updateScreen("switchUser",
                 new SwitchUserScreen(stage, screenController, userController, messageController));

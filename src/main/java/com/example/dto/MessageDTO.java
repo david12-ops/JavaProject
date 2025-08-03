@@ -32,9 +32,6 @@ public class MessageDTO {
 
     private LocalDateTime timestamp;
 
-    public MessageDTO() {
-    }
-
     public MessageDTO(String messageId, String senderId, String senderMailAccount, String recevierId,
             String recevierMailAccount, String subject, String message, LocalDateTime timestamp,
             List<String> attachedBase64Files, Map<String, EnumSet<MessageStatus>> statuses, List<File> attachedFiles) {
@@ -129,4 +126,17 @@ public class MessageDTO {
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
+
+    @Override
+    public String toString() {
+        return "MessageDTO{" + "messageId='" + messageId + '\'' + ", senderId='" + senderId + '\''
+                + ", senderMailAccount='" + senderMailAccount + '\'' + ", recevierId='" + recevierId + '\''
+                + ", recevierMailAccount='" + recevierMailAccount + '\'' + ", subject='" + subject + '\''
+                + ", message='"
+                + (message != null ? message.substring(0, Math.min(30, message.length())) + "..." : null) + '\''
+                + ", timestamp=" + timestamp + ", statuses=" + statuses + ", attachedBase64FilesCount="
+                + (attachedBase64Files != null ? attachedBase64Files.size() : 0) + ", attachedFilesCount="
+                + (attachedFiles != null ? attachedFiles.size() : 0) + '}';
+    }
+
 }

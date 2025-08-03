@@ -94,7 +94,8 @@ public class UserRepository {
         try {
             User currentUser = new User(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount(),
                     userDTO.getCurrentPassword(), userDTO.getProfileImage());
-            String base64 = profileImage != null ? FileConvertor.imageToBase64(profileImage) : null;
+            String base64 = profileImage != null ? FileConvertor.fileToBase64(profileImage) : null;
+
             User updatedUser = new User(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount(),
                     userDTO.getCurrentPassword(), base64);
 

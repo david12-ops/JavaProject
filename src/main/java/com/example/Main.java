@@ -1,9 +1,13 @@
 package com.example;
 
+import java.util.EnumSet;
+
 import com.example.controller.MessageController;
 import com.example.controller.ScreenController;
 import com.example.controller.UserController;
+import com.example.utils.enums.MessageStatus;
 import com.example.view.AddAnotherAccountScreen;
+import com.example.view.DetailMessageScreen;
 import com.example.view.ForgotCredentialsScreen;
 import com.example.view.LoginScreen;
 import com.example.view.MainScreen;
@@ -17,7 +21,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class Main extends Application {
-
         // Icons use from - https://icons8.com
         private UserController userController = new UserController();
         private MessageController messageController = new MessageController();
@@ -37,11 +40,13 @@ public class Main extends Application {
                 SwitchUserScreen switchUserScreen = new SwitchUserScreen(primaryStage, screenController, userController,
                                 messageController);
                 MainScreen mainScreen = new MainScreen(primaryStage, screenController, userController,
-                                messageController);
+                                messageController, EnumSet.of(MessageStatus.INBOX));
                 UpdateAvatar updateAvatarScreen = new UpdateAvatar(primaryStage, screenController, userController,
                                 messageController);
                 NewMessageScreen newMessageScreen = new NewMessageScreen(primaryStage, screenController, userController,
                                 messageController);
+                DetailMessageScreen detailMessageScreen = new DetailMessageScreen(primaryStage, userController,
+                                screenController, messageController, null);
 
                 Scene scene = new Scene(loginScreen, 400, 300);
                 screenController.setScene(scene);
@@ -54,6 +59,7 @@ public class Main extends Application {
                 screenController.addScreen("updateAvatarImage", updateAvatarScreen);
                 screenController.addScreen("switchUser", switchUserScreen);
                 screenController.addScreen("newMessage", newMessageScreen);
+                screenController.addScreen("detailMessage", detailMessageScreen);
 
                 scene.getStylesheets().add(getClass().getResource("/styles/form.css").toExternalForm());
                 scene.getStylesheets().add(getClass().getResource("/styles/appBar.css").toExternalForm());

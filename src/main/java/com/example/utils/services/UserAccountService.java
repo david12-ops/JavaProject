@@ -27,6 +27,7 @@ public class UserAccountService implements AccountService {
     private record LabeledValue(String label, Object value) {
     }
 
+    // Support Methods
     private boolean containsDataNull(String errorKey, LabeledValue... labeledValues) {
         for (LabeledValue labeledValue : labeledValues) {
             if (labeledValue.value == null) {
@@ -35,6 +36,31 @@ public class UserAccountService implements AccountService {
             }
         }
         return false;
+    }
+
+    private UserToken checkUserToken(UserToken userToken) {
+        if (userToken == null || userToken.getMailAccount() == null || userToken.getUserId() == null) {
+            return null;
+        }
+
+        return userToken;
+    }
+
+    private UserDTO creaUserDTO(String userId, String groupId, String currentPassword, String mailAccount,
+            String password, String confirmationPassword, String profileImage) {
+        return new UserDTO(userId, groupId, mailAccount, currentPassword, confirmationPassword, password, profileImage);
+    }
+
+    private String resolveIdByEmail(String email) {
+        if (email == null)
+            return null;
+
+        for (UserDTO userDTO : userRepository.getAllUserDtos()) {
+            if (email.equals(userDTO.getMailAccount())) {
+                return userDTO.getUserId();
+            }
+        }
+        return null;
     }
 
     private UserDTO getUserDTOByToken(UserToken userToken, List<UserDTO> userDTOs) {
@@ -58,7 +84,7 @@ public class UserAccountService implements AccountService {
 
     @Override
     public boolean removeAccount(UserToken userToken, UserDTO userDTO) {
-        boolean containsNull = containsDataNull("removeAccount", new LabeledValue("token", userToken),
+        boolean containsNull = containsDataNull("removeAccount", new LabeledValue("token", checkUserToken(userToken)),
                 new LabeledValue("dto", userDTO));
 
         if (containsNull)
@@ -68,39 +94,43 @@ public class UserAccountService implements AccountService {
                 && userToken.getMailAccount().equals(userDTO.getMailAccount())) {
             return false;
         }
-        userRepository.removeUser(userDTO);
-        return !userRepository.getAllUserDtos().contains(userDTO);
+
+        String userId = resolveIdByEmail(userDTO.getMailAccount());
+        UserDTO userDTOwithUserId = creaUserDTO(userId, userDTO.getGroupId(), userDTO.getMailAccount(),
+                userDTO.getCurrentPassword(), userDTO.getPassword(), userDTO.getConfirmPassword(),
+                userDTO.getProfileImage());
+
+        userRepository.removeUser(userDTOwithUserId);
+        return !userRepository.getAllUserDtos().contains(userDTOwithUserId);
     }
 
     @Override
     public void updateImageProfile(UserToken userToken, File file) {
-        UserDTO userDTO;
         List<UserDTO> userDTOs = userRepository.getAllUserDtos();
+        UserDTO founUserDTO = getUserDTOByToken(userToken, userDTOs);
 
-        boolean containsNull = containsDataNull("updateImageProfile", new LabeledValue("token", userToken),
-                new LabeledValue("dto", getUserDTOByToken(userToken, userDTOs)));
+        boolean containsNull = containsDataNull("updateImageProfile",
+                new LabeledValue("token", checkUserToken(userToken)), new LabeledValue("dto", founUserDTO));
 
         if (containsNull)
             return;
-        else
-            userDTO = getUserDTOByToken(userToken, userDTOs);
 
         boolean isValid = userValidator.validProfileImage(file);
 
         if (isValid && file == null) {
-            userRepository.updateUser(userDTO, (File) null);
+            userRepository.updateUser(founUserDTO, (File) null);
         }
 
         if (isValid && file != null) {
-            userRepository.updateUser(userDTO, file);
+            userRepository.updateUser(founUserDTO, file);
         }
     }
 
     @Override
     public List<UserDTO> getAllUserAccounts(UserToken userToken) {
         List<UserDTO> userDTOs = userRepository.getAllUserDtos();
-        boolean containsNull = containsDataNull("getAllUserAccounts", new LabeledValue("token", userToken),
-                new LabeledValue("DTOs", userDTOs));
+        boolean containsNull = containsDataNull("getAllUserAccounts",
+                new LabeledValue("token", checkUserToken(userToken)), new LabeledValue("DTOs", userDTOs));
 
         if (containsNull)
             return null;
@@ -114,7 +144,8 @@ public class UserAccountService implements AccountService {
 
     @Override
     public Image getImageProfile(UserToken userToken) {
-        boolean containsNull = containsDataNull("getImageProfile", new LabeledValue("token", userToken));
+        boolean containsNull = containsDataNull("getImageProfile",
+                new LabeledValue("token", checkUserToken(userToken)));
 
         if (containsNull)
             return null;
@@ -125,7 +156,7 @@ public class UserAccountService implements AccountService {
                 .findAny();
 
         if (foundUserDTO.isPresent() && foundUserDTO.get().getProfileImage() != null) {
-            return FileConvertor.Base64ToImage(foundUserDTO.get().getProfileImage());
+            return FileConvertor.base64ToImage(foundUserDTO.get().getProfileImage());
         }
         return null;
     }
