@@ -14,14 +14,15 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class MainScreen extends VBox {
-    // TODO - obnoveni zprávy
+    // TODO - obnoveni zprávy, celkove update statusu nedoreseny s ui, aggregace
+    // zpráv není úplna pro případ s trash statusem, nove testy
     // TODO - solve update status bug
     // TODO - build tests - message part
     // TODO - test on services too (auth, account)
 
     public MainScreen(Stage stage, ScreenController screenController, UserController userController,
-            MessageController messageController, EnumSet<MessageStatus> messageStatuses) {
-        Table table = new Table(stage, screenController, messageController, userController, messageStatuses);
+            MessageController messageController, EnumSet<MessageStatus> messageStatusesFromUI) {
+        Table table = new Table(stage, screenController, messageController, userController, messageStatusesFromUI);
         Layout layout = new Layout(stage, table, screenController, userController, messageController);
 
         this.getChildren().add(layout);

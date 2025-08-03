@@ -45,8 +45,8 @@ public class Main extends Application {
                                 messageController);
                 NewMessageScreen newMessageScreen = new NewMessageScreen(primaryStage, screenController, userController,
                                 messageController);
-                DetailMessageScreen detailMessageScreen = new DetailMessageScreen(primaryStage, userController,
-                                screenController, messageController, null);
+                DetailMessageScreen detailMessageScreen = new DetailMessageScreen(primaryStage, messageController, null,
+                                null);
 
                 Scene scene = new Scene(loginScreen, 400, 300);
                 screenController.setScene(scene);

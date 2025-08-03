@@ -1,19 +1,12 @@
 package com.example.view;
 
-import java.util.EnumSet;
-
 import com.example.components.FileChooserUI;
 import com.example.controller.MessageController;
-import com.example.controller.ScreenController;
-import com.example.controller.UserController;
 import com.example.dto.MessageDTO;
-import com.example.model.UserToken;
 import com.example.utils.enums.FileChooserUIState;
-import com.example.utils.enums.MessageStatus;
 
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -22,20 +15,10 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class DetailMessageScreen extends VBox {
-    private void updateStatusAction(Stage stage, UserController userController, ScreenController screenController,
-            MessageController messageController, MessageDTO messageDTO, MessageStatus newMessageStatus,
-            UserToken userToken) {
-        messageController.updateStatus(userToken, messageDTO, newMessageStatus);
-        screenController.updateScreen("main", new MainScreen(stage, screenController, userController, messageController,
-                EnumSet.of(newMessageStatus)));
-        screenController.activate("main", stage);
-    }
-
     private FileChooserUI fileChooserUI;
 
-    public DetailMessageScreen(Stage stage, UserController userController, ScreenController screenController,
-            MessageController messageController, MessageDTO messageDTO) {
-        UserToken userToken = userController.getLoggedUser();
+    public DetailMessageScreen(Stage stage, MessageController messageController, MessageDTO messageDTO,
+            HBox buttonBox) {
         fileChooserUI = new FileChooserUI(new Label(), messageController, FileChooserUIState.READONLY);
         fileChooserUI.setFilesToDisplay(messageDTO != null ? messageDTO.getAttachedBase64Files() : null);
 
@@ -65,22 +48,6 @@ public class DetailMessageScreen extends VBox {
         messageAreaField.setPrefRowCount(15);
         messageAreaField.setWrapText(true);
 
-        Button backButton = new Button("Back");
-        backButton.getStyleClass().add("appButton");
-        backButton.setOnAction(e -> {
-            screenController.activate("main", stage);
-        });
-
-        Button starredButton = new Button("Add to favorites");
-        starredButton.getStyleClass().add("updateButton");
-        starredButton.setOnAction(e -> {
-            updateStatusAction(stage, userController, screenController, messageController, messageDTO,
-                    MessageStatus.STARRED, userToken);
-        });
-
-        HBox buttonBox = new HBox(20, backButton, starredButton);
-        buttonBox.setAlignment(Pos.CENTER);
-
         HBox senderBox = new HBox(10, senderLabel, senderField);
         senderBox.setAlignment(Pos.CENTER);
 
@@ -93,7 +60,8 @@ public class DetailMessageScreen extends VBox {
         HBox attachmentsBox = new HBox(10, attachmentsLabel, fileChooserUI);
         attachmentsBox.setAlignment(Pos.CENTER);
 
-        VBox form = new VBox(25, senderBox, subjectBox, messageBox, attachmentsBox, buttonBox);
+        VBox form = buttonBox != null ? new VBox(25, senderBox, subjectBox, messageBox, attachmentsBox, buttonBox)
+                : new VBox(25, senderBox, subjectBox, messageBox, attachmentsBox);
         form.setAlignment(Pos.CENTER);
 
         form.setAlignment(Pos.CENTER);
@@ -102,10 +70,8 @@ public class DetailMessageScreen extends VBox {
         this.setAlignment(Pos.CENTER);
     }
 
-    public static void show(Stage stage, UserController userController, ScreenController screenController,
-            MessageController messageController, MessageDTO messageDTO) {
-        Scene scene = new Scene(
-                new DetailMessageScreen(stage, userController, screenController, messageController, messageDTO));
+    public static void show(Stage stage, MessageController messageController, MessageDTO messageDTO, HBox buttonBox) {
+        Scene scene = new Scene(new DetailMessageScreen(stage, messageController, messageDTO, buttonBox));
         stage.setScene(scene);
         stage.show();
     }

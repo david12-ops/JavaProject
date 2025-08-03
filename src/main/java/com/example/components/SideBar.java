@@ -24,9 +24,9 @@ import javafx.stage.Stage;
 
 public class SideBar extends VBox {
         private void showContent(Stage stage, ScreenController screenController, UserController userController,
-                        MessageController messageController, EnumSet<MessageStatus> messageStatuses) {
+                        MessageController messageController, EnumSet<MessageStatus> messageStatusesFromUI) {
                 screenController.updateScreen("main", new MainScreen(stage, screenController, userController,
-                                messageController, messageStatuses));
+                                messageController, messageStatusesFromUI));
                 screenController.activate("main", stage);
         }
 
@@ -71,18 +71,12 @@ public class SideBar extends VBox {
                                         EnumSet.of(MessageStatus.SENT));
                 });
 
-                Button draftsButton = new Button("Drafts");
-                draftsButton.setOnAction(e -> {
-                        showContent(stage, screenController, userController, messageController,
-                                        EnumSet.of(MessageStatus.DRAFTS));
-                });
-
                 Button moreButton = new Button("More");
                 Button allMailButton = new Button("All Mail");
                 allMailButton.setOnAction(e -> {
                         showContent(stage, screenController, userController, messageController,
                                         EnumSet.of(MessageStatus.INBOX, MessageStatus.SENT, MessageStatus.STARRED,
-                                                        MessageStatus.DRAFTS, MessageStatus.TRASH));
+                                                        MessageStatus.TRASH));
                 });
 
                 Button trashButton = new Button("Trash");
@@ -95,7 +89,6 @@ public class SideBar extends VBox {
                 inboxButton.getStyleClass().add("appButton");
                 starredButton.getStyleClass().add("appButton");
                 sentButton.getStyleClass().add("appButton");
-                draftsButton.getStyleClass().add("appButton");
                 moreButton.getStyleClass().add("appButton");
                 allMailButton.getStyleClass().add("appButton");
                 trashButton.getStyleClass().add("deleteButton");
@@ -118,7 +111,6 @@ public class SideBar extends VBox {
                         moreButton.setText(isVisible ? "More" : "Less");
                 });
 
-                getChildren().addAll(addButton, inboxButton, starredButton, sentButton, draftsButton, moreButton,
-                                extraButtonsBox);
+                getChildren().addAll(addButton, inboxButton, starredButton, sentButton, moreButton, extraButtonsBox);
         }
 }

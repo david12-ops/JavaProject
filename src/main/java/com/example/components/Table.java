@@ -10,6 +10,7 @@ import com.example.dto.MessageDTO;
 import com.example.model.UserToken;
 import com.example.utils.enums.MessageStatus;
 import com.example.view.DetailMessageScreen;
+import com.example.view.MainScreen;
 
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -19,6 +20,87 @@ import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 
 public class Table extends HBox {
+    private void updateStatusAction(Stage stage, UserController userController, ScreenController screenController,
+            MessageController messageController, MessageDTO messageDTO, MessageStatus newMessageStatus) {
+        messageController.updateStatus(userController.getLoggedUser(), messageDTO, newMessageStatus);
+        screenController.updateScreen("main", new MainScreen(stage, screenController, userController, messageController,
+                EnumSet.of(newMessageStatus)));
+        screenController.activate("main", stage);
+    }
+
+    private boolean isMessageStatusOneFromUI(EnumSet<MessageStatus> messageStatusesFromUI) {
+        return messageStatusesFromUI.size() == 1;
+    }
+
+    private HBox createButtonBox(Stage stage, MessageController messageController, UserController userController,
+            ScreenController screenController, MessageDTO messageDTO, EnumSet<MessageStatus> messageStatusesFromUI) {
+        UserToken userToken = userController.getLoggedUser();
+        boolean isTokenFilled = userToken != null && userToken.getUserId() != null;
+
+        HBox buttonBox = new HBox(20);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        Button backButton = new Button("Back");
+        backButton.getStyleClass().add("appButton");
+        backButton.setOnAction(e -> {
+            screenController.activate("main", stage);
+        });
+
+        Button addToFavoritesButton = new Button("Add to favorites");
+        addToFavoritesButton.getStyleClass().add("updateButton");
+        addToFavoritesButton.setOnAction(e -> {
+            updateStatusAction(stage, userController, screenController, messageController, messageDTO,
+                    MessageStatus.STARRED);
+        });
+
+        Button removeFromFavoritesButton = new Button("Remove from favorites");
+        removeFromFavoritesButton.getStyleClass().add("deleteButton");
+        removeFromFavoritesButton.setOnAction(e -> {
+            updateStatusAction(stage, userController, screenController, messageController, messageDTO,
+                    MessageStatus.STARRED);
+        });
+
+        Button renewMessageButton = new Button("Renew message");
+        renewMessageButton.getStyleClass().add("updateButton");
+        renewMessageButton.setOnAction(e -> {
+            updateStatusAction(stage, userController, screenController, messageController, messageDTO,
+                    MessageStatus.STARRED);
+        });
+
+        buttonBox.getChildren().add(backButton);
+
+        if (!isTokenFilled) {
+            return buttonBox;
+        }
+
+        EnumSet<MessageStatus> userStatuses = messageDTO.getStatuses().getOrDefault(userToken.getUserId(),
+                EnumSet.noneOf(MessageStatus.class));
+
+        boolean isStarred = userStatuses.contains(MessageStatus.STARRED);
+        boolean isInTrash = userStatuses.contains(MessageStatus.TRASH);
+
+        if (isMessageStatusOneFromUI(messageStatusesFromUI) && (messageStatusesFromUI.contains(MessageStatus.INBOX)
+                || messageStatusesFromUI.contains(MessageStatus.SENT))) {
+            buttonBox.getChildren().add(isStarred ? removeFromFavoritesButton : addToFavoritesButton);
+        } else if (isMessageStatusOneFromUI(messageStatusesFromUI)
+                && messageStatusesFromUI.contains(MessageStatus.STARRED)) {
+            buttonBox.getChildren().add(removeFromFavoritesButton);
+        } else if (isMessageStatusOneFromUI(messageStatusesFromUI)
+                && messageStatusesFromUI.contains(MessageStatus.TRASH)) {
+            buttonBox.getChildren().addAll(isStarred ? removeFromFavoritesButton : addToFavoritesButton,
+                    renewMessageButton);
+        } else if (!isMessageStatusOneFromUI(messageStatusesFromUI)) {
+            if (isInTrash) {
+                buttonBox.getChildren().addAll(isStarred ? removeFromFavoritesButton : addToFavoritesButton,
+                        renewMessageButton);
+            } else {
+                buttonBox.getChildren().add(isStarred ? removeFromFavoritesButton : addToFavoritesButton);
+            }
+        }
+
+        return buttonBox;
+    }
+
     private Label createLabel(String displayText) {
         Label colLabel = new Label(displayText);
         colLabel.setStyle(
@@ -56,8 +138,10 @@ public class Table extends HBox {
         });
     }
 
+    private HBox detailButtonBox;
+
     public Table(Stage stage, ScreenController screenController, MessageController messageController,
-            UserController userController, EnumSet<MessageStatus> messageStatuses) {
+            UserController userController, EnumSet<MessageStatus> messageStatusesFromUI) {
         TableView<MessageDTO> table = new TableView<>();
         UserToken userToken = userController.getLoggedUser();
         styleTable(table);
@@ -108,8 +192,10 @@ public class Table extends HBox {
                 });
 
                 detailButton.setOnAction(e -> {
-                    screenController.updateScreen("detailMessage", new DetailMessageScreen(stage, userController,
-                            screenController, messageController, getTableView().getItems().get(getIndex())));
+                    detailButtonBox = createButtonBox(stage, messageController, userController, screenController,
+                            getTableView().getItems().get(getIndex()), messageStatusesFromUI);
+                    screenController.updateScreen("detailMessage", new DetailMessageScreen(stage, messageController,
+                            getTableView().getItems().get(getIndex()), detailButtonBox));
                     screenController.activate("detailMessage", stage);
                 });
             }
@@ -131,7 +217,8 @@ public class Table extends HBox {
 
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.getColumns().addAll(sender, subjectCol, messageCol, timestampCol, actionsCol);
-        table.setItems(FXCollections.observableArrayList(messageController.getMessages(messageStatuses, userToken)));
+        table.setItems(
+                FXCollections.observableArrayList(messageController.getMessages(messageStatusesFromUI, userToken)));
 
         this.getChildren().add(table);
         this.setAlignment(Pos.CENTER);
