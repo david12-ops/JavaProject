@@ -51,7 +51,7 @@ public class MailboxService implements MailService {
     }
 
     private String resolveUserIdByEmail(String email) {
-        if (userDTOs == null || userDTOs.size() == 0)
+        if (userDTOs == null || userDTOs.size() == 0 || email == null)
             return null;
 
         for (UserDTO userDTO : userDTOs) {
@@ -63,7 +63,7 @@ public class MailboxService implements MailService {
     }
 
     private String resolveEmailByUserId(String userId) {
-        if (userDTOs == null || userDTOs.size() == 0)
+        if (userDTOs == null || userDTOs.size() == 0 || userId == null)
             return null;
 
         for (UserDTO userDTO : userDTOs) {
@@ -171,15 +171,20 @@ public class MailboxService implements MailService {
                 new LabeledValue("messageDTO", messageDTO), new LabeledValue("token", checkUserToken(userToken))))
             return;
 
+        Map<String, EnumSet<MessageStatus>> plainMapStatuses = new HashMap<>();
         EnumSet<MessageStatus> currentMessageStatuses = EnumSet.copyOf(
                 messageDTO.getStatuses().getOrDefault(userToken.getUserId(), EnumSet.noneOf(MessageStatus.class)));
+        String senderId = resolveUserIdByEmail(messageDTO.getSenderMailAccount());
+        String recevierId = resolveUserIdByEmail(messageDTO.getRecevierMailAccount());
+        boolean contaisIds = senderId != null && recevierId != null;
 
-        if (messageValidator.isStatusUpdateAllowed(messageDTO.getStatuses().get(userToken.getUserId()), newStatus)) {
+        if (contaisIds && messageValidator.isStatusUpdateAllowed(messageDTO.getStatuses().get(userToken.getUserId()),
+                newStatus)) {
             currentMessageStatuses.add(newStatus);
-            MessageDTO updadMessageDTO = createMessageDTO(messageDTO.getMessageId(), messageDTO.getSenderId(),
-                    messageDTO.getSenderMailAccount(), messageDTO.getRecevierId(), messageDTO.getRecevierMailAccount(),
+            MessageDTO updadMessageDTO = createMessageDTO(messageDTO.getMessageId(), senderId,
+                    messageDTO.getSenderMailAccount(), recevierId, messageDTO.getRecevierMailAccount(),
                     messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
-                    messageDTO.getAttachedBase64Files(), null, messageDTO.getAttachedFiles());
+                    messageDTO.getAttachedBase64Files(), plainMapStatuses, messageDTO.getAttachedFiles());
             updadMessageDTO.setStatuses(userToken.getUserId(), currentMessageStatuses);
 
             messageRepository.updateMessageStatus(messageDTO, updadMessageDTO);
@@ -188,10 +193,14 @@ public class MailboxService implements MailService {
 
     @Override
     public void removeMessage(UserToken userToken, MessageDTO messageDTO) {
+        if (containsDataNull("updateStatus", new LabeledValue("messageDTO", messageDTO),
+                new LabeledValue("token", checkUserToken(userToken))))
+            return;
+
         if (messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH))
             messageRepository.removeMessage(messageDTO);
-        else
-            updateStatus(userToken, messageDTO, MessageStatus.TRASH);
+
+        updateStatus(userToken, messageDTO, MessageStatus.TRASH);
     }
 
     @Override

@@ -60,10 +60,12 @@ public class UserAuthService implements AuthService {
     }
 
     private String resolveIdByEmail(String email) {
-        if (email == null)
+        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
+
+        if (userDTOs == null || userDTOs.size() == 0 || email == null)
             return null;
 
-        for (UserDTO userDTO : userRepository.getAllUserDtos()) {
+        for (UserDTO userDTO : userDTOs) {
             if (email.equals(userDTO.getMailAccount())) {
                 return userDTO.getUserId();
             }
@@ -91,7 +93,12 @@ public class UserAuthService implements AuthService {
     }
 
     private UserDTO getUserDTOByEmailAndPassword(String email, String password) {
-        for (UserDTO userDTO : userRepository.getAllUserDtos()) {
+        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
+
+        if (userDTOs == null || userDTOs.size() == 0 || email == null || password == null)
+            return null;
+
+        for (UserDTO userDTO : userDTOs) {
             String userMailAccountFromDTO = userDTO.getMailAccount();
             String userCurrentPasswordFromDTO = userDTO.getCurrentPassword();
             boolean dtoContainsData = userMailAccountFromDTO != null && userCurrentPasswordFromDTO != null;
@@ -105,6 +112,11 @@ public class UserAuthService implements AuthService {
     }
 
     private UserDTO getUserDTOByToken(UserToken userToken) {
+        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
+
+        if (userDTOs == null || userDTOs.size() == 0)
+            return null;
+
         for (UserDTO userDTO : userRepository.getAllUserDtos()) {
             String userIdFromDTO = userDTO.getUserId();
             String userMailAccountFromDTO = userDTO.getMailAccount();

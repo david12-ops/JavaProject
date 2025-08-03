@@ -52,10 +52,12 @@ public class UserAccountService implements AccountService {
     }
 
     private String resolveIdByEmail(String email) {
-        if (email == null)
+        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
+
+        if (userDTOs == null || userDTOs.size() == 0 || email == null)
             return null;
 
-        for (UserDTO userDTO : userRepository.getAllUserDtos()) {
+        for (UserDTO userDTO : userDTOs) {
             if (email.equals(userDTO.getMailAccount())) {
                 return userDTO.getUserId();
             }
@@ -63,7 +65,12 @@ public class UserAccountService implements AccountService {
         return null;
     }
 
-    private UserDTO getUserDTOByToken(UserToken userToken, List<UserDTO> userDTOs) {
+    private UserDTO getUserDTOByToken(UserToken userToken) {
+        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
+
+        if (userDTOs == null || userDTOs.size() == 0)
+            return null;
+
         for (UserDTO userDTO : userDTOs) {
             String userIdFromDTO = userDTO.getUserId();
             String userMailAccountFromDTO = userDTO.getMailAccount();
@@ -106,8 +113,7 @@ public class UserAccountService implements AccountService {
 
     @Override
     public void updateImageProfile(UserToken userToken, File file) {
-        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
-        UserDTO founUserDTO = getUserDTOByToken(userToken, userDTOs);
+        UserDTO founUserDTO = getUserDTOByToken(userToken);
 
         boolean containsNull = containsDataNull("updateImageProfile",
                 new LabeledValue("token", checkUserToken(userToken)), new LabeledValue("dto", founUserDTO));
