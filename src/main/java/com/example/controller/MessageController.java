@@ -45,7 +45,7 @@ public class MessageController {
         mailboxService.removeMessage(userToken, messageDTO);
     }
 
-    public List<MessageDTO> getMessages(EnumSet<MessageStatus> messageStatuses, UserToken userToken) {
-        return mailboxService.getMessageDTOs(userToken, messageStatuses);
+    public List<MessageDTO> getMessages(EnumSet<MessageStatus> messageStatusesFromUI, UserToken userToken) {
+        return mailboxService.getMessageDTOs(userToken, messageStatusesFromUI);
     }
 }

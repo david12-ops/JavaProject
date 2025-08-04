@@ -113,14 +113,15 @@ public class MailboxService implements MailService {
     }
 
     private List<MessageDTO> filterMessageDTOsByTokenAndStatus(List<MessageDTO> messageDTOs, UserToken userToken,
-            EnumSet<MessageStatus> messageStatuses) {
+            EnumSet<MessageStatus> messageStatusesFromUI) {
         List<MessageDTO> filteredList = new ArrayList<>();
 
-        for (MessageStatus messageStatus : messageStatuses) {
+        for (MessageStatus messageStatus : messageStatusesFromUI) {
             List<MessageDTO> matchedMessageDTOs = aggregateMessageDTOs(userToken, messageStatus, messageDTOs)
                     .get(messageStatus);
             filteredList.addAll(matchedMessageDTOs);
         }
+
         return filteredList;
     }
 
@@ -204,7 +205,7 @@ public class MailboxService implements MailService {
     }
 
     @Override
-    public List<MessageDTO> getMessageDTOs(UserToken userToken, EnumSet<MessageStatus> messageStatuses) {
+    public List<MessageDTO> getMessageDTOs(UserToken userToken, EnumSet<MessageStatus> messageStatusesFromUI) {
         List<MessageDTO> messageDTOs = messageRepository.getAllMessageDtos();
         List<MessageDTO> updatedMessageDTOs = new ArrayList<>();
 
@@ -214,7 +215,7 @@ public class MailboxService implements MailService {
         if (containsNull)
             return List.of();
 
-        filterMessageDTOsByTokenAndStatus(messageDTOs, userToken, messageStatuses).forEach(messageDTO -> {
+        filterMessageDTOsByTokenAndStatus(messageDTOs, userToken, messageStatusesFromUI).forEach(messageDTO -> {
             String senderMailAccount = resolveEmailByUserId(messageDTO.getSenderId());
             String recevierMailAccount = resolveEmailByUserId(messageDTO.getRecevierId());
 
