@@ -14,8 +14,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class MainScreen extends VBox {
-    // TODO - obnoveni zprávy, celkove update statusu nedoreseny s ui, aggregace
-    // zpráv není úplna pro případ s trash statusem, nove testy
+    // TODO - nove testy
 
     public MainScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController, EnumSet<MessageStatus> messageStatusesFromUI) {
