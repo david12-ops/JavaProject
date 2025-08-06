@@ -13,18 +13,27 @@ import com.example.view.DetailMessageScreen;
 import com.example.view.MainScreen;
 
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.*;
 import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 
-public class Table extends HBox {
+public class Table extends VBox {
     private void updateStatusAction(Stage stage, UserController userController, ScreenController screenController,
             MessageController messageController, MessageDTO messageDTO, MessageStatus newMessageStatus) {
         messageController.updateStatus(userController.getLoggedUser(), messageDTO, newMessageStatus);
         screenController.updateScreen("main", new MainScreen(stage, screenController, userController, messageController,
                 EnumSet.of(newMessageStatus)));
+        screenController.activate("main", stage);
+    }
+
+    private void removeMessageStatus(Stage stage, UserController userController, ScreenController screenController,
+            MessageController messageController, MessageDTO messageDTO, MessageStatus messageStatusToRemove) {
+        messageController.removeMessageStatus(userController.getLoggedUser(), messageDTO, messageStatusToRemove);
+        screenController.updateScreen("main", new MainScreen(stage, screenController, userController, messageController,
+                EnumSet.of(messageStatusToRemove)));
         screenController.activate("main", stage);
     }
 
@@ -56,15 +65,15 @@ public class Table extends HBox {
         Button removeFromFavoritesButton = new Button("Remove from favorites");
         removeFromFavoritesButton.getStyleClass().add("deleteButton");
         removeFromFavoritesButton.setOnAction(e -> {
-            updateStatusAction(stage, userController, screenController, messageController, messageDTO,
+            removeMessageStatus(stage, userController, screenController, messageController, messageDTO,
                     MessageStatus.STARRED);
         });
 
         Button renewMessageButton = new Button("Renew message");
         renewMessageButton.getStyleClass().add("updateButton");
         renewMessageButton.setOnAction(e -> {
-            updateStatusAction(stage, userController, screenController, messageController, messageDTO,
-                    MessageStatus.STARRED);
+            removeMessageStatus(stage, userController, screenController, messageController, messageDTO,
+                    MessageStatus.TRASH);
         });
 
         buttonBox.getChildren().add(backButton);
@@ -146,6 +155,12 @@ public class Table extends HBox {
         UserToken userToken = userController.getLoggedUser();
         styleTable(table);
 
+        Label statusLabel = new Label(
+                messageStatusesFromUI.size() == 1 ? messageStatusesFromUI.iterator().next().toString() : "All");
+        statusLabel.setStyle("-fx-text-fill: #D9D89F;\r\n" + //
+                "    -fx-font-size: 30px;\r\n" + //
+                "    -fx-padding: 5px 0 10px 0; -fx-font-weight: bold;");
+
         TableColumn<MessageDTO, String> sender = new TableColumn<>();
         sender.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getSenderMailAccount()));
         sender.setGraphic(createLabel("Sender"));
@@ -220,7 +235,7 @@ public class Table extends HBox {
         table.setItems(
                 FXCollections.observableArrayList(messageController.getMessages(messageStatusesFromUI, userToken)));
 
-        this.getChildren().add(table);
+        this.getChildren().addAll(statusLabel, table);
         this.setAlignment(Pos.CENTER);
     }
 }
