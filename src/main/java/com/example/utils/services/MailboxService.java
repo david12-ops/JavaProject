@@ -5,8 +5,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.example.dto.MessageDTO;
 import com.example.dto.UserDTO;
@@ -17,6 +20,7 @@ import com.example.utils.ValidationContext;
 import com.example.utils.enums.ValidationMode;
 import com.example.utils.enums.ViewLevel;
 import com.example.utils.enums.MessageStatus;
+import com.example.utils.enums.OperationType;
 import com.example.utils.interfaces.ErrorHandler;
 import com.example.utils.interfaces.MailService;
 import com.example.utils.interfaces.MessageValidator;
@@ -83,46 +87,59 @@ public class MailboxService implements MailService {
     }
 
     private List<MessageDTO> filterMessageByUserId(UserToken userToken, List<MessageDTO> messageDTOs) {
-        return messageDTOs.stream().filter(messageDTO -> messageDTO.getRecevierId().equals(userToken.getUserId())
-                || messageDTO.getSenderId().equals(userToken.getUserId())).toList();
+        return messageDTOs.stream()
+                .filter(messageDTO -> messageDTO.getRecevierId().equals(userToken.getUserId())
+                        || messageDTO.getSenderId().equals(userToken.getUserId()))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private Map<MessageStatus, List<MessageDTO>> aggregateMessageDTOs(UserToken userToken, MessageStatus messageStatus,
-            List<MessageDTO> messageDTOs) {
+    private Map<MessageStatus, List<MessageDTO>> aggregateMessageDTOs(UserToken userToken,
+            MessageStatus messageStatusFromUI, List<MessageDTO> messageDTOs) {
         List<MessageDTO> matchedMessageDTOsByStatus = new ArrayList<>();
         Map aggregatedByStatusList = new HashMap();
 
-        List<MessageDTO> filterMessageDTOs = filterMessageByUserId(userToken, messageDTOs);
-
-        if (filterMessageDTOs.isEmpty()) {
-            aggregatedByStatusList.put(messageStatus, List.of());
+        if (messageDTOs.isEmpty()) {
+            aggregatedByStatusList.put(messageStatusFromUI, List.of());
             return aggregatedByStatusList;
         }
 
-        for (MessageDTO messageDTO : filterMessageDTOs) {
-            Map<String, EnumSet<MessageStatus>> statusesByUser = messageDTO.getStatuses();
-            EnumSet<MessageStatus> userStatuses = statusesByUser.get(userToken.getUserId());
+        for (MessageDTO messageDTO : messageDTOs) {
+            Map<String, EnumSet<MessageStatus>> messageStatusesByUser = messageDTO.getStatuses();
+            EnumSet<MessageStatus> messageStatuses = messageStatusesByUser.get(userToken.getUserId());
 
-            if (userStatuses.contains(messageStatus)) {
+            if (messageStatuses.contains(messageStatusFromUI)) {
                 matchedMessageDTOsByStatus.add(messageDTO);
             }
         }
 
-        aggregatedByStatusList.put(messageStatus, matchedMessageDTOsByStatus);
+        aggregatedByStatusList.put(messageStatusFromUI, matchedMessageDTOsByStatus);
         return aggregatedByStatusList;
     }
 
     private List<MessageDTO> filterMessageDTOsByTokenAndStatus(List<MessageDTO> messageDTOs, UserToken userToken,
             EnumSet<MessageStatus> messageStatusesFromUI) {
+        List<MessageDTO> matchedMessageDTOs = new ArrayList<>();
         List<MessageDTO> filteredList = new ArrayList<>();
+        filteredList = filterMessageByUserId(userToken, messageDTOs);
 
-        for (MessageStatus messageStatus : messageStatusesFromUI) {
-            List<MessageDTO> matchedMessageDTOs = aggregateMessageDTOs(userToken, messageStatus, messageDTOs)
-                    .get(messageStatus);
-            filteredList.addAll(matchedMessageDTOs);
+        if (!messageStatusesFromUI.contains(MessageStatus.TRASH)) {
+            filteredList.removeIf(
+                    messageDTO -> messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH));
         }
 
-        return filteredList;
+        if (messageStatusesFromUI.size() == 1) {
+            matchedMessageDTOs = aggregateMessageDTOs(userToken, messageStatusesFromUI.iterator().next(), filteredList)
+                    .get(messageStatusesFromUI.iterator().next());
+        } else {
+            for (MessageStatus messageStatusFromUI : messageStatusesFromUI) {
+                matchedMessageDTOs.addAll(
+                        aggregateMessageDTOs(userToken, messageStatusFromUI, filteredList).get(messageStatusFromUI));
+                Set<MessageDTO> nonDuplicateDTOs = new HashSet<>(matchedMessageDTOs);
+                matchedMessageDTOs = new ArrayList<>(nonDuplicateDTOs);
+            }
+        }
+
+        return matchedMessageDTOs;
     }
 
     public MailboxService() {
@@ -139,18 +156,18 @@ public class MailboxService implements MailService {
         Map<String, EnumSet<MessageStatus>> messageStatuses = new HashMap<>();
         boolean isValid = messageValidator.validMessageData(recevierEmail, subject, message)
                 && messageValidator.validFiles(files);
-        String resolvedRecevierId = resolveUserIdByEmail(recevierEmail);
+        String recevierId = resolveUserIdByEmail(recevierEmail);
 
-        if (isValid && !containsDataNull("sendMessage", new LabeledValue("recevierId", resolvedRecevierId))) {
+        if (isValid && !containsDataNull("sendMessage", new LabeledValue("recevierId", recevierId))) {
             /*
              * In this case, i accept to send message myself and it is represented by id
              * (key) - status (value)
              */
-            if (userToken.getUserId().equals(resolvedRecevierId)) {
+            if (userToken.getUserId().equals(recevierId)) {
                 messageStatuses.put(userToken.getUserId(), EnumSet.of(MessageStatus.SENT, MessageStatus.INBOX));
             } else {
                 messageStatuses.put(userToken.getUserId(), EnumSet.of(MessageStatus.SENT));
-                messageStatuses.put(resolvedRecevierId, EnumSet.of(MessageStatus.INBOX));
+                messageStatuses.put(recevierId, EnumSet.of(MessageStatus.INBOX));
             }
 
             if (!messageValidator.containsOnlyAllowedStatuses(messageStatuses,
@@ -160,33 +177,48 @@ public class MailboxService implements MailService {
                 return;
             }
 
-            MessageDTO newMessageDTO = createMessageDTO(null, userToken.getUserId(), null, resolvedRecevierId, null,
-                    subject, message, LocalDateTime.now(), null, messageStatuses, files);
+            MessageDTO newMessageDTO = createMessageDTO(null, userToken.getUserId(), null, recevierId, null, subject,
+                    message, LocalDateTime.now(), null, messageStatuses, files);
             messageRepository.addMessage(userToken, newMessageDTO);
         }
     }
 
     @Override
-    public void updateStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus newStatus) {
-        if (containsDataNull("updateStatus", new LabeledValue("status", newStatus),
+    public void updateStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus status,
+            OperationType operationType) {
+        if (containsDataNull("updateStatus", new LabeledValue("status", status),
                 new LabeledValue("messageDTO", messageDTO), new LabeledValue("token", checkUserToken(userToken))))
             return;
 
-        Map<String, EnumSet<MessageStatus>> plainMapStatuses = new HashMap<>();
-        EnumSet<MessageStatus> currentMessageStatuses = EnumSet.copyOf(
-                messageDTO.getStatuses().getOrDefault(userToken.getUserId(), EnumSet.noneOf(MessageStatus.class)));
+        if (!EnumSet.of(OperationType.UPDATE, OperationType.REMOVE).contains(operationType)) {
+            errorHandler
+                    .logError(errorHandler.createErrorBody("operationType", "Provided unsupported type of operation."));
+            return;
+        }
+
+        Map<String, EnumSet<MessageStatus>> currentMessageStatuses = messageDTO.getStatuses();
         String senderId = resolveUserIdByEmail(messageDTO.getSenderMailAccount());
         String recevierId = resolveUserIdByEmail(messageDTO.getRecevierMailAccount());
-        boolean contaisIds = senderId != null && recevierId != null;
+        boolean containsDataNull = containsDataNull("updateStatus", new LabeledValue("senderId", senderId),
+                new LabeledValue("recevierId", recevierId),
+                new LabeledValue("messageStatuses", currentMessageStatuses));
 
-        if (contaisIds && messageValidator.isStatusUpdateAllowed(messageDTO.getStatuses().get(userToken.getUserId()),
-                newStatus)) {
-            currentMessageStatuses.add(newStatus);
+        if (!containsDataNull) {
+            EnumSet<MessageStatus> currentMessageStatusesByUser = EnumSet.copyOf(
+                    currentMessageStatuses.getOrDefault(userToken.getUserId(), EnumSet.noneOf(MessageStatus.class)));
+
+            if (operationType == OperationType.REMOVE)
+                currentMessageStatusesByUser.remove(status);
+
+            if (operationType == OperationType.UPDATE && messageValidator
+                    .isStatusUpdateAllowed(messageDTO.getStatuses().get(userToken.getUserId()), status))
+                currentMessageStatusesByUser.add(status);
+
             MessageDTO updadMessageDTO = createMessageDTO(messageDTO.getMessageId(), senderId,
                     messageDTO.getSenderMailAccount(), recevierId, messageDTO.getRecevierMailAccount(),
                     messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
-                    messageDTO.getAttachedBase64Files(), plainMapStatuses, messageDTO.getAttachedFiles());
-            updadMessageDTO.setStatuses(userToken.getUserId(), currentMessageStatuses);
+                    messageDTO.getAttachedBase64Files(), currentMessageStatuses, messageDTO.getAttachedFiles());
+            updadMessageDTO.setStatuses(userToken.getUserId(), currentMessageStatusesByUser);
 
             messageRepository.updateMessageStatus(messageDTO, updadMessageDTO);
         }
@@ -201,7 +233,7 @@ public class MailboxService implements MailService {
         if (messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH))
             messageRepository.removeMessage(messageDTO);
 
-        updateStatus(userToken, messageDTO, MessageStatus.TRASH);
+        updateStatus(userToken, messageDTO, MessageStatus.TRASH, OperationType.UPDATE);
     }
 
     @Override
@@ -234,4 +266,5 @@ public class MailboxService implements MailService {
     public ErrorHandler getErrorHandler() {
         return errorHandler;
     }
+
 }
