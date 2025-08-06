@@ -1,5 +1,7 @@
 package com.example.dto;
 
+import java.util.Objects;
+
 import com.example.utils.enums.ViewLevel;
 
 public class UserDTO {
@@ -40,6 +42,11 @@ public class UserDTO {
             return false;
         UserDTO userDTO = (UserDTO) obj;
         return userId.equals(userDTO.userId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userId);
     }
 
     public void sanitize(ViewLevel level) {

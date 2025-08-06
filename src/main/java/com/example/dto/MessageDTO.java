@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.example.utils.enums.MessageStatus;
 import com.example.utils.enums.ViewLevel;
@@ -46,6 +47,25 @@ public class MessageDTO {
         this.statuses = statuses;
         this.attachedBase64Files = attachedBase64Files;
         this.attachedFiles = attachedFiles;
+    }
+
+    /*
+     * This method determines how the objects will be compared.
+     */
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
+        MessageDTO messageDTO = (MessageDTO) obj;
+        return messageId.equals(messageDTO.messageId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(messageId);
     }
 
     public void sanitize(ViewLevel level) {
