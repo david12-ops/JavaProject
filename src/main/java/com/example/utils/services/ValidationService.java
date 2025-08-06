@@ -48,6 +48,11 @@ public class ValidationService {
 
         @Override
         public boolean validPassword(String currentPassword, String password, String email, FormType form) {
+            if (!EnumSet.of(FormType.FORGOTCREDENTIALS, FormType.REGISTER, FormType.ADDACCOUNT).contains(form)) {
+                errorHandler.logError(errorHandler.createErrorBody("formType", "Provided unsupported type of form."));
+                return false;
+            }
+
             if (password == null || !PASSWORD_REGEX.matcher(password).matches()) {
                 if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
                     errorHandler.logError(errorHandler.createErrorBody("password",
@@ -111,6 +116,12 @@ public class ValidationService {
         @Override
         public boolean nonDuplicateUserWithEmail(OperationType operation, String currentUserEmail, String newEmail,
                 List<UserDTO> userDTOs) {
+            if (!EnumSet.of(OperationType.CREATE, OperationType.UPDATE).contains(operation)) {
+                errorHandler.logError(
+                        errorHandler.createErrorBody("operationType", "Provided unsupported type of operation."));
+                return false;
+            }
+
             if (userDTOs != null && !userDTOs.isEmpty()) {
                 List<UserDTO> fliteredUserDTOs = operation == OperationType.UPDATE && currentUserEmail != null
                         ? userDTOs.stream().filter(userDTO -> !userDTO.getMailAccount().equals(currentUserEmail))
@@ -131,6 +142,11 @@ public class ValidationService {
 
         @Override
         public boolean confirmedPassword(String password, String confirmationPassword, FormType form) {
+            if (!EnumSet.of(FormType.FORGOTCREDENTIALS, FormType.REGISTER, FormType.ADDACCOUNT).contains(form)) {
+                errorHandler.logError(errorHandler.createErrorBody("formType", "Provided unsupported type of form."));
+                return false;
+            }
+
             if (!password.equals(confirmationPassword)) {
                 if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
                     errorHandler.logError(errorHandler.createErrorBody("confirmPassword",
