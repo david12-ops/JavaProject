@@ -29,7 +29,7 @@ public class Table extends VBox {
         screenController.activate("main", stage);
     }
 
-    private void removeMessageStatus(Stage stage, UserController userController, ScreenController screenController,
+    private void removeStatusAction(Stage stage, UserController userController, ScreenController screenController,
             MessageController messageController, MessageDTO messageDTO, MessageStatus messageStatusToRemove) {
         messageController.removeMessageStatus(userController.getLoggedUser(), messageDTO, messageStatusToRemove);
         screenController.updateScreen("main", new MainScreen(stage, screenController, userController, messageController,
@@ -65,14 +65,14 @@ public class Table extends VBox {
         Button removeFromFavoritesButton = new Button("Remove from favorites");
         removeFromFavoritesButton.getStyleClass().add("deleteButton");
         removeFromFavoritesButton.setOnAction(e -> {
-            removeMessageStatus(stage, userController, screenController, messageController, messageDTO,
+            removeStatusAction(stage, userController, screenController, messageController, messageDTO,
                     MessageStatus.STARRED);
         });
 
         Button renewMessageButton = new Button("Renew message");
         renewMessageButton.getStyleClass().add("updateButton");
         renewMessageButton.setOnAction(e -> {
-            removeMessageStatus(stage, userController, screenController, messageController, messageDTO,
+            removeStatusAction(stage, userController, screenController, messageController, messageDTO,
                     MessageStatus.TRASH);
         });
 
