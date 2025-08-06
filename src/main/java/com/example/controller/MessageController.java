@@ -7,6 +7,7 @@ import java.util.List;
 import com.example.dto.MessageDTO;
 import com.example.model.UserToken;
 import com.example.utils.enums.MessageStatus;
+import com.example.utils.enums.OperationType;
 import com.example.utils.services.MailboxService;
 
 public class MessageController {
@@ -37,8 +38,12 @@ public class MessageController {
         throw new UnsupportedOperationException("Unimplemented method 'responseToMessage'");
     }
 
-    public void updateStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus newStatus) {
-        mailboxService.updateStatus(userToken, messageDTO, newStatus);
+    public void updateMessageStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus newStatus) {
+        mailboxService.updateStatus(userToken, messageDTO, newStatus, OperationType.UPDATE);
+    }
+
+    public void removeMessageStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus messageStatusToRemove) {
+        mailboxService.updateStatus(userToken, messageDTO, messageStatusToRemove, OperationType.REMOVE);
     }
 
     public void removeMessage(UserToken userToken, MessageDTO messageDTO) {
