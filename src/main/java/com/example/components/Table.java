@@ -23,7 +23,7 @@ import javafx.geometry.Pos;
 public class Table extends VBox {
     private void updateStatusAction(Stage stage, UserController userController, ScreenController screenController,
             MessageController messageController, MessageDTO messageDTO, MessageStatus newMessageStatus) {
-        messageController.updateStatus(userController.getLoggedUser(), messageDTO, newMessageStatus);
+        messageController.updateMessageStatus(userController.getLoggedUser(), messageDTO, newMessageStatus);
         screenController.updateScreen("main", new MainScreen(stage, screenController, userController, messageController,
                 EnumSet.of(newMessageStatus)));
         screenController.activate("main", stage);
