@@ -17,7 +17,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class SwitchUserScreen extends VBox {
-
     public SwitchUserScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController) {
         List<UserDTO> userDTOs = userController.getAllUserAccounts();

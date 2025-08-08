@@ -102,7 +102,6 @@ public class FileChooserUI extends VBox {
 
     public FileChooserUI(Label attachedFilesErrorLabel, MessageController messageController,
             FileChooserUIState fileChooserUIState) {
-
         if (fileChooserUIState == FileChooserUIState.READONLY)
             disableFileControls(attachButton, removeButton);
 

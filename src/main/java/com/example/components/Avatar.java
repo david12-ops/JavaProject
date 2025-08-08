@@ -27,8 +27,17 @@ import javafx.stage.Stage;
 public class Avatar extends VBox {
     private final ObjectProperty<Image> imageProperty = new SimpleObjectProperty<>();
 
-    public Avatar(Stage stage, UserDTO userDTO) {
+    private void updateAvatarImage(Circle circle, Image newImage, Text letter) {
+        if (newImage != null) {
+            circle.setFill(new ImagePattern(newImage));
+            letter.setVisible(false);
+        } else {
+            circle.setFill(Color.CORNFLOWERBLUE);
+            letter.setVisible(true);
+        }
+    }
 
+    public Avatar(Stage stage, UserDTO userDTO) {
         Image imgaeProfile = FileConvertor.base64ToImage(userDTO.getProfileImage());
         String firstLetter = userDTO != null ? userDTO.getMailAccount().substring(0, 1).toUpperCase() : null;
 
@@ -56,7 +65,6 @@ public class Avatar extends VBox {
     }
 
     public Avatar(Stage stage, UserController userController, ScreenController screenController) {
-
         UserToken currUserToken = userController.getLoggedUser();
         String firstLetter = currUserToken != null ? currUserToken.getMailAccount().substring(0, 1).toUpperCase()
                 : null;
@@ -132,16 +140,6 @@ public class Avatar extends VBox {
         });
 
         this.getChildren().add(avatarStack);
-    }
-
-    private void updateAvatarImage(Circle circle, Image newImage, Text letter) {
-        if (newImage != null) {
-            circle.setFill(new ImagePattern(newImage));
-            letter.setVisible(false);
-        } else {
-            circle.setFill(Color.CORNFLOWERBLUE);
-            letter.setVisible(true);
-        }
     }
 
     public void setImage(Image newImage) {

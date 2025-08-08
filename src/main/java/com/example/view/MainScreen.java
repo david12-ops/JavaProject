@@ -31,5 +31,4 @@ public class MainScreen extends VBox {
         stage.setScene(scene);
         stage.show();
     }
-
 }

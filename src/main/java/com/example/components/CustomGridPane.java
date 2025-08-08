@@ -83,7 +83,6 @@ public class CustomGridPane extends HBox {
 
     private void refreshLayout(UserController userController, ScreenController screenController,
             MessageController messageController, Stage stage) {
-
         GridDimension gridDimension = getGridDimension(stage.getWidth(), stage.getHeight());
         computeGridPanesAndList(userController.getAllUserAccounts(), gridDimension);
 
@@ -107,7 +106,6 @@ public class CustomGridPane extends HBox {
     }
 
     private void computeGridPanesAndList(List<UserDTO> userDTOs, GridDimension gridDimension) {
-
         int gridWidth = 0;
         int gridHeight = 0;
 
@@ -170,7 +168,6 @@ public class CustomGridPane extends HBox {
 
     private void switchGridPane(GridPane gridPane, List<UserDTO> userDTOs, Stage stage, UserController userController,
             ScreenController screenController, MessageController messageController, int columns) {
-
         gridPane.getChildren().clear();
 
         for (int i = 0; i < userDTOs.size(); i++) {
@@ -229,7 +226,6 @@ public class CustomGridPane extends HBox {
 
     public CustomGridPane(ScreenController screenController, UserController userController,
             MessageController messageController, Stage stage) {
-
         Button nextButton = new Button(">");
         nextButton.setShape(new Circle(20));
         nextButton.setMinSize(40, 40);

@@ -17,7 +17,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
-
     @Override
     public Label createErrorLabel() {
         Label label = new Label();
@@ -191,5 +190,4 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
         stage.setScene(scene);
         stage.show();
     }
-
 }

@@ -15,7 +15,6 @@ import javafx.stage.Stage;
 public class Layout extends BorderPane {
     public Layout(Stage stage, Node content, ScreenController screenController, UserController userController,
             MessageController messageController) {
-
         VBox contentArea = new VBox(content);
         contentArea.setPadding(new Insets(15));
         contentArea.setFillWidth(false);

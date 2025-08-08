@@ -17,7 +17,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class ForgotCredentialsScreen extends VBox implements GuiErrorHelper {
-
     @Override
     public Label createErrorLabel() {
         Label label = new Label();
@@ -71,7 +70,6 @@ public class ForgotCredentialsScreen extends VBox implements GuiErrorHelper {
         }
 
         labelError.setText("");
-
     }
 
     private VBox createVbox(UserToken userToken, Label labelError, Label emailLabel, TextField emailField,
@@ -91,7 +89,6 @@ public class ForgotCredentialsScreen extends VBox implements GuiErrorHelper {
             PasswordField newPasswordField, PasswordField confirmNewPasswordField, Label emailErrorLabel,
             Label passwordErrorLabel, Label newPasswordErrorLabel, Label confirmNewPasswordErrorLabel,
             UserController userController, ScreenController screenController, Label labelError, UserToken userToken) {
-
         boolean isValid = true;
         labelError.setText("");
         clearErrorLabels(emailErrorLabel, passwordErrorLabel, newPasswordErrorLabel, confirmNewPasswordErrorLabel);

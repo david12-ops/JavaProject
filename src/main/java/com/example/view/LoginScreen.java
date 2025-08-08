@@ -15,7 +15,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class LoginScreen extends VBox {
-
     private Label createErrorLabel() {
         Label label = new Label();
         label.setWrapText(true);
@@ -38,7 +37,6 @@ public class LoginScreen extends VBox {
     private void loginButtonAction(TextField emailField, PasswordField passwordField, Label emailErrorLabel,
             Label passwordErrorLabel, UserController userController, ScreenController screenController,
             MessageController messageController, Label labelError, Stage stage) {
-
         boolean isValid = true;
 
         if (emailField.getText().isBlank()) {

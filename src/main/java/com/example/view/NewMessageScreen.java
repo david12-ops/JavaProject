@@ -24,7 +24,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class NewMessageScreen extends VBox implements GuiErrorHelper {
-
     @Override
     public Label createErrorLabel() {
         Label label = new Label();
@@ -106,7 +105,6 @@ public class NewMessageScreen extends VBox implements GuiErrorHelper {
                     messageController, EnumSet.of(MessageStatus.INBOX)));
             screenController.activate("main", stage);
         }
-
     }
 
     private void onchangeInitialize(TextField whomField, TextField subjectField, TextArea messageAreaField,
