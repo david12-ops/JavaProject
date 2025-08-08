@@ -29,7 +29,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 public class UserValidationsTest {
-
         private ErrorHandler errorHandler;
         private ValidationService validationService;
         private UserValidations validator;
@@ -56,7 +55,6 @@ public class UserValidationsTest {
         @Test
         @DisplayName("Should validate password confirmation fails for mismatches and succeeds for exact matches")
         void testPasswordMatchSuccess() {
-
                 errors.put(FormType.ADDACCOUNT, "Password does not match the confirmation.");
                 errors.put(FormType.REGISTER, "Password does not match the confirmation.");
                 errors.put(FormType.FORGOTCREDENTIALS, "New password does not match the confirmation.");
@@ -65,15 +63,18 @@ public class UserValidationsTest {
                                 new Pair<>("a@čbc", "ca@čb"), // different order
                                 new Pair<>("abcde", "abfde"), // one char difference
                                 new Pair<>("abcde", null));
-
                 List<Pair<String, String>> validInputs = Arrays
                                 .asList(new Pair<>("long@stringwithtext", "long@stringwithtext"));
 
                 for (FormType form : Arrays.asList(FormType.ADDACCOUNT, FormType.FORGOTCREDENTIALS,
                                 FormType.REGISTER)) {
                         for (Pair<String, String> pair : invalidInputs) {
-                                assertFalse(validator.confirmedPassword(pair.getKey(), pair.getValue(), form));
+                                assertFalse(validator.confirmedPassword(pair.getKey(), pair.getValue(),
+                                                FormType.UPDATEAVATAR));
+                                compareErrors("Provided unsupported type of form.", Arrays.asList("formType"),
+                                                errorHandler);
 
+                                assertFalse(validator.confirmedPassword(pair.getKey(), pair.getValue(), form));
                                 compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
                                                 ? "Password does not match the confirmation."
                                                 : "New password does not match the confirmation.",
@@ -84,7 +85,6 @@ public class UserValidationsTest {
                         for (Pair<String, String> pair : validInputs) {
                                 assertTrue(validator.confirmedPassword(pair.getKey(), pair.getValue(), form));
                         }
-
                 }
         }
 
@@ -92,14 +92,11 @@ public class UserValidationsTest {
         @DisplayName("Should enforce password rules: structure, similarity to email, and uniqueness from current")
         void testPasswordContent() {
                 List<String> validPasswords = Arrays.asList("Password1!45", "Welcome2@456", "Secure3$7895");
-
                 List<String> sameAsCurrentPassword = Arrays.asList("Password1!", "Welcome2@", "Secure3$");
-
                 List<String> invalidPasswords = Arrays.asList("password", // no uppercase, digit, or special character
                                 "PASSWORD1!", // no lowercase
                                 "12345!@", // no letters
                                 null);
-
                 List<String> tooSimilarPasswordsWithEmail = Arrays.asList("John.Doe123!", "Jane.smith@123",
                                 "Michael@123");
 
@@ -133,12 +130,16 @@ public class UserValidationsTest {
                                                 : "New password is too similar to your email.",
                                                 Arrays.asList("password", "newPassword"), errorHandler);
 
+                                assertFalse(validator.validPassword(userDTO.getPassword(), validPassword,
+                                                userDTO.getMailAccount(), FormType.UPDATEAVATAR));
+                                compareErrors("Provided unsupported type of form.", Arrays.asList("formType"),
+                                                errorHandler);
+
                                 assertTrue(validator.validPassword(userDTO.getPassword(), validPassword,
                                                 userDTO.getMailAccount(), form));
 
                                 assertFalse(validator.validPassword(userDTO.getPassword(), sameAsCurrentPass,
                                                 userDTO.getMailAccount(), form));
-
                                 compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
                                                 ? "Password must be different from the current password."
                                                 : "New password must be different from the current password.",
@@ -153,7 +154,6 @@ public class UserValidationsTest {
                                                         Arrays.asList("password", "newPassword"), errorHandler);
 
                                 }
-
                         }
                 }
         }
@@ -188,19 +188,16 @@ public class UserValidationsTest {
                         assertFalse(validator.validEmail(email));
                         compareErrors("Please enter a valid email address (e.g., user@example.com).",
                                         Arrays.asList("email"), errorHandler);
-
                 }
 
                 for (String email : validEmails) {
                         assertTrue(validator.validEmail(email));
                 }
-
         }
 
         @Test
         @DisplayName("Should detect duplicate emails correctly during user creation and update")
         void testEmailDuplication() {
-
                 List<UserDTO> userDTOs = Arrays.asList(
                                 new UserDTO(null, null, "user@example.com", null,
                                                 BCrypt.hashpw("Password1!", BCrypt.gensalt()), null, null),
@@ -219,14 +216,20 @@ public class UserValidationsTest {
                                 new UserDTO(null, null, "user1234@sub.domain.org", null,
                                                 BCrypt.hashpw("Password8!", BCrypt.gensalt()), null, null));
 
+                assertFalse(validator.nonDuplicateUserWithEmail(OperationType.REMOVE, null, "user12@sub.domain.org",
+                                userDTOs));
+                compareErrors("Provided unsupported type of operation.", Arrays.asList("operationType"), errorHandler);
+
                 assertTrue(validator.nonDuplicateUserWithEmail(OperationType.CREATE, null, "user12@sub.domain.org",
                                 userDTOs));
+
                 assertFalse(validator.nonDuplicateUserWithEmail(OperationType.CREATE, null, "user1234@sub.domain.org",
                                 userDTOs));
                 compareErrors("Provided email is already used.", Arrays.asList("email"), errorHandler);
 
                 assertTrue(validator.nonDuplicateUserWithEmail(OperationType.UPDATE, "user@example.com",
                                 "user.test12@sub.domain.org", userDTOs));
+
                 assertFalse(validator.nonDuplicateUserWithEmail(OperationType.UPDATE, "user@example.com",
                                 "user1234@sub.domain.org", userDTOs));
                 compareErrors("Provided email is already used.", Arrays.asList("email"), errorHandler);

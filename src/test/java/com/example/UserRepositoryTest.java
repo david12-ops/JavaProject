@@ -23,7 +23,6 @@ import com.example.utils.enums.EnvironmentType;
 
 @ExtendWith(MockitoExtension.class)
 public class UserRepositoryTest {
-
     private UserRepository userRepository;
 
     @BeforeEach
@@ -86,9 +85,9 @@ public class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Should remove all users except the logged-in one")
+    @DisplayName("Should remove all users")
     void testRemoveUser() {
-        userRepository.setTestData(createUsersWithNullProfileImages());
+        prepareData(null);
 
         for (UserDTO userDTO : userRepository.getAllUserDtos()) {
             userRepository.removeUser(userDTO);
@@ -100,7 +99,8 @@ public class UserRepositoryTest {
     @Test
     @DisplayName("Should update and clear user's profile image")
     void testUpdateUserProfileImage() {
-        userRepository.setTestData(createUsersWithNullProfileImages());
+        prepareData(null);
+
         UserDTO alice = userRepository.getAllUserDtos().get(0);
         alice.setProfileImage("fK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQfK7aVp9LzQ");
 

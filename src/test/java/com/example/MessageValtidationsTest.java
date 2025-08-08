@@ -37,7 +37,6 @@ public class MessageValtidationsTest {
             assertEquals(expectedMessage, errorMessage, "Mismatch in error message for key " + key);
             errorHandler.removeError(key);
         }
-
     }
 
     private Map<String, EnumSet<MessageStatus>> getMesssageStatus(String senderId, String recevierEmail) {
@@ -58,7 +57,6 @@ public class MessageValtidationsTest {
     @Test
     @DisplayName("Should detect invalid message format (whom email, subject, message) and accept valid ones")
     void testMesssageData() {
-
         List<Message> messsages = List.of(new Message(null, "ABCD", null, null, null, LocalDateTime.now(), null, null),
                 new Message(null, "ABCD1", "strat@gmail.com",
                         "Exploring the Impact of Artificial Intelligence on Modern Education Systems", null,
@@ -118,7 +116,6 @@ public class MessageValtidationsTest {
     @Test
     @DisplayName("Should allow only attach limit count of supported files")
     void testAttachedFiles() {
-
         boolean withEmptyFileArr = validator.validFiles(null);
         assertTrue(withEmptyFileArr);
 
