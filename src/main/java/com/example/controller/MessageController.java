@@ -11,11 +11,6 @@ import com.example.utils.enums.OperationType;
 import com.example.utils.services.MailboxService;
 
 public class MessageController {
-    /*
-     * controlers will not have direct access to register because of limitations
-     * that come with this do factory to repository to have shred one instance
-     * across services (optional private constructor)
-     */
     private final MailboxService mailboxService = new MailboxService();
 
     public MessageController() {
