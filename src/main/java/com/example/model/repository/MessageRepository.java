@@ -2,7 +2,6 @@ package com.example.model.repository;
 
 import com.example.dto.MessageDTO;
 import com.example.model.Message;
-import com.example.model.UserToken;
 import com.example.utils.FileConvertor;
 import com.example.utils.JsonStorageTool;
 import com.example.utils.enums.EnvironmentType;
@@ -63,7 +62,7 @@ public class MessageRepository {
         return listOfMessages;
     }
 
-    public void addMessage(UserToken userToken, MessageDTO messageDTO) {
+    public void addMessage(MessageDTO messageDTO) {
         List<File> files = messageDTO.getAttachedFiles();
         List<String> base64Files = (files != null && !files.isEmpty()) ? files.stream().map(file -> {
             try {
@@ -74,7 +73,7 @@ public class MessageRepository {
             }
         }).filter(Objects::nonNull).toList() : null;
 
-        Message newMessage = new Message(null, userToken.getUserId(), messageDTO.getRecevierId(),
+        Message newMessage = new Message(null, messageDTO.getSenderId(), messageDTO.getRecevierId(),
                 messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(), base64Files,
                 messageDTO.getStatuses());
 
