@@ -179,7 +179,7 @@ public class MailboxService implements MailService {
 
             MessageDTO newMessageDTO = createMessageDTO(null, userToken.getUserId(), null, recevierId, null, subject,
                     message, LocalDateTime.now(), null, messageStatuses, files);
-            messageRepository.addMessage(userToken, newMessageDTO);
+            messageRepository.addMessage(newMessageDTO);
         }
     }
 
@@ -190,7 +190,7 @@ public class MailboxService implements MailService {
                 new LabeledValue("messageDTO", messageDTO), new LabeledValue("token", checkUserToken(userToken))))
             return;
 
-        if (!EnumSet.of(OperationType.UPDATE, OperationType.REMOVE).contains(operationType)) {
+        if (operationType == null || !EnumSet.of(OperationType.UPDATE, OperationType.REMOVE).contains(operationType)) {
             errorHandler
                     .logError(errorHandler.createErrorBody("operationType", "Provided unsupported type of operation."));
             return;
@@ -200,8 +200,8 @@ public class MailboxService implements MailService {
         String senderId = resolveUserIdByEmail(messageDTO.getSenderMailAccount());
         String recevierId = resolveUserIdByEmail(messageDTO.getRecevierMailAccount());
         boolean containsDataNull = containsDataNull("updateStatus", new LabeledValue("senderId", senderId),
-                new LabeledValue("recevierId", recevierId),
-                new LabeledValue("messageStatuses", currentMessageStatuses));
+                new LabeledValue("recevierId", recevierId), new LabeledValue("messageStatuses", currentMessageStatuses),
+                new LabeledValue("messageDTOid", messageDTO.getMessageId()));
 
         if (!containsDataNull) {
             EnumSet<MessageStatus> currentMessageStatusesByUser = EnumSet.copyOf(
@@ -227,6 +227,7 @@ public class MailboxService implements MailService {
     @Override
     public void removeMessage(UserToken userToken, MessageDTO messageDTO) {
         if (containsDataNull("updateStatus", new LabeledValue("messageDTO", messageDTO),
+                new LabeledValue("messageDTOid", messageDTO.getMessageId()),
                 new LabeledValue("token", checkUserToken(userToken))))
             return;
 
