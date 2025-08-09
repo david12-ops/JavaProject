@@ -10,6 +10,7 @@ import com.example.model.repository.UserRepository;
 import com.example.utils.FileConvertor;
 import com.example.utils.RepositoryFactory;
 import com.example.utils.ValidationContext;
+import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.ValidationMode;
 import com.example.utils.enums.ViewLevel;
 import com.example.utils.interfaces.AccountService;
@@ -20,9 +21,16 @@ import javafx.scene.image.Image;
 
 public class UserAccountService implements AccountService {
     private final ValidationContext validationContext = new ValidationContext(ValidationMode.USER);
-    private final UserRepository userRepository = RepositoryFactory.getUserRepository();
-    private ErrorHandler errorHandler;
-    private UserValidator userValidator;
+    private final UserRepository userRepository;
+
+    private final ErrorHandler errorHandler;
+    private final UserValidator userValidator;
+
+    public UserAccountService(EnvironmentType environmentType) {
+        this.userRepository = RepositoryFactory.getUserRepository(environmentType);
+        this.errorHandler = validationContext.getUserValidationBundle().getErrorManager();
+        this.userValidator = validationContext.getUserValidationBundle().getValidator();
+    }
 
     private record LabeledValue(String label, Object value) {
     }
@@ -82,11 +90,6 @@ public class UserAccountService implements AccountService {
             }
         }
         return null;
-    }
-
-    public UserAccountService() {
-        this.errorHandler = validationContext.getUserValidationBundle().getErrorManager();
-        this.userValidator = validationContext.getUserValidationBundle().getValidator();
     }
 
     @Override

@@ -11,6 +11,7 @@ import com.example.model.repository.UserRepository;
 import com.example.utils.RepositoryFactory;
 import com.example.utils.ValidationContext;
 import com.example.utils.enums.AddOperationType;
+import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.FormType;
 import com.example.utils.enums.OperationType;
 import com.example.utils.enums.ValidationMode;
@@ -20,14 +21,16 @@ import com.example.utils.interfaces.UserValidator;
 
 public class UserAuthService implements AuthService {
     private final ValidationContext validationContext = new ValidationContext(ValidationMode.USER);
-    private final UserRepository userRepository = RepositoryFactory.getUserRepository();
+    private final UserRepository userRepository;
 
-    private SessionService sessionService;
-    private ErrorHandler errorHandler;
-    private UserValidator userValidator;
+    private final ErrorHandler errorHandler;
+    private final UserValidator userValidator;
+
+    private final SessionService sessionService;
     private String currentSessionId;
 
-    public UserAuthService(SessionService sessionService) {
+    public UserAuthService(SessionService sessionService, EnvironmentType environmentType) {
+        this.userRepository = RepositoryFactory.getUserRepository(environmentType);
         this.errorHandler = validationContext.getUserValidationBundle().getErrorManager();
         this.userValidator = validationContext.getUserValidationBundle().getValidator();
         this.sessionService = sessionService;
