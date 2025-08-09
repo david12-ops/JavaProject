@@ -46,5 +46,4 @@ public class ErrorManager implements ErrorHandler {
     public Map.Entry<String, String> createErrorBody(String key, String message) {
         return new AbstractMap.SimpleEntry<>(key, message);
     }
-
 }

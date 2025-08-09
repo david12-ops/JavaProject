@@ -58,7 +58,6 @@ class FilePersistence<T> {
 }
 
 public class JsonStorageTool<T> {
-
     // syncronized CRUD operations for multi acces - prevent race conditions
     private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -121,5 +120,4 @@ public class JsonStorageTool<T> {
             rwLock.writeLock().unlock();
         }
     }
-
 }
