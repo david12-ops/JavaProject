@@ -1,11 +1,13 @@
 package com.example.utils.services;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.example.dto.UserDTO;
+import com.example.model.User;
 import com.example.model.UserToken;
 import com.example.model.repository.UserRepository;
 import com.example.utils.RepositoryFactory;
@@ -34,6 +36,21 @@ public class UserAuthService implements AuthService {
         this.errorHandler = validationContext.getUserValidationBundle().getErrorManager();
         this.userValidator = validationContext.getUserValidationBundle().getValidator();
         this.sessionService = sessionService;
+
+        if (environmentType == EnvironmentType.TEST)
+            setTestUsersList(userRepository);
+    }
+
+    private void setTestUsersList(UserRepository userRepository) {
+        List<User> users = new ArrayList<>();
+
+        users.add(new User("1", "groupA", "alice@example.com", "hashedPassword1!", null));
+        users.add(new User("2", "groupA", "bob@example.com", "hashedPassword2!", null));
+        users.add(new User("3", "groupB", "charlie@example.com", "hashedPassword3!", null));
+        users.add(new User("4", "groupB", "dave@example.com", "hashedPassword4!", null));
+        users.add(new User("5", "groupC", "eve@example.com", "hashedPassword5!", null));
+
+        userRepository.setTestData(users);
     }
 
     private record LabeledValue(String label, Object value) {
@@ -43,7 +60,8 @@ public class UserAuthService implements AuthService {
     private boolean containsDataNull(String errorKey, LabeledValue... labeledValues) {
         for (LabeledValue labeledValue : labeledValues) {
             if (labeledValue.value == null) {
-                errorHandler.logError(errorHandler.createErrorBody(errorKey, "Invalid " + labeledValue.label()));
+                errorHandler.logError(
+                        errorHandler.createErrorBody("function " + errorKey, "Invalid " + labeledValue.label()));
                 return true;
             }
         }

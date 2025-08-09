@@ -1,10 +1,12 @@
 package com.example.utils.services;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import com.example.dto.UserDTO;
+import com.example.model.User;
 import com.example.model.UserToken;
 import com.example.model.repository.UserRepository;
 import com.example.utils.FileConvertor;
@@ -30,6 +32,21 @@ public class UserAccountService implements AccountService {
         this.userRepository = RepositoryFactory.getUserRepository(environmentType);
         this.errorHandler = validationContext.getUserValidationBundle().getErrorManager();
         this.userValidator = validationContext.getUserValidationBundle().getValidator();
+
+        if (environmentType == EnvironmentType.TEST)
+            setTestUsersList(userRepository);
+    }
+
+    private void setTestUsersList(UserRepository userRepository) {
+        List<User> users = new ArrayList<>();
+
+        users.add(new User("1", "groupA", "alice@example.com", "hashedPassword1!", null));
+        users.add(new User("2", "groupA", "bob@example.com", "hashedPassword2!", null));
+        users.add(new User("3", "groupB", "charlie@example.com", "hashedPassword3!", null));
+        users.add(new User("4", "groupB", "dave@example.com", "hashedPassword4!", null));
+        users.add(new User("5", "groupC", "eve@example.com", "hashedPassword5!", null));
+
+        userRepository.setTestData(users);
     }
 
     private record LabeledValue(String label, Object value) {
@@ -39,7 +56,8 @@ public class UserAccountService implements AccountService {
     private boolean containsDataNull(String errorKey, LabeledValue... labeledValues) {
         for (LabeledValue labeledValue : labeledValues) {
             if (labeledValue.value == null) {
-                errorHandler.logError(errorHandler.createErrorBody(errorKey, "Invalid " + labeledValue.label()));
+                errorHandler.logError(
+                        errorHandler.createErrorBody("function " + errorKey, "Invalid " + labeledValue.label()));
                 return true;
             }
         }
