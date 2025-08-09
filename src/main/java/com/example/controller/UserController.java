@@ -6,6 +6,7 @@ import java.util.List;
 import com.example.dto.UserDTO;
 import com.example.model.UserToken;
 import com.example.utils.enums.AddOperationType;
+import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.FormType;
 import com.example.utils.interfaces.AuthService;
 import com.example.utils.interfaces.AccountService;
@@ -16,8 +17,9 @@ import com.example.utils.services.UserAuthService;
 import javafx.scene.image.Image;
 
 public class UserController {
-    private final AuthService authService = new UserAuthService(SessionService.getInstance());
-    private final AccountService accountService = new UserAccountService();
+    private final AuthService authService = new UserAuthService(SessionService.getInstance(),
+            EnvironmentType.PRODUCTION);
+    private final AccountService accountService = new UserAccountService(EnvironmentType.PRODUCTION);
 
     public UserController() {
     }

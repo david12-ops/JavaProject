@@ -6,12 +6,13 @@ import java.util.List;
 
 import com.example.dto.MessageDTO;
 import com.example.model.UserToken;
+import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.MessageStatus;
 import com.example.utils.enums.OperationType;
 import com.example.utils.services.MailboxService;
 
 public class MessageController {
-    private final MailboxService mailboxService = new MailboxService();
+    private final MailboxService mailboxService = new MailboxService(EnvironmentType.PRODUCTION);
 
     public MessageController() {
     }
