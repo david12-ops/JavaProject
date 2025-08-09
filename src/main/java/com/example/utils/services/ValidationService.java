@@ -30,7 +30,7 @@ public class ValidationService {
     private static final String SUPPORTED_FILES = "(?i).*\\.(docx?|xlsx?|pptx?|pdf|txt|rtf|jpg|jpeg|png|gif|bmp|tiff|webp|mp4|mov|avi|wmv|mp3|wav|m4a|zip|7z|tar)$";
 
     public class UserValidations implements UserValidator {
-        private ErrorHandler errorHandler;
+        private final ErrorHandler errorHandler;
 
         public UserValidations(ErrorHandler errorHandler) {
             this.errorHandler = errorHandler;
@@ -147,7 +147,7 @@ public class ValidationService {
                 return false;
             }
 
-            if (!password.equals(confirmationPassword)) {
+            if (password != null && !password.equals(confirmationPassword)) {
                 if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
                     errorHandler.logError(errorHandler.createErrorBody("confirmPassword",
                             "Password does not match the confirmation."));
@@ -178,7 +178,7 @@ public class ValidationService {
     }
 
     public class MessageValidations implements MessageValidator {
-        private ErrorHandler errorHandler;
+        private final ErrorHandler errorHandler;
         private Map<Integer, String> messagePartForNullFiles = new HashMap<>();
         private Map<MessageStatus, EnumSet<MessageStatus>> allowedByStatus;
 
@@ -271,9 +271,21 @@ public class ValidationService {
         @Override
         public boolean containsOnlyAllowedStatuses(Map<String, EnumSet<MessageStatus>> messageStatuses,
                 EnumSet<MessageStatus> expectedMessageStatus) {
+            if (messageStatuses == null) {
+                errorHandler.logError(errorHandler.createErrorBody("statuses", "Current message statuses required."));
+                return false;
+            }
+
+            if (expectedMessageStatus == null) {
+                errorHandler.logError(errorHandler.createErrorBody("expectedStatuses", "Expect statuses required."));
+                return false;
+            }
+
             for (EnumSet<MessageStatus> statuses : messageStatuses.values()) {
                 for (MessageStatus status : statuses) {
                     if (!expectedMessageStatus.contains(status)) {
+                        errorHandler.logError(
+                                errorHandler.createErrorBody("statuses", "Provided statuses are not allowed."));
                         return false;
                     }
                 }
@@ -283,8 +295,20 @@ public class ValidationService {
 
         @Override
         public boolean isStatusUpdateAllowed(EnumSet<MessageStatus> messageStatuses, MessageStatus newStatus) {
+            if (messageStatuses == null) {
+                errorHandler.logError(errorHandler.createErrorBody("statuses", "Current message statuses required."));
+                return false;
+            }
+
+            if (newStatus == null) {
+                errorHandler.logError(errorHandler.createErrorBody("status", "New status required."));
+                return false;
+            }
+
             for (MessageStatus messageStatus : messageStatuses) {
                 if (!allowedByStatus.get(messageStatus).contains(newStatus)) {
+                    errorHandler
+                            .logError(errorHandler.createErrorBody("status", "Unsupported update with new status."));
                     return false;
                 }
             }
