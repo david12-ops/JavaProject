@@ -141,6 +141,16 @@ public class MessageValtidationsTest {
                 "Exploring the Impact of Artificial Intelligence on Modern Education Systems", null,
                 LocalDateTime.now(), null, getMesssageStatus("ABCD1", "BCD2"), null);
 
+        assertFalse(validator.containsOnlyAllowedStatuses(null, null));
+        compareErrors("Current message statuses required.", "statuses", errorHandler);
+        compareErrors("Expect statuses required.", "status", errorHandler);
+
+        assertFalse(validator.containsOnlyAllowedStatuses(messageDTO.getStatuses(), null));
+        compareErrors("Expect statuses required.", "status", errorHandler);
+
+        assertFalse(validator.containsOnlyAllowedStatuses(null, EnumSet.of(MessageStatus.INBOX, MessageStatus.SENT)));
+        compareErrors("Current message statuses required.", "statuses", errorHandler);
+
         assertTrue(validator.containsOnlyAllowedStatuses(messageDTO.getStatuses(),
                 EnumSet.of(MessageStatus.INBOX, MessageStatus.SENT)));
     }
