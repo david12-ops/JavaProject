@@ -52,11 +52,11 @@ public class UserRepositoryTest {
     private List<User> createUsersWithNullProfileImages() {
         List<User> users = new ArrayList<>();
 
-        users.add(new User("1", "groupA", "alice@example.com", "hashedPassword1!", null));
-        users.add(new User("2", "groupA", "bob@example.com", "hashedPassword2!", null));
-        users.add(new User("3", "groupB", "charlie@example.com", "hashedPassword3!", null));
-        users.add(new User("4", "groupB", "dave@example.com", "hashedPassword4!", null));
-        users.add(new User("5", "groupC", "eve@example.com", "hashedPassword5!", null));
+        users.add(new User(null, "groupA", "alice@example.com", "hashedPassword1!", null));
+        users.add(new User(null, "groupA", "bob@example.com", "hashedPassword2!", null));
+        users.add(new User(null, "groupB", "charlie@example.com", "hashedPassword3!", null));
+        users.add(new User(null, "groupB", "dave@example.com", "hashedPassword4!", null));
+        users.add(new User(null, "groupC", "eve@example.com", "hashedPassword5!", null));
 
         return users;
     }
