@@ -13,12 +13,15 @@ import java.util.stream.Collectors;
 
 import com.example.dto.MessageDTO;
 import com.example.dto.UserDTO;
+import com.example.model.User;
 import com.example.model.UserToken;
 import com.example.model.repository.MessageRepository;
+import com.example.model.repository.UserRepository;
 import com.example.utils.RepositoryFactory;
 import com.example.utils.ValidationContext;
 import com.example.utils.enums.ValidationMode;
 import com.example.utils.enums.ViewLevel;
+import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.MessageStatus;
 import com.example.utils.enums.OperationType;
 import com.example.utils.interfaces.ErrorHandler;
@@ -27,16 +30,41 @@ import com.example.utils.interfaces.MessageValidator;
 
 public class MailboxService implements MailService {
     private final ValidationContext validationContext = new ValidationContext(ValidationMode.MESSAGE);
-    private final MessageRepository messageRepository = RepositoryFactory.getMessageRepository();
-    private final List<UserDTO> userDTOs = RepositoryFactory.getUserRepository().getAllUserDtos();
+    private final MessageRepository messageRepository;
+    private final List<UserDTO> userDTOs;
+    private final UserRepository userRepository;
 
-    private ErrorHandler errorHandler;
-    private MessageValidator messageValidator;
+    private final ErrorHandler errorHandler;
+    private final MessageValidator messageValidator;
+
+    public MailboxService(EnvironmentType environmentType) {
+        this.userRepository = RepositoryFactory.getUserRepository(environmentType);
+        this.messageRepository = RepositoryFactory.getMessageRepository(environmentType);
+        errorHandler = validationContext.getMessageValidationBundle().getErrorManager();
+        messageValidator = validationContext.getMessageValidationBundle().getValidator();
+
+        if (environmentType == EnvironmentType.TEST)
+            setTestUsersList(userRepository);
+
+        this.userDTOs = userRepository.getAllUserDtos();
+    }
 
     private record LabeledValue(String label, Object value) {
     }
 
     // Support Methods
+    private void setTestUsersList(UserRepository userRepository) {
+        List<User> users = new ArrayList<>();
+
+        users.add(new User("1", "groupA", "alice@example.com", "hashedPassword1!", null));
+        users.add(new User("2", "groupA", "bob@example.com", "hashedPassword2!", null));
+        users.add(new User("3", "groupB", "charlie@example.com", "hashedPassword3!", null));
+        users.add(new User("4", "groupB", "dave@example.com", "hashedPassword4!", null));
+        users.add(new User("5", "groupC", "eve@example.com", "hashedPassword5!", null));
+
+        userRepository.setTestData(users);
+    }
+
     private MessageDTO createMessageDTO(String messageId, String senderId, String senderMailAccount, String recevierId,
             String recevierMailAccount, String subject, String message, LocalDateTime timestamp,
             List<String> attachedBase64Files, Map<String, EnumSet<MessageStatus>> statuses, List<File> attachedFiles) {
@@ -47,7 +75,8 @@ public class MailboxService implements MailService {
     private boolean containsDataNull(String errorKey, LabeledValue... labeledValues) {
         for (LabeledValue labeledValue : labeledValues) {
             if (labeledValue.value == null) {
-                errorHandler.logError(errorHandler.createErrorBody(errorKey, "Invalid " + labeledValue.label()));
+                errorHandler.logError(
+                        errorHandler.createErrorBody("function " + errorKey, "Invalid " + labeledValue.label()));
                 return true;
             }
         }
@@ -142,11 +171,6 @@ public class MailboxService implements MailService {
         return matchedMessageDTOs;
     }
 
-    public MailboxService() {
-        errorHandler = validationContext.getMessageValidationBundle().getErrorManager();
-        messageValidator = validationContext.getMessageValidationBundle().getValidator();
-    }
-
     @Override
     public void sendMessage(UserToken userToken, String recevierEmail, String subject, String message,
             List<File> files) {
@@ -156,29 +180,27 @@ public class MailboxService implements MailService {
         Map<String, EnumSet<MessageStatus>> messageStatuses = new HashMap<>();
         boolean isValid = messageValidator.validMessageData(recevierEmail, subject, message)
                 && messageValidator.validFiles(files);
-        String recevierId = resolveUserIdByEmail(recevierEmail);
+        String resolvedRecevierId = resolveUserIdByEmail(recevierEmail);
 
-        if (isValid && !containsDataNull("sendMessage", new LabeledValue("recevierId", recevierId))) {
+        if (isValid && !containsDataNull("sendMessage", new LabeledValue("recevierId", resolvedRecevierId))) {
             /*
              * In this case, i accept to send message myself and it is represented by id
              * (key) - status (value)
              */
-            if (userToken.getUserId().equals(recevierId)) {
+            if (userToken.getUserId().equals(resolvedRecevierId)) {
                 messageStatuses.put(userToken.getUserId(), EnumSet.of(MessageStatus.SENT, MessageStatus.INBOX));
             } else {
                 messageStatuses.put(userToken.getUserId(), EnumSet.of(MessageStatus.SENT));
-                messageStatuses.put(recevierId, EnumSet.of(MessageStatus.INBOX));
+                messageStatuses.put(resolvedRecevierId, EnumSet.of(MessageStatus.INBOX));
             }
 
             if (!messageValidator.containsOnlyAllowedStatuses(messageStatuses,
                     EnumSet.of(MessageStatus.INBOX, MessageStatus.SENT))) {
-                errorHandler.logError(
-                        errorHandler.createErrorBody("addMessage", "Message contains unsupported status values"));
                 return;
             }
 
-            MessageDTO newMessageDTO = createMessageDTO(null, userToken.getUserId(), null, recevierId, null, subject,
-                    message, LocalDateTime.now(), null, messageStatuses, files);
+            MessageDTO newMessageDTO = createMessageDTO(null, userToken.getUserId(), null, resolvedRecevierId, null,
+                    subject, message, LocalDateTime.now(), null, messageStatuses, files);
             messageRepository.addMessage(newMessageDTO);
         }
     }
@@ -186,8 +208,8 @@ public class MailboxService implements MailService {
     @Override
     public void updateStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus status,
             OperationType operationType) {
-        if (containsDataNull("updateStatus", new LabeledValue("status", status),
-                new LabeledValue("messageDTO", messageDTO), new LabeledValue("token", checkUserToken(userToken))))
+        if (containsDataNull("updateStatus", new LabeledValue("token", checkUserToken(userToken)),
+                new LabeledValue("messageDTO", messageDTO), new LabeledValue("status", status)))
             return;
 
         if (operationType == null || !EnumSet.of(OperationType.UPDATE, OperationType.REMOVE).contains(operationType)) {
@@ -204,31 +226,41 @@ public class MailboxService implements MailService {
                 new LabeledValue("messageDTOid", messageDTO.getMessageId()));
 
         if (!containsDataNull) {
+            boolean applyUpdate = false;
             EnumSet<MessageStatus> currentMessageStatusesByUser = EnumSet.copyOf(
                     currentMessageStatuses.getOrDefault(userToken.getUserId(), EnumSet.noneOf(MessageStatus.class)));
 
-            if (operationType == OperationType.REMOVE)
+            if (operationType == OperationType.REMOVE && currentMessageStatusesByUser.contains(status)) {
+                applyUpdate = true;
                 currentMessageStatusesByUser.remove(status);
+            }
 
             if (operationType == OperationType.UPDATE && messageValidator
-                    .isStatusUpdateAllowed(messageDTO.getStatuses().get(userToken.getUserId()), status))
+                    .isStatusUpdateAllowed(messageDTO.getStatuses().get(userToken.getUserId()), status)
+                    && !currentMessageStatusesByUser.contains(status)) {
+                applyUpdate = true;
                 currentMessageStatusesByUser.add(status);
+            }
 
-            MessageDTO updadMessageDTO = createMessageDTO(messageDTO.getMessageId(), senderId,
-                    messageDTO.getSenderMailAccount(), recevierId, messageDTO.getRecevierMailAccount(),
-                    messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
-                    messageDTO.getAttachedBase64Files(), currentMessageStatuses, messageDTO.getAttachedFiles());
-            updadMessageDTO.setStatuses(userToken.getUserId(), currentMessageStatusesByUser);
+            if (applyUpdate) {
+                MessageDTO updadMessageDTO = createMessageDTO(messageDTO.getMessageId(), senderId,
+                        messageDTO.getSenderMailAccount(), recevierId, messageDTO.getRecevierMailAccount(),
+                        messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
+                        messageDTO.getAttachedBase64Files(), currentMessageStatuses, messageDTO.getAttachedFiles());
+                updadMessageDTO.setStatuses(userToken.getUserId(), currentMessageStatusesByUser);
 
-            messageRepository.updateMessageStatus(messageDTO, updadMessageDTO);
+                messageRepository.updateMessageStatus(messageDTO, updadMessageDTO);
+            }
         }
     }
 
     @Override
     public void removeMessage(UserToken userToken, MessageDTO messageDTO) {
         if (containsDataNull("updateStatus", new LabeledValue("messageDTO", messageDTO),
-                new LabeledValue("messageDTOid", messageDTO.getMessageId()),
                 new LabeledValue("token", checkUserToken(userToken))))
+            return;
+
+        if (containsDataNull("removeMessage", new LabeledValue("messageDTOid", messageDTO.getMessageId())))
             return;
 
         if (messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH))
@@ -243,7 +275,7 @@ public class MailboxService implements MailService {
         List<MessageDTO> updatedMessageDTOs = new ArrayList<>();
 
         boolean containsNull = containsDataNull("getMessageDTOs", new LabeledValue("token", checkUserToken(userToken)),
-                new LabeledValue("DTOs", messageDTOs));
+                new LabeledValue("DTOs", messageDTOs), new LabeledValue("statuses", messageStatusesFromUI));
 
         if (containsNull)
             return List.of();
