@@ -1,5 +1,6 @@
 package com.example.utils;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,12 @@ public class ValidationContext {
     private ValidationBundle<ValidationService.UserValidations> userValidatorBundle;
 
     public ValidationContext(ValidationMode mode) {
+        if (mode == null || !EnumSet.of(ValidationMode.USER, ValidationMode.MESSAGE).contains(mode)) {
+            System.err.println("❌ Critical Error: Invalid validation type provided.");
+            Thread.dumpStack();
+            System.exit(1);
+        }
+
         if (mode == ValidationMode.USER) {
             this.userValidatorBundle = new ValidationBundle<>(validationService.new UserValidations(errorHandler),
                     errorHandler);
@@ -28,14 +35,10 @@ public class ValidationContext {
     }
 
     public ValidationBundle<ValidationService.MessageValidations> getMessageValidationBundle() {
-        if (messageValidatorBundle == null)
-            throw new IllegalStateException("Message validations not initialized. Use ValidationMode.MESSAGE.");
         return messageValidatorBundle;
     }
 
     public ValidationBundle<ValidationService.UserValidations> getUserValidationBundle() {
-        if (userValidatorBundle == null)
-            throw new IllegalStateException("User validations not initialized. Use ValidationMode.USER.");
         return userValidatorBundle;
     }
 }
