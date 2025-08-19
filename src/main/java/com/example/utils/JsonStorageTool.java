@@ -65,6 +65,12 @@ public class JsonStorageTool<T> {
     private FilePersistence<T> filePersistence;
 
     public JsonStorageTool(String fileName, TypeReference<List<T>> typeReference) {
+        if (fileName == null || typeReference == null) {
+            System.err.println("❌ Critical Error: Invalid arguments provided.");
+            Thread.dumpStack();
+            System.exit(1);
+        }
+
         filePersistence = new FilePersistence(fileName, typeReference, items);
         filePersistence.loadFromFile();
     }
@@ -73,6 +79,10 @@ public class JsonStorageTool<T> {
         rwLock.readLock().lock();
         try {
             return new ArrayList<>(this.items);
+        } catch (Exception e) {
+            System.err.println("Failed to get items: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
         } finally {
             rwLock.readLock().unlock();
         }
@@ -83,6 +93,9 @@ public class JsonStorageTool<T> {
         try {
             this.items.add(item);
             filePersistence.saveToFile();
+        } catch (Exception e) {
+            System.err.println("Failed to add item: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -91,12 +104,13 @@ public class JsonStorageTool<T> {
     public void removeItem(T item) {
         rwLock.writeLock().lock();
         try {
-            this.items.remove(item);
-            filePersistence.saveToFile();
+            if (this.items.contains(item)) {
+                this.items.remove(item);
+                filePersistence.saveToFile();
+            }
         } catch (Exception e) {
             System.err.println("Failed to remove item: " + e.getMessage());
             e.printStackTrace();
-
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -115,7 +129,6 @@ public class JsonStorageTool<T> {
         } catch (Exception e) {
             System.err.println("Failed to update item: " + e.getMessage());
             e.printStackTrace();
-
         } finally {
             rwLock.writeLock().unlock();
         }
