@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 import com.example.dto.UserDTO;
 import com.example.model.User;
 import com.example.model.UserToken;
@@ -40,11 +42,16 @@ public class UserAccountService implements AccountService {
     private void setTestUsersList(UserRepository userRepository) {
         List<User> users = new ArrayList<>();
 
-        users.add(new User("1", "groupA", "alice@example.com", "hashedPassword1!", null));
-        users.add(new User("2", "groupA", "bob@example.com", "hashedPassword2!", null));
-        users.add(new User("3", "groupB", "charlie@example.com", "hashedPassword3!", null));
-        users.add(new User("4", "groupB", "dave@example.com", "hashedPassword4!", null));
-        users.add(new User("5", "groupC", "eve@example.com", "hashedPassword5!", null));
+        users.add(new User("1", "groupA", "alice@example.com", BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()),
+                null));
+        users.add(
+                new User("2", "groupA", "bob@example.com", BCrypt.hashpw("hashedPassword2!", BCrypt.gensalt()), null));
+        users.add(new User("3", "groupB", "charlie@example.com", BCrypt.hashpw("hashedPassword3!", BCrypt.gensalt()),
+                null));
+        users.add(
+                new User("4", "groupB", "dave@example.com", BCrypt.hashpw("hashedPassword4!", BCrypt.gensalt()), null));
+        users.add(
+                new User("5", "groupC", "eve@example.com", BCrypt.hashpw("hashedPassword5!", BCrypt.gensalt()), null));
 
         userRepository.setTestData(users);
     }
@@ -53,15 +60,20 @@ public class UserAccountService implements AccountService {
     }
 
     // Support Methods
-    private boolean containsDataNull(String errorKey, LabeledValue... labeledValues) {
+    private boolean containsDataNull(String location, LabeledValue... labeledValues) {
         for (LabeledValue labeledValue : labeledValues) {
             if (labeledValue.value == null) {
-                errorHandler.logError(
-                        errorHandler.createErrorBody("function " + errorKey, "Invalid " + labeledValue.label()));
+                errorHandler.logError(errorHandler.createErrorBody(labeledValue.label(),
+                        "Invalid " + labeledValue.label() + " argument in " + location + "."));
                 return true;
             }
         }
         return false;
+    }
+
+    private void clearErrors(ErrorHandler errorHandler, String... errorkeys) {
+        for (String key : errorkeys)
+            errorHandler.removeError(key);
     }
 
     private UserToken checkUserToken(UserToken userToken) {
@@ -112,22 +124,23 @@ public class UserAccountService implements AccountService {
 
     @Override
     public boolean removeAccount(UserToken userToken, UserDTO userDTO) {
-        boolean containsNull = containsDataNull("removeAccount", new LabeledValue("token", checkUserToken(userToken)),
-                new LabeledValue("dto", userDTO));
+        boolean containsNull = containsDataNull("removeAccount function",
+                new LabeledValue("token", checkUserToken(userToken)), new LabeledValue("dto", userDTO));
 
         if (containsNull)
             return false;
 
-        if (userToken.getUserId().equals(userDTO.getUserId())
+        String userId = resolveIdByEmail(userDTO.getMailAccount());
+        if (userId == null || userToken.getUserId().equals(userDTO.getUserId())
                 && userToken.getMailAccount().equals(userDTO.getMailAccount())) {
             return false;
         }
 
-        String userId = resolveIdByEmail(userDTO.getMailAccount());
         UserDTO userDTOwithUserId = creaUserDTO(userId, userDTO.getGroupId(), userDTO.getMailAccount(),
                 userDTO.getCurrentPassword(), userDTO.getPassword(), userDTO.getConfirmPassword(),
                 userDTO.getProfileImage());
 
+        clearErrors(errorHandler, "dto", "token");
         userRepository.removeUser(userDTOwithUserId);
         return !userRepository.getAllUserDtos().contains(userDTOwithUserId);
     }
@@ -136,7 +149,7 @@ public class UserAccountService implements AccountService {
     public void updateImageProfile(UserToken userToken, File file) {
         UserDTO founUserDTO = getUserDTOByToken(userToken);
 
-        boolean containsNull = containsDataNull("updateImageProfile",
+        boolean containsNull = containsDataNull("updateImageProfile function",
                 new LabeledValue("token", checkUserToken(userToken)), new LabeledValue("dto", founUserDTO));
 
         if (containsNull)
@@ -145,10 +158,12 @@ public class UserAccountService implements AccountService {
         boolean isValid = userValidator.validProfileImage(file);
 
         if (isValid && file == null) {
+            clearErrors(errorHandler, "dto", "token", "file");
             userRepository.updateUser(founUserDTO, (File) null);
         }
 
         if (isValid && file != null) {
+            clearErrors(errorHandler, "dto", "token", "file");
             userRepository.updateUser(founUserDTO, file);
         }
     }
@@ -156,12 +171,13 @@ public class UserAccountService implements AccountService {
     @Override
     public List<UserDTO> getAllUserAccounts(UserToken userToken) {
         List<UserDTO> userDTOs = userRepository.getAllUserDtos();
-        boolean containsNull = containsDataNull("getAllUserAccounts",
+        boolean containsNull = containsDataNull("getAllUserAccounts function",
                 new LabeledValue("token", checkUserToken(userToken)), new LabeledValue("DTOs", userDTOs));
 
         if (containsNull)
             return null;
 
+        clearErrors(errorHandler, "DTOs", "token");
         userDTOs = userDTOs.stream().filter(userDTO -> !userDTO.getUserId().equals(userToken.getUserId())
                 && userDTO.getGroupId().equals(userToken.getGroupId())).toList();
         userDTOs.forEach(userDTO -> userDTO.sanitize(ViewLevel.PUBLIC));
@@ -171,7 +187,7 @@ public class UserAccountService implements AccountService {
 
     @Override
     public Image getImageProfile(UserToken userToken) {
-        boolean containsNull = containsDataNull("getImageProfile",
+        boolean containsNull = containsDataNull("getImageProfile function",
                 new LabeledValue("token", checkUserToken(userToken)));
 
         if (containsNull)
@@ -183,6 +199,7 @@ public class UserAccountService implements AccountService {
                 .findAny();
 
         if (foundUserDTO.isPresent() && foundUserDTO.get().getProfileImage() != null) {
+            clearErrors(errorHandler, "token");
             return FileConvertor.base64ToImage(foundUserDTO.get().getProfileImage());
         }
         return null;

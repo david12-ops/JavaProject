@@ -47,20 +47,21 @@ public class ValidationService {
         }
 
         @Override
-        public boolean validPassword(String currentPassword, String password, String email, FormType form) {
-            if (!EnumSet.of(FormType.FORGOTCREDENTIALS, FormType.REGISTER, FormType.ADDACCOUNT).contains(form)) {
+        public boolean validPassword(String currentPassword, String password, String email, FormType formType) {
+            if (formType == null || !EnumSet.of(FormType.FORGOTCREDENTIALS, FormType.REGISTER, FormType.ADDACCOUNT)
+                    .contains(formType)) {
                 errorHandler.logError(errorHandler.createErrorBody("formType", "Provided unsupported type of form."));
                 return false;
             }
 
             if (password == null || !PASSWORD_REGEX.matcher(password).matches()) {
-                if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
+                if (formType == FormType.ADDACCOUNT || formType == FormType.REGISTER) {
                     errorHandler.logError(errorHandler.createErrorBody("password",
                             "Password must include uppercase, lowercase, number, and special character, and be at least 8 characters."));
                     return false;
                 }
 
-                if (form == FormType.FORGOTCREDENTIALS) {
+                if (formType == FormType.FORGOTCREDENTIALS) {
                     errorHandler.logError(errorHandler.createErrorBody("newPassword",
                             "New password must include uppercase, lowercase, number, and special character, and be at least 8 characters."));
                     return false;
@@ -78,14 +79,15 @@ public class ValidationService {
                 }
 
                 for (String part : parts) {
-                    if ((form == FormType.ADDACCOUNT || form == FormType.REGISTER) && lowerPassword.contains(part)
-                            && emailPart.length() >= 4) {
+                    if ((formType == FormType.ADDACCOUNT || formType == FormType.REGISTER)
+                            && lowerPassword.contains(part) && emailPart.length() >= 4) {
                         errorHandler.logError(
                                 errorHandler.createErrorBody("password", "Password is too similar to your email."));
                         return false;
                     }
 
-                    if (form == FormType.FORGOTCREDENTIALS && lowerPassword.contains(part) && emailPart.length() >= 4) {
+                    if (formType == FormType.FORGOTCREDENTIALS && lowerPassword.contains(part)
+                            && emailPart.length() >= 4) {
                         errorHandler.logError(errorHandler.createErrorBody("newPassword",
                                 "New password is too similar to your email."));
                         return false;
@@ -93,18 +95,15 @@ public class ValidationService {
                 }
             }
 
-            // TODO - for similarity use Levenshtein distance (edit distance), Substring
-            // overlap, Common prefix/suffix comparison (optional)
-
             if (currentPassword != null) {
-                if ((form == FormType.ADDACCOUNT || form == FormType.REGISTER)
+                if ((formType == FormType.ADDACCOUNT || formType == FormType.REGISTER)
                         && BCrypt.checkpw(password, currentPassword)) {
                     errorHandler.logError(errorHandler.createErrorBody("password",
                             "Password must be different from the current password."));
                     return false;
                 }
 
-                if (form == FormType.FORGOTCREDENTIALS && BCrypt.checkpw(password, currentPassword)) {
+                if (formType == FormType.FORGOTCREDENTIALS && BCrypt.checkpw(password, currentPassword)) {
                     errorHandler.logError(errorHandler.createErrorBody("newPassword",
                             "New password must be different from the current password."));
                     return false;
@@ -114,16 +113,17 @@ public class ValidationService {
         }
 
         @Override
-        public boolean nonDuplicateUserWithEmail(OperationType operation, String currentUserEmail, String newEmail,
+        public boolean nonDuplicateUserWithEmail(OperationType operationType, String currentUserEmail, String newEmail,
                 List<UserDTO> userDTOs) {
-            if (!EnumSet.of(OperationType.CREATE, OperationType.UPDATE).contains(operation)) {
+            if (operationType == null
+                    || !EnumSet.of(OperationType.CREATE, OperationType.UPDATE).contains(operationType)) {
                 errorHandler.logError(
                         errorHandler.createErrorBody("operationType", "Provided unsupported type of operation."));
                 return false;
             }
 
             if (userDTOs != null && !userDTOs.isEmpty()) {
-                List<UserDTO> fliteredUserDTOs = operation == OperationType.UPDATE && currentUserEmail != null
+                List<UserDTO> fliteredUserDTOs = operationType == OperationType.UPDATE && currentUserEmail != null
                         ? userDTOs.stream().filter(userDTO -> !userDTO.getMailAccount().equals(currentUserEmail))
                                 .collect(Collectors.toList())
                         : userDTOs;
@@ -141,19 +141,20 @@ public class ValidationService {
         }
 
         @Override
-        public boolean confirmedPassword(String password, String confirmationPassword, FormType form) {
-            if (!EnumSet.of(FormType.FORGOTCREDENTIALS, FormType.REGISTER, FormType.ADDACCOUNT).contains(form)) {
+        public boolean confirmedPassword(String password, String confirmationPassword, FormType formType) {
+            if (formType == null || !EnumSet.of(FormType.FORGOTCREDENTIALS, FormType.REGISTER, FormType.ADDACCOUNT)
+                    .contains(formType)) {
                 errorHandler.logError(errorHandler.createErrorBody("formType", "Provided unsupported type of form."));
                 return false;
             }
 
             if (password != null && !password.equals(confirmationPassword)) {
-                if (form == FormType.ADDACCOUNT || form == FormType.REGISTER) {
+                if (formType == FormType.ADDACCOUNT || formType == FormType.REGISTER) {
                     errorHandler.logError(errorHandler.createErrorBody("confirmPassword",
                             "Password does not match the confirmation."));
                 }
 
-                if (form == FormType.FORGOTCREDENTIALS) {
+                if (formType == FormType.FORGOTCREDENTIALS) {
                     errorHandler.logError(errorHandler.createErrorBody("confirmNewPassword",
                             "New password does not match the confirmation."));
                 }
