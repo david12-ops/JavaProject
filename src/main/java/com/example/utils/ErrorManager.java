@@ -34,12 +34,16 @@ public class ErrorManager implements ErrorHandler {
 
     @Override
     public void removeError(String errorName) {
-        errorMap.remove(errorName);
+        if (errorMap.containsKey(errorName))
+            errorMap.remove(errorName);
     }
 
     @Override
     public String getError(String errorName) {
-        return errorMap.get(errorName);
+        if (errorMap.containsKey(errorName))
+            return errorMap.get(errorName);
+
+        return null;
     }
 
     @Override

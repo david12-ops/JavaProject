@@ -12,10 +12,10 @@ public interface UserValidator {
 
     boolean validEmail(String email);
 
-    boolean validPassword(String currentPassword, String password, String email, FormType form);
+    boolean validPassword(String currentPassword, String password, String email, FormType formType);
 
-    boolean nonDuplicateUserWithEmail(OperationType operation, String currentUserEmail, String newEmail,
+    boolean nonDuplicateUserWithEmail(OperationType operationType, String currentUserEmail, String newEmail,
             List<UserDTO> userDTOs);
 
-    boolean confirmedPassword(String password, String confirmationPassword, FormType form);
+    boolean confirmedPassword(String password, String confirmationPassword, FormType formType);
 }
