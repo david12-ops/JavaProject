@@ -19,44 +19,51 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 public class UserRepository {
     static Dotenv dotenv = Dotenv.load();
-    private List<User> listOfUsers;
     private JsonStorageTool<User> storageTool;
     private EnvironmentType environmentType;
 
+    private List<User> listOfUsersProd;
+    private List<User> listOfUsersTest;
+
     public UserRepository(EnvironmentType environmentType) {
-        this.environmentType = environmentType;
-        if (environmentType == EnvironmentType.PRODUCTION) {
+        if (EnvironmentType.PRODUCTION == environmentType) {
+            this.environmentType = environmentType;
             storageTool = new JsonStorageTool<User>(dotenv.get("FILE_PATH_USERS"), new TypeReference<List<User>>() {
             });
-            this.listOfUsers = storageTool.getItems();
-        } else if (environmentType == EnvironmentType.TEST) {
-            this.listOfUsers = new ArrayList<>();
+            this.listOfUsersProd = storageTool.getItems();
+        } else if (EnvironmentType.TEST == environmentType) {
+            this.environmentType = environmentType;
+            this.listOfUsersTest = new ArrayList<>();
+        } else {
+            System.err.println("❌ Critical Error: Invalid environment type provided.");
+            Thread.dumpStack();
+            System.exit(1);
         }
     }
 
     private void applyUserUpdate(User currentUser, User updatedUser) {
-        if (environmentType == EnvironmentType.PRODUCTION) {
+        if (EnvironmentType.PRODUCTION == environmentType) {
             storageTool.updateItem(currentUser, updatedUser);
-            listOfUsers = storageTool.getItems();
-        } else if (environmentType == EnvironmentType.TEST) {
-            int index = listOfUsers.indexOf(currentUser);
+            listOfUsersProd = storageTool.getItems();
+        } else if (EnvironmentType.TEST == environmentType) {
+            int index = listOfUsersTest.indexOf(currentUser);
             if (index >= 0) {
-                listOfUsers.set(index, updatedUser);
+                listOfUsersTest.set(index, updatedUser);
             }
         }
     }
 
     private void applyUserAdding(User user) {
-        if (environmentType == EnvironmentType.PRODUCTION) {
+        if (EnvironmentType.PRODUCTION == environmentType) {
             storageTool.addItem(user);
-            listOfUsers = storageTool.getItems();
-        } else if (environmentType == EnvironmentType.TEST) {
-            listOfUsers.add(user);
+            listOfUsersProd = storageTool.getItems();
+        } else if (EnvironmentType.TEST == environmentType) {
+            listOfUsersTest.add(user);
         }
     }
 
     public void setTestData(List<User> listOfUsers) {
-        this.listOfUsers = listOfUsers;
+        this.listOfUsersTest = listOfUsers;
     }
 
     public void addUser(UserDTO userDTO, AddOperationType addOperationType) {
@@ -72,11 +79,11 @@ public class UserRepository {
     public void removeUser(UserDTO userDTO) {
         User user = new User(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount(), userDTO.getPassword(),
                 userDTO.getProfileImage());
-        if (environmentType == EnvironmentType.PRODUCTION) {
+        if (EnvironmentType.PRODUCTION == environmentType) {
             storageTool.removeItem(user);
-            listOfUsers = storageTool.getItems();
-        } else if (environmentType == EnvironmentType.TEST) {
-            listOfUsers.remove(user);
+            listOfUsersProd = storageTool.getItems();
+        } else if (EnvironmentType.TEST == environmentType) {
+            listOfUsersTest.remove(user);
         }
     }
 
@@ -107,10 +114,14 @@ public class UserRepository {
 
     public List<UserDTO> getAllUserDtos() {
         List<UserDTO> userDTOs = new ArrayList<>();
-        listOfUsers.forEach(user -> {
+        List<User> data = EnvironmentType.PRODUCTION == environmentType ? listOfUsersProd
+                : EnvironmentType.TEST == environmentType ? listOfUsersTest : new ArrayList<>();
+
+        data.forEach(user -> {
             userDTOs.add(new UserDTO(user.getUserId(), user.getGroupId(), user.getMailAccount(), user.getPassword(),
                     null, null, user.getProfileImage()));
         });
+
         return userDTOs;
     }
 }

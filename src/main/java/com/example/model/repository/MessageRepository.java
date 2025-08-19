@@ -17,49 +17,52 @@ import java.util.Objects;
 
 public class MessageRepository {
     static Dotenv dotenv = Dotenv.load();
-    private List<Message> listOfMessages;
     private JsonStorageTool<Message> storageTool;
     private EnvironmentType environmentType;
 
+    private List<Message> listOfMessagesProd;
+    private List<Message> listOfMessagesTest;
+
     public MessageRepository(EnvironmentType environmentType) {
-        this.environmentType = environmentType;
-        if (environmentType == EnvironmentType.PRODUCTION) {
+        if (EnvironmentType.PRODUCTION == environmentType) {
+            this.environmentType = environmentType;
             storageTool = new JsonStorageTool<Message>(dotenv.get("FILE_PATH_MESSAGES"),
                     new TypeReference<List<Message>>() {
                     });
-            this.listOfMessages = storageTool.getItems();
-        } else if (environmentType == EnvironmentType.TEST) {
-            this.listOfMessages = new ArrayList<>();
+            this.listOfMessagesProd = storageTool.getItems();
+        } else if (EnvironmentType.TEST == environmentType) {
+            this.environmentType = environmentType;
+            this.listOfMessagesTest = new ArrayList<>();
+        } else {
+            System.err.println("❌ Critical Error: Invalid environment type provided.");
+            Thread.dumpStack();
+            System.exit(1);
         }
     }
 
     private void applyMessageAdding(Message message) {
-        if (environmentType == EnvironmentType.PRODUCTION) {
+        if (EnvironmentType.PRODUCTION == environmentType) {
             storageTool.addItem(message);
-            listOfMessages = storageTool.getItems();
-        } else if (environmentType == EnvironmentType.TEST) {
-            listOfMessages.add(message);
+            listOfMessagesProd = storageTool.getItems();
+        } else if (EnvironmentType.TEST == environmentType) {
+            listOfMessagesTest.add(message);
         }
     }
 
     private void applyMessageUpdate(Message currentMessage, Message updatedMessage) {
-        if (environmentType == EnvironmentType.PRODUCTION) {
+        if (EnvironmentType.PRODUCTION == environmentType) {
             storageTool.updateItem(currentMessage, updatedMessage);
-            listOfMessages = storageTool.getItems();
-        } else if (environmentType == EnvironmentType.TEST) {
-            int index = listOfMessages.indexOf(currentMessage);
+            listOfMessagesProd = storageTool.getItems();
+        } else if (EnvironmentType.TEST == environmentType) {
+            int index = listOfMessagesTest.indexOf(currentMessage);
             if (index >= 0) {
-                listOfMessages.set(index, updatedMessage);
+                listOfMessagesTest.set(index, updatedMessage);
             }
         }
     }
 
     public void setTestData(List<Message> listOfMessages) {
-        this.listOfMessages = listOfMessages;
-    }
-
-    public List<Message> getTestData() {
-        return listOfMessages;
+        this.listOfMessagesTest = listOfMessages;
     }
 
     public void addMessage(MessageDTO messageDTO) {
@@ -84,11 +87,13 @@ public class MessageRepository {
         Message messageToRemove = new Message(messageDTO.getMessageId(), messageDTO.getSenderId(),
                 messageDTO.getRecevierId(), messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
                 messageDTO.getAttachedBase64Files(), messageDTO.getStatuses());
-        if (environmentType == EnvironmentType.PRODUCTION) {
+        if (EnvironmentType.PRODUCTION == environmentType) {
             storageTool.removeItem(messageToRemove);
-            listOfMessages = storageTool.getItems();
-        } else if (environmentType == EnvironmentType.TEST) {
-            listOfMessages.remove(messageToRemove);
+            listOfMessagesProd = storageTool.getItems();
+        } else if (EnvironmentType.TEST == environmentType) {
+            if (listOfMessagesTest.contains(messageToRemove)) {
+                listOfMessagesTest.remove(messageToRemove);
+            }
         }
     }
 
@@ -107,11 +112,15 @@ public class MessageRepository {
 
     public List<MessageDTO> getAllMessageDtos() {
         List<MessageDTO> messageDTOs = new ArrayList<>();
-        listOfMessages.forEach(message -> {
+        List<Message> data = EnvironmentType.PRODUCTION == environmentType ? listOfMessagesProd
+                : EnvironmentType.TEST == environmentType ? listOfMessagesTest : new ArrayList<>();
+
+        data.forEach(message -> {
             messageDTOs.add(new MessageDTO(message.getMessageId(), message.getSenderId(), null, message.getRecevierId(),
                     null, message.getSubject(), message.getMessage(), message.getTimestamp(),
                     message.getAttachedBase64Files(), message.getStatuses(), null));
         });
+
         return messageDTOs;
     }
 }
