@@ -52,11 +52,16 @@ public class UserRepositoryTest {
     private List<User> createUsersWithNullProfileImages() {
         List<User> users = new ArrayList<>();
 
-        users.add(new User(null, "groupA", "alice@example.com", "hashedPassword1!", null));
-        users.add(new User(null, "groupA", "bob@example.com", "hashedPassword2!", null));
-        users.add(new User(null, "groupB", "charlie@example.com", "hashedPassword3!", null));
-        users.add(new User(null, "groupB", "dave@example.com", "hashedPassword4!", null));
-        users.add(new User(null, "groupC", "eve@example.com", "hashedPassword5!", null));
+        users.add(new User("1", "groupA", "alice@example.com", BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()),
+                null));
+        users.add(
+                new User("2", "groupA", "bob@example.com", BCrypt.hashpw("hashedPassword2!", BCrypt.gensalt()), null));
+        users.add(new User("3", "groupB", "charlie@example.com", BCrypt.hashpw("hashedPassword3!", BCrypt.gensalt()),
+                null));
+        users.add(
+                new User("4", "groupB", "dave@example.com", BCrypt.hashpw("hashedPassword4!", BCrypt.gensalt()), null));
+        users.add(
+                new User("5", "groupC", "eve@example.com", BCrypt.hashpw("hashedPassword5!", BCrypt.gensalt()), null));
 
         return users;
     }
@@ -67,12 +72,7 @@ public class UserRepositoryTest {
 
         if (userTokens != null) {
             for (UserDTO userDTO : userDTOs) {
-                userDTO.setCurrentPassword(BCrypt.hashpw(userDTO.getCurrentPassword(), BCrypt.gensalt()));
                 userTokens.add(new UserToken(userDTO.getUserId(), userDTO.getGroupId(), userDTO.getMailAccount()));
-            }
-        } else {
-            for (UserDTO userDTO : userDTOs) {
-                userDTO.setCurrentPassword(BCrypt.hashpw(userDTO.getCurrentPassword(), BCrypt.gensalt()));
             }
         }
 

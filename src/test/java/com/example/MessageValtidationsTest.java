@@ -33,10 +33,7 @@ public class MessageValtidationsTest {
 
     private void compareErrors(String expectedMessage, String key, ErrorHandler errorHandler) {
         String errorMessage = errorHandler.getError(key);
-        if (errorMessage != null) {
-            assertEquals(expectedMessage, errorMessage, "Mismatch in error message for key " + key);
-            errorHandler.removeError(key);
-        }
+        assertEquals(expectedMessage, errorMessage, "Mismatch in error message for key " + key);
     }
 
     private Map<String, EnumSet<MessageStatus>> getMesssageStatus(String senderId, String recevierId) {
@@ -141,12 +138,11 @@ public class MessageValtidationsTest {
                 "Exploring the Impact of Artificial Intelligence on Modern Education Systems", null,
                 LocalDateTime.now(), null, getMesssageStatus("ABCD1", "BCD2"), null);
 
-        assertFalse(validator.containsOnlyAllowedStatuses(null, null));
+        assertFalse(validator.containsOnlyAllowedStatuses(null, messageDTO.getStatuses().get("ABCD1")));
         compareErrors("Current message statuses required.", "statuses", errorHandler);
-        compareErrors("Expect statuses required.", "status", errorHandler);
 
         assertFalse(validator.containsOnlyAllowedStatuses(messageDTO.getStatuses(), null));
-        compareErrors("Expect statuses required.", "status", errorHandler);
+        compareErrors("Expect statuses required.", "expectedStatuses", errorHandler);
 
         assertFalse(validator.containsOnlyAllowedStatuses(null, EnumSet.of(MessageStatus.INBOX, MessageStatus.SENT)));
         compareErrors("Current message statuses required.", "statuses", errorHandler);
@@ -162,9 +158,8 @@ public class MessageValtidationsTest {
                 "Exploring the Impact of Artificial Intelligence on Modern Education Systems", null,
                 LocalDateTime.now(), null, getMesssageStatus("ABCD1", "BCD5"), null);
 
-        assertFalse(validator.isStatusUpdateAllowed(null, null));
+        assertFalse(validator.isStatusUpdateAllowed(null, MessageStatus.INBOX));
         compareErrors("Current message statuses required.", "statuses", errorHandler);
-        compareErrors("New status required.", "status", errorHandler);
 
         assertFalse(validator.isStatusUpdateAllowed(messageDTO.getStatuses().get("ABCD1"), null));
         compareErrors("New status required.", "status", errorHandler);

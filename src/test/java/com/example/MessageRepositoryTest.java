@@ -31,6 +31,7 @@ public class MessageRepositoryTest {
     @BeforeEach
     void setup() {
         this.messageRepository = new MessageRepository(EnvironmentType.TEST);
+        prepareData();
     }
 
     private List<Message> createMessages() {
@@ -100,8 +101,6 @@ public class MessageRepositoryTest {
     @Test
     @DisplayName("Should remove all messages")
     void testRemoveMessage() {
-        prepareData();
-
         for (MessageDTO messageDTO : messageRepository.getAllMessageDtos()) {
             messageRepository.removeMessage(messageDTO);
         }
@@ -112,8 +111,6 @@ public class MessageRepositoryTest {
     @Test
     @DisplayName("Should add message")
     void testAddMessage() {
-        prepareData();
-
         LocalDateTime localDateTime = LocalDateTime.now().minusHours(5);
         messageRepository.addMessage(
                 new MessageDTO(null, "user-106", "user-106@gmail.com", "receiver6", "receiver6@gmail.com", "Reminder",
@@ -134,8 +131,6 @@ public class MessageRepositoryTest {
     @Test
     @DisplayName("Should update message status")
     void testUpdateMessageStatus() {
-        prepareData();
-
         MessageDTO foundMessageDTO = getMessageDTObyID("msg-002", messageRepository.getAllMessageDtos());
         Map<String, EnumSet<MessageStatus>> foundMessageDTOStatuses = foundMessageDTO.getStatuses();
         Map<String, EnumSet<MessageStatus>> updatedMessageDTOStatuses = foundMessageDTO.getStatuses();

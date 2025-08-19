@@ -9,6 +9,7 @@ import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.MessageStatus;
 import com.example.utils.enums.OperationType;
 import com.example.utils.interfaces.ErrorHandler;
+import com.example.utils.interfaces.MailService;
 import com.example.utils.services.MailboxService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,213 +18,252 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.EnumSet;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mindrot.jbcrypt.BCrypt;
 
 @ExtendWith(MockitoExtension.class)
 public class MailboxServiceTest {
-    private void compareErrors(String expectedMessage, String key, ErrorHandler errorHandler) {
-        String errorMessage = errorHandler.getError(key);
-        if (errorMessage != null) {
-            assertEquals(expectedMessage, errorMessage, "Mismatch in error message for key " + key);
-            errorHandler.removeError(key);
-        }
-    }
+        private MailService mailService;
 
-    @Test
-    @DisplayName("Should send message")
-    public void testSendMessage() {
-        MailboxService mailboxService = new MailboxService(EnvironmentType.TEST);
-        User user = new User("1", "groupA", "alice@example.com", "hashedPassword1!", null);
-        User user2 = new User("2", "groupA", "bob@example.com", "hashedPassword2!", null);
-
-        UserToken userToken = new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount());
-        UserToken userToken2 = new UserToken(user2.getUserId(), user2.getGroupId(), user2.getMailAccount());
-
-        mailboxService.sendMessage(userToken, "bob@example.com", "Service sending test", "Testing service sending",
-                null);
-        mailboxService.sendMessage(userToken2, "alice@example.com", "Service sending test", "Testing service sending",
-                null);
-        mailboxService.sendMessage(userToken2, "nonexisting@example.com", "Service sending test",
-                "Testing service sending", null);
-
-        assertEquals(1, mailboxService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.SENT)).size());
-        assertEquals(1, mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).size());
-
-        mailboxService.sendMessage(null, null, null, null, null);
-        compareErrors("Invalid token", "function sendMessage", mailboxService.getErrorHandler());
-
-        UserToken userTokenWithoutId = new UserToken(null, user.getGroupId(), user.getMailAccount());
-        mailboxService.sendMessage(userTokenWithoutId, null, null, null, null);
-        compareErrors("Invalid token", "function sendMessage", mailboxService.getErrorHandler());
-
-        UserToken userTokenWithoutEmail = new UserToken(user.getUserId(), user.getGroupId(), null);
-        mailboxService.sendMessage(userTokenWithoutEmail, null, null, null, null);
-        compareErrors("Invalid token", "function sendMessage", mailboxService.getErrorHandler());
-
-        mailboxService.sendMessage(userToken, null, null, null, null);
-        compareErrors("Invalid recevierId", "function sendMessage", mailboxService.getErrorHandler());
-    }
-
-    @Test
-    @DisplayName("Should update status of message")
-    public void testUpdateStatus() {
-        MailboxService mailboxService = new MailboxService(EnvironmentType.TEST);
-        User user = new User("1", "groupA", "alice@example.com", "hashedPassword1!", null);
-        User user2 = new User("2", "groupA", "bob@example.com", "hashedPassword2!", null);
-
-        UserToken userToken = new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount());
-        UserToken userToken2 = new UserToken(user2.getUserId(), user2.getGroupId(), user2.getMailAccount());
-
-        mailboxService.sendMessage(userToken, "bob@example.com", "Service sending test", "Testing service sending",
-                null);
-        mailboxService.sendMessage(userToken2, "alice@example.com", "Service sending test", "Testing service sending",
-                null);
-
-        mailboxService.updateStatus(null, null, null, null);
-        compareErrors("Invalid token", "function updateStatus", mailboxService.getErrorHandler());
-
-        UserToken userTokenWithoutId = new UserToken(null, user.getGroupId(), user.getMailAccount());
-        mailboxService.sendMessage(userTokenWithoutId, null, null, null, null);
-        compareErrors("Invalid token", "function updateStatus", mailboxService.getErrorHandler());
-
-        UserToken userTokenWithoutEmail = new UserToken(user.getUserId(), user.getGroupId(), null);
-        mailboxService.sendMessage(userTokenWithoutEmail, null, null, null, null);
-        compareErrors("Invalid token", "function updateStatus", mailboxService.getErrorHandler());
-
-        mailboxService.updateStatus(userToken,
-                mailboxService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).get(0), MessageStatus.STARRED,
-                null);
-        compareErrors("Invalid operationType", "function updateStatus", mailboxService.getErrorHandler());
-
-        mailboxService.updateStatus(userToken,
-                mailboxService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).get(0), MessageStatus.STARRED,
-                OperationType.CREATE);
-        compareErrors("Invalid operationType", "function updateStatus", mailboxService.getErrorHandler());
-
-        mailboxService.updateStatus(userToken, null, null, null);
-        compareErrors("Invalid messageDTO", "function updateStatus", mailboxService.getErrorHandler());
-
-        mailboxService.updateStatus(userToken,
-                mailboxService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).get(0), null, null);
-        compareErrors("Invalid status", "function updateStatus", mailboxService.getErrorHandler());
-
-        MessageDTO messageDTOWithoutId = mailboxService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.SENT))
-                .get(0);
-        messageDTOWithoutId.setMessageId(null);
-        mailboxService.updateStatus(userToken, messageDTOWithoutId, MessageStatus.STARRED, OperationType.UPDATE);
-        compareErrors("Invalid messageDTOid", "function updateStatus", mailboxService.getErrorHandler());
-
-        MessageDTO messageDTO = mailboxService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).get(0);
-
-        mailboxService.updateStatus(userToken, messageDTO, MessageStatus.SENT, OperationType.UPDATE);
-        compareErrors("Unsupported update with new status.", "status", mailboxService.getErrorHandler());
-
-        mailboxService.updateStatus(userToken, messageDTO, MessageStatus.STARRED, OperationType.UPDATE);
-        assertTrue(messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.STARRED));
-
-        mailboxService.updateStatus(userToken, messageDTO, MessageStatus.STARRED, OperationType.REMOVE);
-        assertFalse(messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.STARRED));
-
-        mailboxService.updateStatus(userToken, messageDTO, MessageStatus.TRASH, OperationType.UPDATE);
-        assertTrue(messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH));
-        mailboxService.updateStatus(userToken, messageDTO, MessageStatus.TRASH, OperationType.REMOVE);
-        assertFalse(messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH));
-    }
-
-    @Test
-    @DisplayName("Should remove message")
-    public void testRemoveMessage() {
-        MailboxService mailboxService = new MailboxService(EnvironmentType.TEST);
-        User user = new User("1", "groupA", "alice@example.com", "hashedPassword1!", null);
-        User user2 = new User("2", "groupA", "bob@example.com", "hashedPassword2!", null);
-
-        UserToken userToken = new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount());
-        UserToken userToken2 = new UserToken(user2.getUserId(), user2.getGroupId(), user2.getMailAccount());
-
-        mailboxService.sendMessage(userToken, "bob@example.com", "Service sending test", "Testing service sending",
-                null);
-        mailboxService.sendMessage(userToken2, "alice@example.com", "Service sending test", "Testing service sending",
-                null);
-        mailboxService.sendMessage(userToken2, "alice@example.com", "Service sending test twice",
-                "Testing service sending twice", null);
-
-        MessageDTO messageDTOtoTrashStatus = mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT))
-                .get(0);
-        mailboxService.removeMessage(userToken2, messageDTOtoTrashStatus);
-        assertTrue(messageDTOtoTrashStatus.getStatuses().get(userToken2.getUserId()).contains(MessageStatus.TRASH));
-
-        mailboxService.removeMessage(userToken2, messageDTOtoTrashStatus);
-        assertFalse(mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).stream()
-                .anyMatch(messageDTO -> messageDTO.getMessageId().equals(messageDTOtoTrashStatus.getMessageId())));
-
-        mailboxService.removeMessage(null,
-                mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).get(0));
-        compareErrors("Invalid token", "function removeMessage", mailboxService.getErrorHandler());
-
-        UserToken userTokenWithoutId = new UserToken(null, user.getGroupId(), user.getMailAccount());
-        mailboxService.sendMessage(userTokenWithoutId, null, null, null, null);
-        compareErrors("Invalid token", "function removeMessage", mailboxService.getErrorHandler());
-
-        UserToken userTokenWithoutEmail = new UserToken(user.getUserId(), user.getGroupId(), null);
-        mailboxService.sendMessage(userTokenWithoutEmail, null, null, null, null);
-        compareErrors("Invalid token", "function removeMessage", mailboxService.getErrorHandler());
-
-        mailboxService.removeMessage(userToken2, null);
-        compareErrors("Invalid messageDTO", "function removeMessage", mailboxService.getErrorHandler());
-
-        MessageDTO messageDTOWithoutId = mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT))
-                .get(0);
-        messageDTOWithoutId.setMessageId(null);
-        mailboxService.removeMessage(userToken2, messageDTOWithoutId);
-        compareErrors("Invalid messageDTOid", "function removeMessage", mailboxService.getErrorHandler());
-
-        assertEquals(1, mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).size());
-
-        mailboxService.sendMessage(userToken2, "test2@gmail.com", "Service sending second test",
-                "Testing service sending twice", null);
-
-        for (MessageDTO messageDTO : mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT))) {
-            mailboxService.removeMessage(userToken2, messageDTO);
+        private void compareErrors(String expectedMessage, String key, ErrorHandler errorHandler) {
+                String errorMessage = errorHandler.getError(key);
+                assertEquals(expectedMessage, errorMessage, "Mismatch in error message for key " + key);
         }
 
-        assertEquals(0, mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).size());
-    }
+        @BeforeEach
+        void setup() {
+                this.mailService = new MailboxService(EnvironmentType.TEST);
+        }
 
-    @Test
-    @DisplayName("Should get message")
-    public void testGetMessageDTOs() {
-        MailboxService mailboxService = new MailboxService(EnvironmentType.TEST);
-        User user = new User("1", "groupA", "alice@example.com", "hashedPassword1!", null);
-        User user2 = new User("2", "groupA", "bob@example.com", "hashedPassword2!", null);
+        @Test
+        @DisplayName("Should send message")
+        public void testSendMessage() {
+                User user = new User("1", "groupA", "alice@example.com",
+                                BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()), null);
+                User user2 = new User("2", "groupA", "bob@example.com",
+                                BCrypt.hashpw("hashedPassword2!", BCrypt.gensalt()), null);
 
-        UserToken userToken = new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount());
-        UserToken userToken2 = new UserToken(user2.getUserId(), user2.getGroupId(), user2.getMailAccount());
+                UserToken userToken = new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount());
+                UserToken userToken2 = new UserToken(user2.getUserId(), user2.getGroupId(), user2.getMailAccount());
 
-        mailboxService.sendMessage(userToken, "bob@example.com", "Service sending test", "Testing service sending",
-                null);
-        mailboxService.sendMessage(userToken2, "alice@example.com", "Service sending test", "Testing service sending",
-                null);
+                mailService.sendMessage(userToken, "bob@example.com", "Service sending test", "Testing service sending",
+                                null);
+                mailService.sendMessage(userToken2, "alice@example.com", "Service sending test",
+                                "Testing service sending", null);
+                mailService.sendMessage(userToken2, "nonexisting@example.com", "Service sending test",
+                                "Testing service sending", null);
 
-        mailboxService.getMessageDTOs(null, EnumSet.of(MessageStatus.INBOX));
-        compareErrors("Invalid token", "function getMessageDTOs", mailboxService.getErrorHandler());
+                assertEquals(1, mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.SENT)).size());
+                assertEquals(1, mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).size());
 
-        UserToken userTokenWithoutId = new UserToken(null, user.getGroupId(), user.getMailAccount());
-        mailboxService.getMessageDTOs(userTokenWithoutId, null);
-        compareErrors("Invalid token", "function getMessageDTOs", mailboxService.getErrorHandler());
+                mailService.sendMessage(null, null, null, null, null);
+                compareErrors("Invalid token argument in sendMessage function.", "token",
+                                mailService.getErrorHandler());
 
-        UserToken userTokenWithoutEmail = new UserToken(user.getUserId(), user.getGroupId(), null);
-        mailboxService.getMessageDTOs(userTokenWithoutEmail, null);
-        compareErrors("Invalid token", "function getMessageDTOs", mailboxService.getErrorHandler());
+                UserToken userTokenWithoutId = new UserToken(null, user.getGroupId(), user.getMailAccount());
+                mailService.sendMessage(userTokenWithoutId, null, null, null, null);
+                compareErrors("Invalid token argument in sendMessage function.", "token",
+                                mailService.getErrorHandler());
 
-        mailboxService.getMessageDTOs(userToken, null);
-        compareErrors("Invalid statuses", "function getMessageDTOs", mailboxService.getErrorHandler());
+                UserToken userTokenWithoutEmail = new UserToken(user.getUserId(), user.getGroupId(), null);
+                mailService.sendMessage(userTokenWithoutEmail, null, null, null, null);
+                compareErrors("Invalid token argument in sendMessage function.", "token",
+                                mailService.getErrorHandler());
 
-        assertFalse(mailboxService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).isEmpty());
-        assertFalse(mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.INBOX)).isEmpty());
+                mailService.sendMessage(userToken, null, null, null, null);
+                compareErrors("Invalid recevierId argument in sendMessage function.", "recevierId",
+                                mailService.getErrorHandler());
+        }
 
-        assertTrue(mailboxService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.STARRED)).isEmpty());
-        assertTrue(mailboxService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.TRASH)).isEmpty());
-    }
+        @Test
+        @DisplayName("Should update status of message")
+        public void testUpdateStatus() {
+                User user = new User("1", "groupA", "alice@example.com",
+                                BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()), null);
+                User user2 = new User("2", "groupA", "bob@example.com",
+                                BCrypt.hashpw("hashedPassword2!", BCrypt.gensalt()), null);
+
+                UserToken userToken = new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount());
+                UserToken userToken2 = new UserToken(user2.getUserId(), user2.getGroupId(), user2.getMailAccount());
+
+                mailService.sendMessage(userToken, "bob@example.com", "Service sending test", "Testing service sending",
+                                null);
+                mailService.sendMessage(userToken2, "alice@example.com", "Service sending test",
+                                "Testing service sending", null);
+
+                mailService.updateStatus(null, null, null, null);
+                compareErrors("Invalid token argument in updateStatus function.", "token",
+                                mailService.getErrorHandler());
+
+                UserToken userTokenWithoutId = new UserToken(null, user.getGroupId(), user.getMailAccount());
+                mailService.updateStatus(userTokenWithoutId, null, null, null);
+                compareErrors("Invalid token argument in updateStatus function.", "token",
+                                mailService.getErrorHandler());
+
+                UserToken userTokenWithoutEmail = new UserToken(user.getUserId(), user.getGroupId(), null);
+                mailService.updateStatus(userTokenWithoutEmail, null, null, null);
+                compareErrors("Invalid token argument in updateStatus function.", "token",
+                                mailService.getErrorHandler());
+
+                mailService.updateStatus(userToken,
+                                mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).get(0),
+                                MessageStatus.STARRED, null);
+                compareErrors("Provided unsupported type of operation.", "operationType",
+                                mailService.getErrorHandler());
+
+                mailService.updateStatus(userToken,
+                                mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).get(0),
+                                MessageStatus.STARRED, OperationType.CREATE);
+                compareErrors("Provided unsupported type of operation.", "operationType",
+                                mailService.getErrorHandler());
+
+                mailService.updateStatus(userToken, null, null, null);
+                compareErrors("Invalid messageDTO argument in updateStatus function.", "messageDTO",
+                                mailService.getErrorHandler());
+
+                mailService.updateStatus(userToken,
+                                mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).get(0), null,
+                                null);
+                compareErrors("Invalid status argument in updateStatus function.", "status",
+                                mailService.getErrorHandler());
+
+                MessageDTO messageDTOWithoutId = mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.SENT))
+                                .get(0);
+                messageDTOWithoutId.setMessageId(null);
+                mailService.updateStatus(userToken, messageDTOWithoutId, MessageStatus.STARRED, OperationType.UPDATE);
+                compareErrors("Invalid messageDTOid argument in updateStatus function.", "messageDTOid",
+                                mailService.getErrorHandler());
+
+                MessageDTO messageDTO = mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).get(0);
+
+                mailService.updateStatus(userToken, messageDTO, MessageStatus.SENT, OperationType.UPDATE);
+                compareErrors("Unsupported update with new status.", "status", mailService.getErrorHandler());
+
+                mailService.updateStatus(userToken, messageDTO, MessageStatus.STARRED, OperationType.UPDATE);
+                assertTrue(messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.STARRED));
+
+                mailService.updateStatus(userToken, messageDTO, MessageStatus.STARRED, OperationType.REMOVE);
+                assertFalse(messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.STARRED));
+
+                mailService.updateStatus(userToken, messageDTO, MessageStatus.TRASH, OperationType.UPDATE);
+                assertTrue(messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH));
+                mailService.updateStatus(userToken, messageDTO, MessageStatus.TRASH, OperationType.REMOVE);
+                assertFalse(messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH));
+        }
+
+        @Test
+        @DisplayName("Should remove message")
+        public void testRemoveMessage() {
+                User user = new User("1", "groupA", "alice@example.com",
+                                BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()), null);
+                User user2 = new User("2", "groupA", "bob@example.com",
+                                BCrypt.hashpw("hashedPassword2!", BCrypt.gensalt()), null);
+
+                UserToken userToken = new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount());
+                UserToken userToken2 = new UserToken(user2.getUserId(), user2.getGroupId(), user2.getMailAccount());
+
+                mailService.sendMessage(userToken, "bob@example.com", "Service sending test", "Testing service sending",
+                                null);
+                mailService.sendMessage(userToken2, "alice@example.com", "Service sending test",
+                                "Testing service sending", null);
+                mailService.sendMessage(userToken2, "alice@example.com", "Service sending test twice",
+                                "Testing service sending twice", null);
+
+                MessageDTO messageDTOtoTrashStatus = mailService
+                                .getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).get(0);
+                mailService.removeMessage(userToken2, messageDTOtoTrashStatus);
+                assertTrue(messageDTOtoTrashStatus.getStatuses().get(userToken2.getUserId())
+                                .contains(MessageStatus.TRASH));
+
+                mailService.removeMessage(userToken2, messageDTOtoTrashStatus);
+                assertFalse(mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).stream()
+                                .anyMatch(messageDTO -> messageDTO.getMessageId()
+                                                .equals(messageDTOtoTrashStatus.getMessageId())));
+
+                // je?
+                // errorHandler.logError(errorHandler.createErrorBody(labeledValue.label(),
+                // "Invalid " + labeledValue.label() + " argument in " + location + "."));
+                mailService.removeMessage(null,
+                                mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).get(0));
+                compareErrors("Invalid token argument in removeMessage function.", "token",
+                                mailService.getErrorHandler());
+
+                UserToken userTokenWithoutId = new UserToken(null, user.getGroupId(), user.getMailAccount());
+                mailService.removeMessage(userTokenWithoutId,
+                                mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).get(0));
+                compareErrors("Invalid token argument in removeMessage function.", "token",
+                                mailService.getErrorHandler());
+
+                UserToken userTokenWithoutEmail = new UserToken(user.getUserId(), user.getGroupId(), null);
+                mailService.removeMessage(userTokenWithoutEmail,
+                                mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).get(0));
+                compareErrors("Invalid token argument in removeMessage function.", "token",
+                                mailService.getErrorHandler());
+
+                mailService.removeMessage(userToken2, null);
+                compareErrors("Invalid messageDTO argument in removeMessage function.", "messageDTO",
+                                mailService.getErrorHandler());
+
+                MessageDTO messageDTOWithoutId = mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT))
+                                .get(0);
+                messageDTOWithoutId.setMessageId(null);
+                mailService.removeMessage(userToken2, messageDTOWithoutId);
+                compareErrors("Invalid messageDTOid argument in removeMessage function.", "messageDTOid",
+                                mailService.getErrorHandler());
+
+                assertEquals(1, mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).size());
+
+                mailService.sendMessage(userToken2, "test2@gmail.com", "Service sending second test",
+                                "Testing service sending twice", null);
+
+                for (MessageDTO messageDTO : mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT))) {
+                        mailService.removeMessage(userToken2, messageDTO);
+                }
+
+                assertEquals(0, mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).size());
+        }
+
+        @Test
+        @DisplayName("Should get message")
+        public void testGetMessageDTOs() {
+                User user = new User("1", "groupA", "alice@example.com",
+                                BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()), null);
+                User user2 = new User("2", "groupA", "bob@example.com",
+                                BCrypt.hashpw("hashedPassword2!", BCrypt.gensalt()), null);
+
+                UserToken userToken = new UserToken(user.getUserId(), user.getGroupId(), user.getMailAccount());
+                UserToken userToken2 = new UserToken(user2.getUserId(), user2.getGroupId(), user2.getMailAccount());
+
+                mailService.sendMessage(userToken, "bob@example.com", "Service sending test", "Testing service sending",
+                                null);
+                mailService.sendMessage(userToken2, "alice@example.com", "Service sending test",
+                                "Testing service sending", null);
+
+                mailService.getMessageDTOs(null, EnumSet.of(MessageStatus.INBOX));
+                compareErrors("Invalid token argument in getMessageDTOs function.", "token",
+                                mailService.getErrorHandler());
+
+                UserToken userTokenWithoutId = new UserToken(null, user.getGroupId(), user.getMailAccount());
+                mailService.getMessageDTOs(userTokenWithoutId, null);
+                compareErrors("Invalid token argument in getMessageDTOs function.", "token",
+                                mailService.getErrorHandler());
+
+                UserToken userTokenWithoutEmail = new UserToken(user.getUserId(), user.getGroupId(), null);
+                mailService.getMessageDTOs(userTokenWithoutEmail, null);
+                compareErrors("Invalid token argument in getMessageDTOs function.", "token",
+                                mailService.getErrorHandler());
+
+                mailService.getMessageDTOs(userToken, null);
+                compareErrors("Invalid statuses argument in getMessageDTOs function.", "statuses",
+                                mailService.getErrorHandler());
+
+                assertFalse(mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).isEmpty());
+                assertFalse(mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.INBOX)).isEmpty());
+
+                assertTrue(mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.STARRED)).isEmpty());
+                assertTrue(mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.TRASH)).isEmpty());
+        }
 }

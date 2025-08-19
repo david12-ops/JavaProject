@@ -66,7 +66,7 @@ public class UserValidationsTest {
                 List<Pair<String, String>> validInputs = Arrays
                                 .asList(new Pair<>("long@stringwithtext", "long@stringwithtext"));
 
-                for (FormType form : Arrays.asList(FormType.ADDACCOUNT, FormType.FORGOTCREDENTIALS,
+                for (FormType formType : Arrays.asList(FormType.ADDACCOUNT, FormType.FORGOTCREDENTIALS,
                                 FormType.REGISTER)) {
                         for (Pair<String, String> pair : invalidInputs) {
                                 assertFalse(validator.confirmedPassword(pair.getKey(), pair.getValue(),
@@ -74,8 +74,8 @@ public class UserValidationsTest {
                                 compareErrors("Provided unsupported type of form.", Arrays.asList("formType"),
                                                 errorHandler);
 
-                                assertFalse(validator.confirmedPassword(pair.getKey(), pair.getValue(), form));
-                                compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
+                                assertFalse(validator.confirmedPassword(pair.getKey(), pair.getValue(), formType));
+                                compareErrors(formType == FormType.ADDACCOUNT || formType == FormType.REGISTER
                                                 ? "Password does not match the confirmation."
                                                 : "New password does not match the confirmation.",
                                                 Arrays.asList("confirmPassword", "confirmNewPassword"), errorHandler);
@@ -83,7 +83,7 @@ public class UserValidationsTest {
                         }
 
                         for (Pair<String, String> pair : validInputs) {
-                                assertTrue(validator.confirmedPassword(pair.getKey(), pair.getValue(), form));
+                                assertTrue(validator.confirmedPassword(pair.getKey(), pair.getValue(), formType));
                         }
                 }
         }
@@ -116,7 +116,7 @@ public class UserValidationsTest {
                 userDTOs.add(new UserDTO(user3.getUserId(), user3.getGroupId(), user3.getMailAccount(), null,
                                 user3.getPassword(), null, user3.getProfileImage()));
 
-                for (FormType form : Arrays.asList(FormType.ADDACCOUNT, FormType.FORGOTCREDENTIALS,
+                for (FormType formType : Arrays.asList(FormType.ADDACCOUNT, FormType.FORGOTCREDENTIALS,
                                 FormType.REGISTER)) {
                         for (int i = 0; i < userDTOs.size(); i++) {
                                 UserDTO userDTO = userDTOs.get(i);
@@ -124,8 +124,9 @@ public class UserValidationsTest {
                                 String sameAsCurrentPass = sameAsCurrentPassword.get(i);
 
                                 assertFalse(validator.validPassword(userDTO.getPassword(),
-                                                tooSimilarPasswordsWithEmail.get(i), userDTO.getMailAccount(), form));
-                                compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
+                                                tooSimilarPasswordsWithEmail.get(i), userDTO.getMailAccount(),
+                                                formType));
+                                compareErrors(formType == FormType.ADDACCOUNT || formType == FormType.REGISTER
                                                 ? "Password is too similar to your email."
                                                 : "New password is too similar to your email.",
                                                 Arrays.asList("password", "newPassword"), errorHandler);
@@ -136,19 +137,19 @@ public class UserValidationsTest {
                                                 errorHandler);
 
                                 assertTrue(validator.validPassword(userDTO.getPassword(), validPassword,
-                                                userDTO.getMailAccount(), form));
+                                                userDTO.getMailAccount(), formType));
 
                                 assertFalse(validator.validPassword(userDTO.getPassword(), sameAsCurrentPass,
-                                                userDTO.getMailAccount(), form));
-                                compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
+                                                userDTO.getMailAccount(), formType));
+                                compareErrors(formType == FormType.ADDACCOUNT || formType == FormType.REGISTER
                                                 ? "Password must be different from the current password."
                                                 : "New password must be different from the current password.",
                                                 Arrays.asList("password", "newPassword"), errorHandler);
 
                                 for (String password : invalidPasswords) {
                                         assertFalse(validator.validPassword(userDTO.getPassword(), password,
-                                                        userDTO.getMailAccount(), form));
-                                        compareErrors(form == FormType.ADDACCOUNT || form == FormType.REGISTER
+                                                        userDTO.getMailAccount(), formType));
+                                        compareErrors(formType == FormType.ADDACCOUNT || formType == FormType.REGISTER
                                                         ? "Password must include uppercase, lowercase, number, and special character, and be at least 8 characters."
                                                         : "New password must include uppercase, lowercase, number, and special character, and be at least 8 characters.",
                                                         Arrays.asList("password", "newPassword"), errorHandler);
