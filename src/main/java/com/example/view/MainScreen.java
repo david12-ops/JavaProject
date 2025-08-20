@@ -14,8 +14,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class MainScreen extends VBox {
-    // TODO - nove testy
-
+    // TODO - switch user - nezobrazuje po pridani dalisho uctu, uprava remove -
+    // mazat v pripade celou zprávu v případě že, nezbydou klice ani jednoho usera
+    // ke zprave ohledne statusu
     public MainScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController, EnumSet<MessageStatus> messageStatusesFromUI) {
         Table table = new Table(stage, screenController, messageController, userController, messageStatusesFromUI);
