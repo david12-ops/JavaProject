@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,7 +55,6 @@ public class MailboxService implements MailService {
     private record LabeledValue(String label, Object value) {
     }
 
-    // Support Methods
     private void setTestUsersList(UserRepository userRepository) {
         List<User> users = new ArrayList<>();
 
@@ -72,46 +72,24 @@ public class MailboxService implements MailService {
         userRepository.setTestData(users);
     }
 
-    private MessageDTO createMessageDTO(String messageId, String senderId, String senderMailAccount, String recevierId,
-            String recevierMailAccount, String subject, String message, LocalDateTime timestamp,
-            List<String> attachedBase64Files, Map<String, EnumSet<MessageStatus>> statuses, List<File> attachedFiles) {
-        return new MessageDTO(messageId, senderId, senderMailAccount, recevierId, recevierMailAccount, subject, message,
-                timestamp, attachedBase64Files, statuses, attachedFiles);
-    }
-
+    // Support Methods
     private boolean containsDataNull(String location, LabeledValue... labeledValues) {
         for (LabeledValue labeledValue : labeledValues) {
-            if (labeledValue.value == null) {
-                errorHandler.logError(errorHandler.createErrorBody(labeledValue.label(),
-                        "Invalid " + labeledValue.label() + " argument in " + location + "."));
-                return true;
+            if (labeledValue.value instanceof Optional<?> opt) {
+                if (!opt.isPresent()) {
+                    errorHandler.logError(errorHandler.createErrorBody(labeledValue.label(),
+                            "Invalid " + labeledValue.label() + " argument in " + location + "."));
+                    return true;
+                }
+            } else {
+                if (labeledValue.value == null) {
+                    errorHandler.logError(errorHandler.createErrorBody(labeledValue.label(),
+                            "Invalid " + labeledValue.label() + " argument in " + location + "."));
+                    return true;
+                }
             }
         }
         return false;
-    }
-
-    private String resolveUserIdByEmail(String email) {
-        if (userDTOs == null || userDTOs.size() == 0 || email == null)
-            return null;
-
-        for (UserDTO userDTO : userDTOs) {
-            String userEmailFromDTO = userDTO.getMailAccount();
-            if (userEmailFromDTO != null && userEmailFromDTO.equals(email))
-                return userDTO.getUserId();
-        }
-        return null;
-    }
-
-    private String resolveEmailByUserId(String userId) {
-        if (userDTOs == null || userDTOs.size() == 0 || userId == null)
-            return null;
-
-        for (UserDTO userDTO : userDTOs) {
-            String userIdFromDTO = userDTO.getUserId();
-            if (userIdFromDTO != null && userIdFromDTO.equals(userId))
-                return userDTO.getMailAccount();
-        }
-        return null;
     }
 
     private void clearErrors(ErrorHandler errorHandler, String... errorkeys) {
@@ -125,6 +103,34 @@ public class MailboxService implements MailService {
         }
 
         return userToken;
+    }
+
+    private Optional<String> resolveUserIdByEmail(String emailAccount) {
+        if (userDTOs == null || userDTOs.size() == 0 || emailAccount == null)
+            return null;
+
+        Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
+                .filter(userDTO -> userDTO.getMailAccount() != null && userDTO.getMailAccount().equals(emailAccount))
+                .findAny();
+
+        return optionalFoundUserDTO.flatMap(userDTO -> Optional.ofNullable(userDTO.getUserId()));
+    }
+
+    private Optional<String> resolveEmailByUserId(String userId) {
+        if (userDTOs == null || userDTOs.size() == 0 || userId == null)
+            return null;
+
+        Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
+                .filter(userDTO -> userDTO.getUserId() != null && userDTO.getUserId().equals(userId)).findAny();
+
+        return optionalFoundUserDTO.flatMap(userDTO -> Optional.ofNullable(userDTO.getMailAccount()));
+    }
+
+    private MessageDTO createMessageDTO(String messageId, String senderId, String senderMailAccount, String recevierId,
+            String recevierMailAccount, String subject, String message, LocalDateTime timestamp,
+            List<String> attachedBase64Files, Map<String, EnumSet<MessageStatus>> statuses, List<File> attachedFiles) {
+        return new MessageDTO(messageId, senderId, senderMailAccount, recevierId, recevierMailAccount, subject, message,
+                timestamp, attachedBase64Files, statuses, attachedFiles);
     }
 
     private List<MessageDTO> filterMessageByUserId(UserToken userToken, List<MessageDTO> messageDTOs) {
@@ -186,24 +192,25 @@ public class MailboxService implements MailService {
     @Override
     public void sendMessage(UserToken userToken, String recevierEmail, String subject, String message,
             List<File> files) {
+        final Optional<String> resolvedRecevierId;
         if (containsDataNull("sendMessage function", new LabeledValue("token", checkUserToken(userToken))))
             return;
 
         Map<String, EnumSet<MessageStatus>> messageStatuses = new HashMap<>();
         boolean isValid = messageValidator.validMessageData(recevierEmail, subject, message)
                 && messageValidator.validFiles(files);
-        String resolvedRecevierId = resolveUserIdByEmail(recevierEmail);
+        resolvedRecevierId = resolveUserIdByEmail(recevierEmail);
 
         if (isValid && !containsDataNull("sendMessage function", new LabeledValue("recevierId", resolvedRecevierId))) {
             /*
              * In this case, i accept to send message myself and it is represented by id
              * (key) - status (value)
              */
-            if (userToken.getUserId().equals(resolvedRecevierId)) {
+            if (userToken.getUserId().equals(resolvedRecevierId.get())) {
                 messageStatuses.put(userToken.getUserId(), EnumSet.of(MessageStatus.SENT, MessageStatus.INBOX));
             } else {
                 messageStatuses.put(userToken.getUserId(), EnumSet.of(MessageStatus.SENT));
-                messageStatuses.put(resolvedRecevierId, EnumSet.of(MessageStatus.INBOX));
+                messageStatuses.put(resolvedRecevierId.get(), EnumSet.of(MessageStatus.INBOX));
             }
 
             if (!messageValidator.containsOnlyAllowedStatuses(messageStatuses,
@@ -211,8 +218,8 @@ public class MailboxService implements MailService {
                 return;
             }
 
-            MessageDTO newMessageDTO = createMessageDTO(null, userToken.getUserId(), null, resolvedRecevierId, null,
-                    subject, message, LocalDateTime.now(), null, messageStatuses, files);
+            MessageDTO newMessageDTO = createMessageDTO(null, userToken.getUserId(), null, resolvedRecevierId.get(),
+                    null, subject, message, LocalDateTime.now(), null, messageStatuses, files);
             clearErrors(errorHandler, "recevierId", "token", "statuses", "expectedStatuses", "email", "subject",
                     "message", "file");
             messageRepository.addMessage(newMessageDTO);
@@ -222,6 +229,8 @@ public class MailboxService implements MailService {
     @Override
     public void updateStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus status,
             OperationType operationType) {
+        final Optional<String> resolvedSenderId;
+        final Optional<String> resolvedRecevierId;
         if (containsDataNull("updateStatus function", new LabeledValue("token", checkUserToken(userToken)),
                 new LabeledValue("messageDTO", messageDTO), new LabeledValue("status", status)))
             return;
@@ -233,10 +242,11 @@ public class MailboxService implements MailService {
         }
 
         Map<String, EnumSet<MessageStatus>> currentMessageStatuses = messageDTO.getStatuses();
-        String senderId = resolveUserIdByEmail(messageDTO.getSenderMailAccount());
-        String recevierId = resolveUserIdByEmail(messageDTO.getRecevierMailAccount());
-        boolean containsDataNull = containsDataNull("updateStatus function", new LabeledValue("senderId", senderId),
-                new LabeledValue("recevierId", recevierId), new LabeledValue("messageStatuses", currentMessageStatuses),
+        resolvedSenderId = resolveUserIdByEmail(messageDTO.getSenderMailAccount());
+        resolvedRecevierId = resolveUserIdByEmail(messageDTO.getRecevierMailAccount());
+        boolean containsDataNull = containsDataNull("updateStatus function",
+                new LabeledValue("senderId", resolvedSenderId), new LabeledValue("recevierId", resolvedRecevierId),
+                new LabeledValue("messageStatuses", currentMessageStatuses),
                 new LabeledValue("messageDTOid", messageDTO.getMessageId()));
 
         if (!containsDataNull) {
@@ -257,10 +267,11 @@ public class MailboxService implements MailService {
             }
 
             if (applyUpdate) {
-                MessageDTO updadMessageDTO = createMessageDTO(messageDTO.getMessageId(), senderId,
-                        messageDTO.getSenderMailAccount(), recevierId, messageDTO.getRecevierMailAccount(),
-                        messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
-                        messageDTO.getAttachedBase64Files(), currentMessageStatuses, messageDTO.getAttachedFiles());
+                MessageDTO updadMessageDTO = createMessageDTO(messageDTO.getMessageId(), resolvedSenderId.get(),
+                        messageDTO.getSenderMailAccount(), resolvedRecevierId.get(),
+                        messageDTO.getRecevierMailAccount(), messageDTO.getSubject(), messageDTO.getMessage(),
+                        messageDTO.getTimestamp(), messageDTO.getAttachedBase64Files(), currentMessageStatuses,
+                        messageDTO.getAttachedFiles());
                 updadMessageDTO.setStatuses(userToken.getUserId(), currentMessageStatusesByUser);
 
                 clearErrors(errorHandler, "token", "messageDTO", "status", "operationType", "senderId", "recevierId",
@@ -300,15 +311,17 @@ public class MailboxService implements MailService {
             return List.of();
 
         filterMessageDTOsByTokenAndStatus(messageDTOs, userToken, messageStatusesFromUI).forEach(messageDTO -> {
-            String senderMailAccount = resolveEmailByUserId(messageDTO.getSenderId());
-            String recevierMailAccount = resolveEmailByUserId(messageDTO.getRecevierId());
+            Optional<String> senderMailAccount = resolveEmailByUserId(messageDTO.getSenderId());
+            Optional<String> recevierMailAccount = resolveEmailByUserId(messageDTO.getRecevierId());
 
-            MessageDTO updatedMessageDTO = createMessageDTO(messageDTO.getMessageId(), messageDTO.getSenderId(),
-                    senderMailAccount, messageDTO.getRecevierId(), recevierMailAccount, messageDTO.getSubject(),
-                    messageDTO.getMessage(), messageDTO.getTimestamp(), messageDTO.getAttachedBase64Files(),
-                    messageDTO.getStatuses(), messageDTO.getAttachedFiles());
-            updatedMessageDTO.sanitize(ViewLevel.PUBLIC);
-            updatedMessageDTOs.add(updatedMessageDTO);
+            if (senderMailAccount.isPresent() && recevierMailAccount.isPresent()) {
+                MessageDTO updatedMessageDTO = createMessageDTO(messageDTO.getMessageId(), messageDTO.getSenderId(),
+                        senderMailAccount.get(), messageDTO.getRecevierId(), recevierMailAccount.get(),
+                        messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
+                        messageDTO.getAttachedBase64Files(), messageDTO.getStatuses(), messageDTO.getAttachedFiles());
+                updatedMessageDTO.sanitize(ViewLevel.PUBLIC);
+                updatedMessageDTOs.add(updatedMessageDTO);
+            }
         });
 
         clearErrors(errorHandler, "DTOs", "token", "statuses");

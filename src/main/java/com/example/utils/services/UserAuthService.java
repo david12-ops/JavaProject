@@ -3,6 +3,7 @@ package com.example.utils.services;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -16,6 +17,7 @@ import com.example.utils.enums.AddOperationType;
 import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.FormType;
 import com.example.utils.enums.OperationType;
+import com.example.utils.enums.TokenField;
 import com.example.utils.enums.ValidationMode;
 import com.example.utils.interfaces.AuthService;
 import com.example.utils.interfaces.ErrorHandler;
@@ -64,10 +66,18 @@ public class UserAuthService implements AuthService {
     // Support Methods
     private boolean containsDataNull(String location, LabeledValue... labeledValues) {
         for (LabeledValue labeledValue : labeledValues) {
-            if (labeledValue.value == null) {
-                errorHandler.logError(errorHandler.createErrorBody(labeledValue.label(),
-                        "Invalid " + labeledValue.label() + " argument in " + location + "."));
-                return true;
+            if (labeledValue.value instanceof Optional<?> opt) {
+                if (opt.isEmpty()) {
+                    errorHandler.logError(errorHandler.createErrorBody(labeledValue.label(),
+                            "Invalid " + labeledValue.label() + " argument in " + location + "."));
+                    return true;
+                }
+            } else {
+                if (labeledValue.value == null) {
+                    errorHandler.logError(errorHandler.createErrorBody(labeledValue.label(),
+                            "Invalid " + labeledValue.label() + " argument in " + location + "."));
+                    return true;
+                }
             }
         }
         return false;
@@ -82,26 +92,84 @@ public class UserAuthService implements AuthService {
         return supportedTypes.contains(formType);
     }
 
-    private UserToken checkUserToken(UserToken userToken) {
-        if (userToken == null || userToken.getMailAccount() == null || userToken.getUserId() == null) {
+    private UserToken checkUserToken(UserToken userToken, EnumSet<TokenField> tokenFieldsToCheck) {
+        boolean validEmailField = false;
+        boolean validUserIdField = false;
+        boolean validGroupIdField = false;
+
+        if (userToken == null)
             return null;
+
+        for (TokenField tokenField : tokenFieldsToCheck) {
+            if (TokenField.EMAILACCOUNT == tokenField)
+                validEmailField = userToken.getMailAccount() != null ? true : false;
+
+            if (TokenField.USERID == tokenField)
+                validUserIdField = userToken.getUserId() != null ? true : false;
+
+            if (!validGroupIdField && TokenField.GROUPID == tokenField)
+                validGroupIdField = userToken.getGroupId() != null ? true : false;
         }
 
-        return userToken;
+        return validEmailField && validGroupIdField && validUserIdField ? userToken : null;
     }
 
-    private String resolveIdByEmail(String email) {
+    private Optional<String> resolveIdByEmail(String emailAccount) {
         List<UserDTO> userDTOs = userRepository.getAllUserDtos();
 
-        if (userDTOs == null || userDTOs.size() == 0 || email == null)
+        if (userDTOs == null || userDTOs.size() == 0 || emailAccount == null)
             return null;
 
-        for (UserDTO userDTO : userDTOs) {
-            if (email.equals(userDTO.getMailAccount())) {
-                return userDTO.getUserId();
-            }
-        }
-        return null;
+        Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
+                .filter(userDTO -> userDTO.getMailAccount() != null && userDTO.getMailAccount().equals(emailAccount))
+                .findFirst();
+
+        return optionalFoundUserDTO.flatMap(userDTO -> Optional.ofNullable(userDTO.getUserId()));
+    }
+
+    private Optional<String> resolveGroupIdByUserIdAndEmail(String userId, String emailAccount) {
+        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
+
+        if (userDTOs == null || userDTOs.size() == 0 || userId == null || emailAccount == null)
+            return null;
+
+        Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
+                .filter(userDTO -> userDTO.getUserId() != null && userDTO.getMailAccount() != null
+                        && userDTO.getUserId().equals(userId) && userDTO.getMailAccount().equals(emailAccount))
+                .findFirst();
+
+        return optionalFoundUserDTO.flatMap(userDTO -> Optional.ofNullable(userDTO.getGroupId()));
+    }
+
+    private Optional<UserDTO> getUserDTOByEmailAndPassword(String emailAccount, String password) {
+        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
+
+        if (userDTOs == null || userDTOs.size() == 0 || emailAccount == null || password == null)
+            return null;
+
+        Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
+                .filter(userDTO -> userDTO.getMailAccount() != null && userDTO.getCurrentPassword() != null
+                        && userDTO.getMailAccount().equals(emailAccount)
+                        && BCrypt.checkpw(password, userDTO.getCurrentPassword()))
+                .findFirst();
+
+        return optionalFoundUserDTO;
+    }
+
+    private Optional<UserDTO> getUserDTOByToken(UserToken userToken) {
+        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
+
+        if (userDTOs == null || userDTOs.size() == 0)
+            return null;
+
+        Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
+                .filter(userDTO -> userDTO.getUserId() != null && userDTO.getMailAccount() != null
+                        && userDTO.getGroupId() != null && userDTO.getUserId().equals(userToken.getUserId())
+                        && userDTO.getMailAccount().equals(userToken.getMailAccount())
+                        && userDTO.getGroupId().equals(userToken.getGroupId()))
+                .findFirst();
+
+        return optionalFoundUserDTO;
     }
 
     private UserDTO creaUserDTO(String userId, String groupId, String currentPassword, String mailAccount,
@@ -124,50 +192,11 @@ public class UserAuthService implements AuthService {
 
     }
 
-    private UserDTO getUserDTOByEmailAndPassword(String email, String password) {
-        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
-
-        if (userDTOs == null || userDTOs.size() == 0 || email == null || password == null)
-            return null;
-
-        for (UserDTO userDTO : userDTOs) {
-            String userMailAccountFromDTO = userDTO.getMailAccount();
-            String userCurrentPasswordFromDTO = userDTO.getCurrentPassword();
-            boolean dtoContainsData = userMailAccountFromDTO != null && userCurrentPasswordFromDTO != null;
-
-            if (dtoContainsData && userMailAccountFromDTO.equals(email)
-                    && BCrypt.checkpw(password, userCurrentPasswordFromDTO)) {
-                return userDTO;
-            }
-        }
-        return null;
-    }
-
-    private UserDTO getUserDTOByToken(UserToken userToken) {
-        List<UserDTO> userDTOs = userRepository.getAllUserDtos();
-
-        if (userDTOs == null || userDTOs.size() == 0)
-            return null;
-
-        for (UserDTO userDTO : userRepository.getAllUserDtos()) {
-            String userIdFromDTO = userDTO.getUserId();
-            String userMailAccountFromDTO = userDTO.getMailAccount();
-            boolean dtoContainsData = userIdFromDTO != null && userMailAccountFromDTO != null;
-
-            if (dtoContainsData && userIdFromDTO.equals(userToken.getUserId())
-                    && userMailAccountFromDTO.equals(userToken.getMailAccount())) {
-                return userDTO;
-            }
-        }
-        return null;
-    }
-
     @Override
     public boolean register(String emailAccount, String password, String confirmationPassword, FormType formType,
             AddOperationType addTypeOperation) {
         UserDTO userDTO;
-
-        UserToken userToken = getLoggedUser();
+        final UserToken userToken = getLoggedUser();
         boolean isAddOperationTypeSupported = addTypeOperation != null
                 && EnumSet.of(AddOperationType.ANOTHERACCOUNT, AddOperationType.NEWACCOUNT).contains(addTypeOperation);
         boolean isFormTypeSupported = isFormSupported(formType, EnumSet.of(FormType.REGISTER, FormType.ADDACCOUNT));
@@ -184,12 +213,16 @@ public class UserAuthService implements AuthService {
         }
 
         if (FormType.ADDACCOUNT == formType && AddOperationType.ANOTHERACCOUNT == addTypeOperation) {
-            boolean isValid = !containsDataNull("register function",
-                    new LabeledValue("token", checkUserToken(userToken)))
-                    && validateData(OperationType.CREATE, null, emailAccount,
-                            getUserDTOByToken(userToken).getCurrentPassword(), password, confirmationPassword, formType,
-                            userRepository.getAllUserDtos());
+            boolean containsNull = containsDataNull("register function",
+                    new LabeledValue("token", checkUserToken(userToken,
+                            EnumSet.of(TokenField.EMAILACCOUNT, TokenField.GROUPID, TokenField.USERID))));
+            if (containsNull)
+                return false;
 
+            Optional<UserDTO> foundUserDTO = getUserDTOByToken(userToken);
+            boolean isValid = validateData(OperationType.CREATE, null, emailAccount,
+                    foundUserDTO.isPresent() ? foundUserDTO.get().getCurrentPassword() : null, password,
+                    confirmationPassword, formType, userRepository.getAllUserDtos());
             if (!isValid)
                 return false;
 
@@ -228,19 +261,22 @@ public class UserAuthService implements AuthService {
 
     @Override
     public void login(String emailAccount, String password) {
-        UserDTO userDTO = getUserDTOByEmailAndPassword(emailAccount, password);
+        final Optional<UserDTO> userDTO = getUserDTOByEmailAndPassword(emailAccount, password);
 
-        if (!containsDataNull("login function", new LabeledValue("dto", userDTO)) && userDTO.getUserId() != null
-                && !sessionService.isUserLoggedIn(userDTO.getUserId())) {
+        if (containsDataNull("login function", new LabeledValue("dto", userDTO)))
+            return;
+
+        if (userDTO.isPresent() && userDTO.get().getUserId() != null
+                && !sessionService.isUserLoggedIn(userDTO.get().getUserId())) {
             clearErrors(errorHandler, "dto");
-            currentSessionId = sessionService.createSessionId(userDTO);
+            currentSessionId = sessionService.createSessionId(userDTO.get());
         }
     }
 
     @Override
     public boolean updateNotLoggedAccount(String emailAccount, String password, String newPassword,
             String confirmationNewPassword, FormType formType) {
-        UserDTO foundUserDTO = getUserDTOByEmailAndPassword(emailAccount, password);
+        final Optional<UserDTO> foundUserDTO = getUserDTOByEmailAndPassword(emailAccount, password);
         boolean isFormTypeSupported = isFormSupported(formType, EnumSet.of(FormType.FORGOTCREDENTIALS));
 
         if (!isFormTypeSupported) {
@@ -253,14 +289,14 @@ public class UserAuthService implements AuthService {
         if (containsNull)
             return false;
 
-        boolean validPasswords = validatePasswords(foundUserDTO.getMailAccount(), foundUserDTO.getCurrentPassword(),
-                newPassword, confirmationNewPassword, formType);
+        boolean validPasswords = validatePasswords(foundUserDTO.get().getMailAccount(),
+                foundUserDTO.get().getCurrentPassword(), newPassword, confirmationNewPassword, formType);
         if (validPasswords) {
-            UserDTO updatedUserDTO = creaUserDTO(foundUserDTO.getUserId(), foundUserDTO.getGroupId(),
-                    foundUserDTO.getCurrentPassword(), foundUserDTO.getMailAccount(), newPassword,
-                    confirmationNewPassword, foundUserDTO.getProfileImage());
+            UserDTO updatedUserDTO = creaUserDTO(foundUserDTO.get().getUserId(), foundUserDTO.get().getGroupId(),
+                    foundUserDTO.get().getCurrentPassword(), foundUserDTO.get().getMailAccount(), newPassword,
+                    confirmationNewPassword, foundUserDTO.get().getProfileImage());
 
-            userRepository.updateUser(foundUserDTO, updatedUserDTO);
+            userRepository.updateUser(foundUserDTO.get(), updatedUserDTO);
 
             if (getUserDTOByEmailAndPassword(updatedUserDTO.getMailAccount(), updatedUserDTO.getPassword()) != null) {
                 clearErrors(errorHandler, "dto", "newPassword", "confirmNewPassword");
@@ -275,35 +311,44 @@ public class UserAuthService implements AuthService {
 
     @Override
     public boolean switchAccount(UserDTO switchToUserDTO) {
-        UserToken userToken = getLoggedUser();
+        final UserToken userToken = getLoggedUser();
+        final Optional<String> resolvedGroupId;
+        final Optional<String> resolvedUserId;
 
         boolean containsNull = containsDataNull("switchAccount function",
-                new LabeledValue("token", checkUserToken(userToken)), new LabeledValue("dto", switchToUserDTO));
+                new LabeledValue("token",
+                        checkUserToken(userToken,
+                                EnumSet.of(TokenField.EMAILACCOUNT, TokenField.GROUPID, TokenField.USERID))),
+                new LabeledValue("dto", switchToUserDTO));
 
         if (containsNull)
             return false;
 
-        String userId = resolveIdByEmail(switchToUserDTO.getMailAccount());
-        if (userId != null && !userToken.getMailAccount().equals(switchToUserDTO.getMailAccount())
-                && userToken.getGroupId().equals(switchToUserDTO.getGroupId())) {
-            UserDTO switchToUserDTOwithId = creaUserDTO(userId, userToken.getGroupId(),
-                    switchToUserDTO.getCurrentPassword(), switchToUserDTO.getMailAccount(),
-                    switchToUserDTO.getPassword(), switchToUserDTO.getConfirmPassword(),
-                    switchToUserDTO.getProfileImage());
+        resolvedUserId = resolveIdByEmail(switchToUserDTO.getMailAccount());
 
-            clearErrors(errorHandler, "dto", "token");
-            logOut();
-            currentSessionId = sessionService.createSessionId(switchToUserDTOwithId);
-            return true;
+        if (resolvedUserId.isEmpty() || userToken.getMailAccount().equals(switchToUserDTO.getMailAccount())) {
+            return false;
         }
 
-        return false;
+        resolvedGroupId = resolveGroupIdByUserIdAndEmail(resolvedUserId.get(), switchToUserDTO.getMailAccount());
+
+        if (resolvedGroupId.filter(gid -> gid.equals(userToken.getGroupId())).isEmpty())
+            return false;
+
+        UserDTO switchToUserDTOwithId = creaUserDTO(resolvedUserId.get(), resolvedGroupId.get(),
+                switchToUserDTO.getCurrentPassword(), switchToUserDTO.getMailAccount(), switchToUserDTO.getPassword(),
+                switchToUserDTO.getConfirmPassword(), switchToUserDTO.getProfileImage());
+
+        clearErrors(errorHandler, "dto", "token");
+        logOut();
+        currentSessionId = sessionService.createSessionId(switchToUserDTOwithId);
+        return true;
     }
 
     @Override
     public boolean updateLoggedInAccount(String newPassword, String confirmationNewPassword, FormType formType) {
-        UserDTO foundUserDTO;
-        UserToken userToken = getLoggedUser();
+        final UserToken userToken = getLoggedUser();
+        final Optional<UserDTO> foundUserDTO;
         boolean isFormTypeSupported = isFormSupported(formType, EnumSet.of(FormType.FORGOTCREDENTIALS));
 
         if (!isFormTypeSupported) {
@@ -311,28 +356,27 @@ public class UserAuthService implements AuthService {
             return false;
         }
 
-        boolean containsNullUserToken = containsDataNull("updateLoggedInAccount function",
-                new LabeledValue("token", checkUserToken(userToken)));
+        boolean containsNullUserToken = containsDataNull("updateLoggedInAccount function", new LabeledValue("token",
+                checkUserToken(userToken, EnumSet.of(TokenField.EMAILACCOUNT, TokenField.USERID, TokenField.GROUPID))));
 
         if (containsNullUserToken)
             return false;
 
+        foundUserDTO = getUserDTOByToken(userToken);
         boolean containsNullDTO = containsDataNull("updateLoggedInAccount function",
-                new LabeledValue("dto", getUserDTOByToken(userToken)));
+                new LabeledValue("dto", foundUserDTO));
 
         if (containsNullDTO)
             return false;
-        else
-            foundUserDTO = getUserDTOByToken(userToken);
 
-        boolean validPasswords = validatePasswords(foundUserDTO.getMailAccount(), foundUserDTO.getCurrentPassword(),
-                newPassword, confirmationNewPassword, formType);
+        boolean validPasswords = validatePasswords(foundUserDTO.get().getMailAccount(),
+                foundUserDTO.get().getCurrentPassword(), newPassword, confirmationNewPassword, formType);
         if (validPasswords) {
-            UserDTO updatedUserDTO = creaUserDTO(foundUserDTO.getUserId(), foundUserDTO.getGroupId(),
-                    foundUserDTO.getCurrentPassword(), foundUserDTO.getMailAccount(), newPassword,
-                    confirmationNewPassword, foundUserDTO.getProfileImage());
+            UserDTO updatedUserDTO = creaUserDTO(foundUserDTO.get().getUserId(), foundUserDTO.get().getGroupId(),
+                    foundUserDTO.get().getCurrentPassword(), foundUserDTO.get().getMailAccount(), newPassword,
+                    confirmationNewPassword, foundUserDTO.get().getProfileImage());
 
-            userRepository.updateUser(foundUserDTO, updatedUserDTO);
+            userRepository.updateUser(foundUserDTO.get(), updatedUserDTO);
 
             if (getUserDTOByEmailAndPassword(updatedUserDTO.getMailAccount(), updatedUserDTO.getPassword()) != null) {
                 clearErrors(errorHandler, "token", "dto", "newPassword", "confirmNewPassword");
