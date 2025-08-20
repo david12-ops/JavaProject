@@ -59,19 +59,23 @@ public class UserAuthServiceTest {
                                 FormType.ADDACCOUNT, AddOperationType.NEWACCOUNT);
                 assertFalse(registered4);
 
-                boolean registered5 = authService.register("example@gmail.com", "Password@1234", "Password@1234",
-                                FormType.REGISTER, AddOperationType.NEWACCOUNT);
-                assertTrue(registered5);
-
-                boolean registered6 = authService.register("example2@gmail.com", "Password@123456", "Password@123456",
+                boolean registered5 = authService.register("examplegmail.com", "Password1234", "Password1234",
                                 FormType.ADDACCOUNT, AddOperationType.ANOTHERACCOUNT);
-                compareErrors("Invalid token argument in register function.", "token", authService.getErrorHandler());
-                assertFalse(registered6);
+                assertFalse(registered5);
 
-                authService.login("example@gmail.com", "Password@1234");
+                boolean registered6 = authService.register("example@gmail.com", "Password@1234", "Password@1234",
+                                FormType.REGISTER, AddOperationType.NEWACCOUNT);
+                assertTrue(registered6);
+
                 boolean registered7 = authService.register("example2@gmail.com", "Password@123456", "Password@123456",
                                 FormType.ADDACCOUNT, AddOperationType.ANOTHERACCOUNT);
-                assertTrue(registered7);
+                compareErrors("Invalid token argument in register function.", "token", authService.getErrorHandler());
+                assertFalse(registered7);
+
+                authService.login("example@gmail.com", "Password@1234");
+                boolean registered8 = authService.register("example2@gmail.com", "Password@123456", "Password@123456",
+                                FormType.ADDACCOUNT, AddOperationType.ANOTHERACCOUNT);
+                assertTrue(registered8);
         }
 
         @Test
@@ -111,15 +115,15 @@ public class UserAuthServiceTest {
                 assertFalse(switch2);
                 authService.logOut();
 
-                UserDTO userDTOToSwitch = new UserDTO(null, "groupA", "bob@example.com", null, null, null, null);
+                UserDTO userDTOToSwitch1 = new UserDTO(null, null, "bob@example.com", null, null, null, null);
                 authService.login("alice@example.com", "hashedPassword1!");
-                boolean switch3 = authService.switchAccount(userDTOToSwitch);
+                boolean switch3 = authService.switchAccount(userDTOToSwitch1);
                 assertTrue(switch3);
                 authService.logOut();
 
+                UserDTO userDTOToSwitch2 = new UserDTO(null, null, "eve@example.com", null, null, null, null);
                 authService.login("alice@example.com", "hashedPassword1!");
-                userDTOToSwitch.setGroupId("groupAB");
-                boolean switch4 = authService.switchAccount(userDTOToSwitch);
+                boolean switch4 = authService.switchAccount(userDTOToSwitch2);
                 assertFalse(switch4);
                 authService.logOut();
         }
