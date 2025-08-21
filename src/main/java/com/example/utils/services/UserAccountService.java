@@ -111,7 +111,7 @@ public class UserAccountService implements AccountService {
     private Optional<String> resolveIdByEmail(String emailAccount) {
         List<UserDTO> userDTOs = userRepository.getAllUserDtos();
 
-        if (userDTOs == null || userDTOs.size() == 0 || emailAccount == null)
+        if (userDTOs == null || userDTOs.isEmpty() || emailAccount == null)
             return null;
 
         Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
@@ -124,7 +124,7 @@ public class UserAccountService implements AccountService {
     private Optional<String> resolveGroupIdByUserIdAndEmail(String userId, String emailAccount) {
         List<UserDTO> userDTOs = userRepository.getAllUserDtos();
 
-        if (userDTOs == null || userDTOs.size() == 0 || userId == null || emailAccount == null)
+        if (userDTOs == null || userDTOs.isEmpty() || userId == null || emailAccount == null)
             return null;
 
         Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
@@ -138,7 +138,7 @@ public class UserAccountService implements AccountService {
     private Optional<UserDTO> getUserDTOByToken(UserToken userToken) {
         List<UserDTO> userDTOs = userRepository.getAllUserDtos();
 
-        if (userDTOs == null || userDTOs.size() == 0)
+        if (userDTOs == null || userDTOs.isEmpty())
             return null;
 
         Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()

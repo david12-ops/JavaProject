@@ -33,7 +33,7 @@ public class SwitchUserScreen extends VBox {
         textTitle.setAlignment(Pos.CENTER);
         textTitle.setMaxWidth(Double.MAX_VALUE);
 
-        if (userDTOs != null && userDTOs.size() > 0) {
+        if (userDTOs != null && !userDTOs.isEmpty()) {
             CustomGridPane gridPane = new CustomGridPane(screenController, userController, messageController, stage);
             content = new VBox(textTitle, gridPane);
 

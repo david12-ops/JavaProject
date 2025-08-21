@@ -106,7 +106,7 @@ public class MailboxService implements MailService {
     }
 
     private Optional<String> resolveUserIdByEmail(String emailAccount) {
-        if (userDTOs == null || userDTOs.size() == 0 || emailAccount == null)
+        if (userDTOs == null || userDTOs.isEmpty() || emailAccount == null)
             return null;
 
         Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
@@ -117,7 +117,7 @@ public class MailboxService implements MailService {
     }
 
     private Optional<String> resolveEmailByUserId(String userId) {
-        if (userDTOs == null || userDTOs.size() == 0 || userId == null)
+        if (userDTOs == null || userDTOs.isEmpty() || userId == null)
             return null;
 
         Optional<UserDTO> optionalFoundUserDTO = userDTOs.stream()
