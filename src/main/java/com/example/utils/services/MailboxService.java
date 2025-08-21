@@ -135,8 +135,9 @@ public class MailboxService implements MailService {
 
     private List<MessageDTO> filterMessageByUserId(UserToken userToken, List<MessageDTO> messageDTOs) {
         return messageDTOs.stream()
-                .filter(messageDTO -> messageDTO.getRecevierId().equals(userToken.getUserId())
+                .filter(messageDTO -> (messageDTO.getRecevierId().equals(userToken.getUserId())
                         || messageDTO.getSenderId().equals(userToken.getUserId()))
+                        && messageDTO.getStatuses().containsKey(userToken.getUserId()))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -187,6 +188,27 @@ public class MailboxService implements MailService {
         }
 
         return matchedMessageDTOs;
+    }
+
+    private void updateMessageDTO(UserToken userToken, MessageDTO messageDTO) {
+        final Optional<String> resolvedSenderId;
+        final Optional<String> resolvedRecevierId;
+
+        resolvedSenderId = resolveUserIdByEmail(messageDTO.getSenderMailAccount());
+        resolvedRecevierId = resolveUserIdByEmail(messageDTO.getRecevierMailAccount());
+        boolean containsNull = containsDataNull("updateStatus function", new LabeledValue("senderId", resolvedSenderId),
+                new LabeledValue("recevierId", resolvedRecevierId));
+
+        if (containsNull)
+            return;
+
+        messageDTO.getStatuses().remove(userToken.getUserId());
+
+        MessageDTO updadMessageDTO = createMessageDTO(messageDTO.getMessageId(), resolvedSenderId.get(),
+                messageDTO.getSenderMailAccount(), resolvedRecevierId.get(), messageDTO.getRecevierMailAccount(),
+                messageDTO.getSubject(), messageDTO.getMessage(), messageDTO.getTimestamp(),
+                messageDTO.getAttachedBase64Files(), messageDTO.getStatuses(), messageDTO.getAttachedFiles());
+        messageRepository.updateMessageStatus(messageDTO, updadMessageDTO);
     }
 
     @Override
@@ -283,6 +305,8 @@ public class MailboxService implements MailService {
 
     @Override
     public void removeMessage(UserToken userToken, MessageDTO messageDTO) {
+        int keysInMessageStatuses;
+        final Map<String, EnumSet<MessageStatus>> messageStatuses;
         if (containsDataNull("removeMessage function", new LabeledValue("messageDTO", messageDTO),
                 new LabeledValue("token", checkUserToken(userToken))))
             return;
@@ -290,12 +314,21 @@ public class MailboxService implements MailService {
         if (containsDataNull("removeMessage function", new LabeledValue("messageDTOid", messageDTO.getMessageId())))
             return;
 
-        if (messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH)) {
-            clearErrors(errorHandler, "messageDTO", "token", "messageDTOid");
-            messageRepository.removeMessage(messageDTO);
-        }
+        messageStatuses = messageDTO.getStatuses();
+        keysInMessageStatuses = messageStatuses.isEmpty() ? 0 : messageStatuses.size();
 
-        updateStatus(userToken, messageDTO, MessageStatus.TRASH, OperationType.UPDATE);
+        if (keysInMessageStatuses > 0) {
+            if (messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.TRASH)) {
+                updateMessageDTO(userToken, messageDTO);
+                keysInMessageStatuses = messageDTO.getStatuses().size();
+
+                if (keysInMessageStatuses == 0)
+                    messageRepository.removeMessage(messageDTO);
+
+            } else {
+                updateStatus(userToken, messageDTO, MessageStatus.TRASH, OperationType.UPDATE);
+            }
+        }
     }
 
     @Override
