@@ -24,14 +24,14 @@ public class MessageRepository {
     private List<Message> listOfMessagesTest;
 
     public MessageRepository(EnvironmentType environmentType) {
+        this.environmentType = environmentType;
+
         if (EnvironmentType.PRODUCTION == environmentType) {
-            this.environmentType = environmentType;
             storageTool = new JsonStorageTool<Message>(dotenv.get("FILE_PATH_MESSAGES"),
                     new TypeReference<List<Message>>() {
                     });
             this.listOfMessagesProd = storageTool.getItems();
         } else if (EnvironmentType.TEST == environmentType) {
-            this.environmentType = environmentType;
             this.listOfMessagesTest = new ArrayList<>();
         } else {
             System.err.println("❌ Critical Error: Invalid environment type provided.");
@@ -112,8 +112,13 @@ public class MessageRepository {
 
     public List<MessageDTO> getAllMessageDtos() {
         List<MessageDTO> messageDTOs = new ArrayList<>();
-        List<Message> data = EnvironmentType.PRODUCTION == environmentType ? listOfMessagesProd
-                : EnvironmentType.TEST == environmentType ? listOfMessagesTest : new ArrayList<>();
+        List<Message> data = new ArrayList<>();
+
+        if (EnvironmentType.PRODUCTION == environmentType)
+            data = listOfMessagesProd;
+
+        if (EnvironmentType.TEST == environmentType)
+            data = listOfMessagesTest;
 
         data.forEach(message -> {
             messageDTOs.add(new MessageDTO(message.getMessageId(), message.getSenderId(), null, message.getRecevierId(),

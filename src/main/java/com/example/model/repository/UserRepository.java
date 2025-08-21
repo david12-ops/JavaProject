@@ -26,13 +26,13 @@ public class UserRepository {
     private List<User> listOfUsersTest;
 
     public UserRepository(EnvironmentType environmentType) {
+        this.environmentType = environmentType;
+
         if (EnvironmentType.PRODUCTION == environmentType) {
-            this.environmentType = environmentType;
             storageTool = new JsonStorageTool<User>(dotenv.get("FILE_PATH_USERS"), new TypeReference<List<User>>() {
             });
             this.listOfUsersProd = storageTool.getItems();
         } else if (EnvironmentType.TEST == environmentType) {
-            this.environmentType = environmentType;
             this.listOfUsersTest = new ArrayList<>();
         } else {
             System.err.println("❌ Critical Error: Invalid environment type provided.");
@@ -114,8 +114,13 @@ public class UserRepository {
 
     public List<UserDTO> getAllUserDtos() {
         List<UserDTO> userDTOs = new ArrayList<>();
-        List<User> data = EnvironmentType.PRODUCTION == environmentType ? listOfUsersProd
-                : EnvironmentType.TEST == environmentType ? listOfUsersTest : new ArrayList<>();
+        List<User> data = new ArrayList<>();
+
+        if (EnvironmentType.PRODUCTION == environmentType)
+            data = listOfUsersProd;
+
+        if (EnvironmentType.TEST == environmentType)
+            data = listOfUsersTest;
 
         data.forEach(user -> {
             userDTOs.add(new UserDTO(user.getUserId(), user.getGroupId(), user.getMailAccount(), user.getPassword(),
