@@ -183,9 +183,6 @@ public class MailboxServiceTest {
                                 .anyMatch(messageDTO -> messageDTO.getMessageId()
                                                 .equals(messageDTOtoTrashStatus.getMessageId())));
 
-                // je?
-                // errorHandler.logError(errorHandler.createErrorBody(labeledValue.label(),
-                // "Invalid " + labeledValue.label() + " argument in " + location + "."));
                 mailService.removeMessage(null,
                                 mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).get(0));
                 compareErrors("Invalid token argument in removeMessage function.", "token",
@@ -224,6 +221,18 @@ public class MailboxServiceTest {
                 }
 
                 assertEquals(0, mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).size());
+                assertEquals(2, mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX)).size());
+
+                for (MessageDTO messageDTO : mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.TRASH))) {
+                        assertTrue(messageDTO.getStatuses().containsKey(userToken2.getUserId()));
+                        mailService.removeMessage(userToken2, messageDTO);
+                }
+
+                for (MessageDTO messageDTO : mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.INBOX))) {
+                        assertFalse(messageDTO.getStatuses().containsKey(userToken2.getUserId()));
+                        assertTrue(messageDTO.getStatuses().containsKey(userToken.getUserId()));
+                        assertTrue(messageDTO.getStatuses().get(userToken.getUserId()).contains(MessageStatus.INBOX));
+                }
         }
 
         @Test
