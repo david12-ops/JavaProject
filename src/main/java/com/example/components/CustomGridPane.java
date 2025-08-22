@@ -226,6 +226,9 @@ public class CustomGridPane extends HBox {
 
     public CustomGridPane(ScreenController screenController, UserController userController,
             MessageController messageController, Stage stage) {
+        StateEventService.getInstance().subscribe("computeGrid",
+                payload -> refreshLayout(userController, screenController, messageController, stage));
+
         Button nextButton = new Button(">");
         nextButton.setShape(new Circle(20));
         nextButton.setMinSize(40, 40);
@@ -265,16 +268,16 @@ public class CustomGridPane extends HBox {
         buttonBox = new VBox(10, prevButton, nextButton);
         buttonBox.setAlignment(Pos.CENTER);
 
-        PauseTransition resizeDelay = new PauseTransition(Duration.millis(300));
-        resizeDelay.setOnFinished(e -> refreshLayout(userController, screenController, messageController, stage));
+        StateEventService.getInstance().emit("computeGrid", userController.getAllUserAccounts());
 
-        StateEventService.getInstance().subscribe("computeGrid",
-                payload -> refreshLayout(userController, screenController, messageController, stage));
+        PauseTransition resizeDelay = new PauseTransition(Duration.millis(300));
+        resizeDelay.setOnFinished(
+                e -> StateEventService.getInstance().emit("computeGrid", userController.getAllUserAccounts()));
+        ;
 
         stage.widthProperty().addListener((obs, oldVal, newVal) -> resizeDelay.playFromStart());
         stage.heightProperty().addListener((obs, oldVal, newVal) -> resizeDelay.playFromStart());
 
-        StateEventService.getInstance().emit("computeGrid", userController.getAllUserAccounts());
         this.getChildren().setAll(contentBox);
     }
 }

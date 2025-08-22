@@ -19,9 +19,9 @@ import javafx.stage.Stage;
 public class SwitchUserScreen extends VBox {
     public SwitchUserScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController) {
-        List<UserDTO> userDTOs = userController.getAllUserAccounts();
         Layout layout = null;
         VBox content = null;
+        List<UserDTO> userDTOs = userController.getAllUserAccounts();
 
         Label textInfoLabel = new Label("No another accounts found");
         textInfoLabel.setStyle("-fx-text-fill: orangered; -fx-font-size: 30px;");
@@ -34,8 +34,9 @@ public class SwitchUserScreen extends VBox {
         textTitle.setMaxWidth(Double.MAX_VALUE);
 
         if (userDTOs != null && !userDTOs.isEmpty()) {
-            CustomGridPane gridPane = new CustomGridPane(screenController, userController, messageController, stage);
-            content = new VBox(textTitle, gridPane);
+            CustomGridPane customGridPane = new CustomGridPane(screenController, userController, messageController,
+                    stage);
+            content = new VBox(textTitle, customGridPane);
 
             layout = new Layout(stage, content, screenController, userController, messageController);
         } else {

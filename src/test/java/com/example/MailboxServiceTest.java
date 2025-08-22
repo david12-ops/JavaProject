@@ -9,7 +9,6 @@ import com.example.utils.enums.EnvironmentType;
 import com.example.utils.enums.MessageStatus;
 import com.example.utils.enums.OperationType;
 import com.example.utils.interfaces.ErrorHandler;
-import com.example.utils.interfaces.MailService;
 import com.example.utils.services.MailboxService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,7 +25,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 @ExtendWith(MockitoExtension.class)
 public class MailboxServiceTest {
-        private MailService mailService;
+        private MailboxService mailService;
 
         private void compareErrors(String expectedMessage, String key, ErrorHandler errorHandler) {
                 String errorMessage = errorHandler.getError(key);
@@ -41,6 +40,7 @@ public class MailboxServiceTest {
         @Test
         @DisplayName("Should send message")
         public void testSendMessage() {
+                mailService.clearTestMessagesData();
                 User user = new User("1", "groupA", "alice@example.com",
                                 BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()), null);
                 User user2 = new User("2", "groupA", "bob@example.com",
@@ -51,13 +51,13 @@ public class MailboxServiceTest {
 
                 mailService.sendMessage(userToken, "bob@example.com", "Service sending test", "Testing service sending",
                                 null);
+                assertEquals(1, mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.SENT)).size());
+
                 mailService.sendMessage(userToken2, "alice@example.com", "Service sending test",
                                 "Testing service sending", null);
                 mailService.sendMessage(userToken2, "nonexisting@example.com", "Service sending test",
                                 "Testing service sending", null);
-
                 assertEquals(1, mailService.getMessageDTOs(userToken, EnumSet.of(MessageStatus.SENT)).size());
-                assertEquals(1, mailService.getMessageDTOs(userToken2, EnumSet.of(MessageStatus.SENT)).size());
 
                 mailService.sendMessage(null, null, null, null, null);
                 compareErrors("Invalid token argument in sendMessage function.", "token",
@@ -81,6 +81,7 @@ public class MailboxServiceTest {
         @Test
         @DisplayName("Should update status of message")
         public void testUpdateStatus() {
+                mailService.clearTestMessagesData();
                 User user = new User("1", "groupA", "alice@example.com",
                                 BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()), null);
                 User user2 = new User("2", "groupA", "bob@example.com",
@@ -157,6 +158,7 @@ public class MailboxServiceTest {
         @Test
         @DisplayName("Should remove message")
         public void testRemoveMessage() {
+                mailService.clearTestMessagesData();
                 User user = new User("1", "groupA", "alice@example.com",
                                 BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()), null);
                 User user2 = new User("2", "groupA", "bob@example.com",
@@ -238,6 +240,7 @@ public class MailboxServiceTest {
         @Test
         @DisplayName("Should get message")
         public void testGetMessageDTOs() {
+                mailService.clearTestMessagesData();
                 User user = new User("1", "groupA", "alice@example.com",
                                 BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()), null);
                 User user2 = new User("2", "groupA", "bob@example.com",

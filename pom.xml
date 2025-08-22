@@ -87,8 +87,8 @@
                 </executions>
                 <configuration>
                     <mainClass>com.example.Main</mainClass>
-                    <modulePath>Cesta k sdk java modulu</modulePath> 
-                    <addModules>javafx.controls,javafx.fxml</addModules>
+                        <modulePath>Cesta k sdk java modulu</modulePath> 
+                        <addModules>javafx.controls,javafx.fxml</addModules>
                 </configuration>
             </plugin>
         </plugins>

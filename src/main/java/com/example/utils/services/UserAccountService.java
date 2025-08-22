@@ -33,15 +33,15 @@ public class UserAccountService implements AccountService {
     private final UserValidator userValidator;
 
     public UserAccountService(EnvironmentType environmentType) {
-        this.userRepository = RepositoryFactory.getUserRepository(environmentType);
+        this.userRepository = RepositoryFactory.getInstance(environmentType).getUserRepository();
         this.errorHandler = validationContext.getUserValidationBundle().getErrorManager();
         this.userValidator = validationContext.getUserValidationBundle().getValidator();
 
         if (environmentType == EnvironmentType.TEST)
-            setTestUsersList(userRepository);
+            setTestUsersList();
     }
 
-    private void setTestUsersList(UserRepository userRepository) {
+    private void setTestUsersList() {
         List<User> users = new ArrayList<>();
 
         users.add(new User("1", "groupA", "alice@example.com", BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()),

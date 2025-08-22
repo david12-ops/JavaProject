@@ -65,6 +65,10 @@ public class MessageRepository {
         this.listOfMessagesTest = listOfMessages;
     }
 
+    public void clearTestDada() {
+        this.listOfMessagesTest.clear();
+    }
+
     public void addMessage(MessageDTO messageDTO) {
         List<File> files = messageDTO.getAttachedFiles();
         List<String> base64Files = (files != null && !files.isEmpty()) ? files.stream().map(file -> {

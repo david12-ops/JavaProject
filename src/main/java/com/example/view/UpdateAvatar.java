@@ -58,6 +58,7 @@ public class UpdateAvatar extends VBox {
             userController.updateImageProfile(null);
             dropZone.clear();
             imageErrorLabel.setText("");
+
             screenController.updateScreen("main", new MainScreen(stage, screenController, userController,
                     messageController, EnumSet.of(MessageStatus.INBOX)));
             screenController.updateScreen("switchUser",

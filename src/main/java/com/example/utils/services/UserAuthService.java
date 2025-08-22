@@ -34,16 +34,16 @@ public class UserAuthService implements AuthService {
     private String currentSessionId;
 
     public UserAuthService(SessionService sessionService, EnvironmentType environmentType) {
-        this.userRepository = RepositoryFactory.getUserRepository(environmentType);
+        this.userRepository = RepositoryFactory.getInstance(environmentType).getUserRepository();
         this.errorHandler = validationContext.getUserValidationBundle().getErrorManager();
         this.userValidator = validationContext.getUserValidationBundle().getValidator();
         this.sessionService = sessionService;
 
         if (environmentType == EnvironmentType.TEST)
-            setTestUsersList(userRepository);
+            setTestUsersList();
     }
 
-    private void setTestUsersList(UserRepository userRepository) {
+    private void setTestUsersList() {
         List<User> users = new ArrayList<>();
 
         users.add(new User("1", "groupA", "alice@example.com", BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()),
@@ -219,7 +219,7 @@ public class UserAuthService implements AuthService {
             if (containsNull)
                 return false;
 
-            Optional<UserDTO> foundUserDTO = getUserDTOByToken(userToken);
+            final Optional<UserDTO> foundUserDTO = getUserDTOByToken(userToken);
             boolean isValid = validateData(OperationType.CREATE, null, emailAccount,
                     foundUserDTO.isPresent() ? foundUserDTO.get().getCurrentPassword() : null, password,
                     confirmationPassword, formType, userRepository.getAllUserDtos());

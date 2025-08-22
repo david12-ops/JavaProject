@@ -14,7 +14,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 public class MainScreen extends VBox {
-    // TODO - switch user - nezobrazuje po pridani dalisho uctu
     public MainScreen(Stage stage, ScreenController screenController, UserController userController,
             MessageController messageController, EnumSet<MessageStatus> messageStatusesFromUI) {
         Table table = new Table(stage, screenController, messageController, userController, messageStatusesFromUI);

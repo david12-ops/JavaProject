@@ -8,7 +8,6 @@ import com.example.dto.UserDTO;
 import com.example.model.UserToken;
 
 public class SessionService {
-
     // syncronized getInstance/hasMap for multi acces - prevent race conditions
     private ConcurrentMap<String, UserToken> activeSessions;
 

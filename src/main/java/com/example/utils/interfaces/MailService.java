@@ -10,7 +10,7 @@ import com.example.utils.enums.MessageStatus;
 import com.example.utils.enums.OperationType;
 
 public interface MailService {
-    void sendMessage(UserToken userToken, String recevierId, String subject, String message, List<File> files);
+    void sendMessage(UserToken userToken, String recevierEmail, String subject, String message, List<File> files);
 
     void updateStatus(UserToken userToken, MessageDTO messageDTO, MessageStatus status, OperationType operationType);
 

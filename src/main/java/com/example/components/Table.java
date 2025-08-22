@@ -96,12 +96,10 @@ public class Table extends VBox {
             buttonBox.getChildren().add(removeFromFavoritesButton);
         } else if (isMessageStatusOneFromUI(messageStatusesFromUI)
                 && messageStatusesFromUI.contains(MessageStatus.TRASH)) {
-            buttonBox.getChildren().addAll(isStarred ? removeFromFavoritesButton : addToFavoritesButton,
-                    renewMessageButton);
+            buttonBox.getChildren().addAll(renewMessageButton);
         } else if (!isMessageStatusOneFromUI(messageStatusesFromUI)) {
             if (isInTrash) {
-                buttonBox.getChildren().addAll(isStarred ? removeFromFavoritesButton : addToFavoritesButton,
-                        renewMessageButton);
+                buttonBox.getChildren().add(renewMessageButton);
             } else {
                 buttonBox.getChildren().add(isStarred ? removeFromFavoritesButton : addToFavoritesButton);
             }

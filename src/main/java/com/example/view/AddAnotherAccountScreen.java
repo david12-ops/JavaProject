@@ -56,7 +56,7 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
     private void addButtonAction(Stage stage, TextField emailField, PasswordField passwordField,
             PasswordField confirmPasswordField, Label confirmPasswordErrorLabel, Label emailErrorLabel,
             Label passwordErrorLabel, UserController userController, ScreenController screenController,
-            MessageController messageControll, Label labelError) {
+            MessageController messageController, Label labelError) {
 
         boolean isValid = true;
         labelError.setText("");
@@ -94,9 +94,8 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
         if (isValid && addedAccount) {
             clearFields(emailErrorLabel, passwordErrorLabel, confirmPasswordErrorLabel, emailField, passwordField,
                     confirmPasswordField, userController);
-
             screenController.updateScreen("switchUser",
-                    new SwitchUserScreen(stage, screenController, userController, messageControll));
+                    new SwitchUserScreen(stage, screenController, userController, messageController));
             screenController.activate("main", stage);
         } else if (isValid) {
             labelError.setText(
@@ -133,7 +132,7 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
     }
 
     public AddAnotherAccountScreen(Stage stage, ScreenController screenController, UserController userController,
-            MessageController messageControll) {
+            MessageController messageController) {
         Label labelError = createErrorLabel();
 
         Label emailLabel = new Label("Email:");
@@ -161,7 +160,8 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
         addButton.getStyleClass().add("addButton");
         addButton.setOnAction(e -> {
             addButtonAction(stage, emailField, passwordField, confirmPasswordField, confirmPasswordErrorLabel,
-                    emailErrorLabel, passwordErrorLabel, userController, screenController, messageControll, labelError);
+                    emailErrorLabel, passwordErrorLabel, userController, screenController, messageController,
+                    labelError);
         });
 
         Button backButton = new Button("Back");
@@ -185,8 +185,9 @@ public class AddAnotherAccountScreen extends VBox implements GuiErrorHelper {
     }
 
     public static void show(Stage stage, ScreenController screenController, UserController userController,
-            MessageController messageControll) {
-        Scene scene = new Scene(new AddAnotherAccountScreen(stage, screenController, userController, messageControll));
+            MessageController messageController) {
+        Scene scene = new Scene(
+                new AddAnotherAccountScreen(stage, screenController, userController, messageController));
         stage.setScene(scene);
         stage.show();
     }

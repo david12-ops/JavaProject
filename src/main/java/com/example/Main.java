@@ -22,14 +22,12 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
         // Icons use from - https://icons8.com
-        private UserController userController = new UserController();
-        private MessageController messageController = new MessageController();
-        private ScreenController screenController;
+        private final UserController userController = new UserController();
+        private final MessageController messageController = new MessageController();
+        private final ScreenController screenController = new ScreenController(null);
 
         @Override
         public void start(Stage primaryStage) {
-                screenController = new ScreenController(null);
-
                 LoginScreen loginScreen = new LoginScreen(primaryStage, screenController, userController,
                                 messageController);
                 RegisterScreen registerScreen = new RegisterScreen(primaryStage, screenController, userController);

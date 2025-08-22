@@ -41,13 +41,13 @@ public class MailboxService implements MailService {
     private final MessageValidator messageValidator;
 
     public MailboxService(EnvironmentType environmentType) {
-        this.userRepository = RepositoryFactory.getUserRepository(environmentType);
-        this.messageRepository = RepositoryFactory.getMessageRepository(environmentType);
+        this.userRepository = RepositoryFactory.getInstance(environmentType).getUserRepository();
+        this.messageRepository = RepositoryFactory.getInstance(environmentType).getMessageRepository();
         errorHandler = validationContext.getMessageValidationBundle().getErrorManager();
         messageValidator = validationContext.getMessageValidationBundle().getValidator();
 
         if (environmentType == EnvironmentType.TEST)
-            setTestUsersList(userRepository);
+            setTestUsersList();
 
         this.userDTOs = userRepository.getAllUserDtos();
     }
@@ -55,7 +55,7 @@ public class MailboxService implements MailService {
     private record LabeledValue(String label, Object value) {
     }
 
-    private void setTestUsersList(UserRepository userRepository) {
+    private void setTestUsersList() {
         List<User> users = new ArrayList<>();
 
         users.add(new User("1", "groupA", "alice@example.com", BCrypt.hashpw("hashedPassword1!", BCrypt.gensalt()),
@@ -70,6 +70,10 @@ public class MailboxService implements MailService {
                 new User("5", "groupC", "eve@example.com", BCrypt.hashpw("hashedPassword5!", BCrypt.gensalt()), null));
 
         userRepository.setTestData(users);
+    }
+
+    public void clearTestMessagesData() {
+        messageRepository.clearTestDada();
     }
 
     // Support Methods
